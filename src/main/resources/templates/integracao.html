@@ -230,9 +230,10 @@
     </form>
   </div>
 
-  <!-- O WhatsApp e de mao dupla: manda por API e responde por aqui. -->
+  <!-- Ligacoes de mao dupla: mandam por API e recebem por aqui. -->
   <div class="secao" th:if="${integracao.tipo.recebeDeFora
-                             or integracao.provedor?.name() == 'WHATSAPP'}">
+                             or integracao.provedor?.name() == 'WHATSAPP'
+                             or integracao.provedor?.name() == 'TAREFAS_DE_OUTRO_SISTEMA'}">
     <h2>Endereço de recebimento</h2>
     <p style="color:var(--text-secondary);font-size:14px;margin-bottom:14px">
       É este endereço que o outro sistema chama para avisar o que aconteceu. O trecho final é

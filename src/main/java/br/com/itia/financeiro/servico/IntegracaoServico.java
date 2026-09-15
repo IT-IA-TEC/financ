@@ -46,6 +46,7 @@ public class IntegracaoServico {
     private final EventoIntegracaoRepositorio eventos;
     private final BaixaAutomatica baixa;
     private final EntradaDeWhatsApp entradaDeWhatsApp;
+    private final EntradaDeTarefas entradaDeTarefas;
     private final ContextoEmpresa contexto;
     private final Cofre cofre;
     private final Avisos avisos;
@@ -57,12 +58,14 @@ public class IntegracaoServico {
                              OperacaoIntegracaoRepositorio operacoes,
                              EventoIntegracaoRepositorio eventos, BaixaAutomatica baixa,
                              EntradaDeWhatsApp entradaDeWhatsApp,
+                             EntradaDeTarefas entradaDeTarefas,
                              ContextoEmpresa contexto, Cofre cofre, Avisos avisos) {
         this.integracoes = integracoes;
         this.operacoes = operacoes;
         this.eventos = eventos;
         this.baixa = baixa;
         this.entradaDeWhatsApp = entradaDeWhatsApp;
+        this.entradaDeTarefas = entradaDeTarefas;
         this.contexto = contexto;
         this.cofre = cofre;
         this.avisos = avisos;
@@ -379,6 +382,9 @@ public class IntegracaoServico {
         // o aviso fica na fila de investigacao com o motivo escrito.
         if (integracao.getProvedor() == Conector.WHATSAPP) {
             entradaDeWhatsApp.processar(evento, integracao.getEmpresa().getId());
+            eventos.save(evento);
+        } else if (integracao.getProvedor() == Conector.TAREFAS_DE_OUTRO_SISTEMA) {
+            entradaDeTarefas.receber(evento, integracao.getEmpresa().getId());
             eventos.save(evento);
         } else {
             baixa.processar(evento, integracao.getEmpresa().getId());

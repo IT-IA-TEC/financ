@@ -166,7 +166,6 @@ public class Conversas {
      * Se o canal do WhatsApp estiver ligado, sai na hora. Se não estiver, fica
      * na fila com o texto pronto, e a equipe manda pelo aparelho e marca aqui.
      */
-    @Transactional
     public Mensagem responder(UUID unidadeId, String texto, String destinoEscolhido) {
         if (texto == null || texto.isBlank()) {
             throw new IllegalArgumentException("Escreva a mensagem antes de mandar.");
@@ -185,10 +184,48 @@ public class Conversas {
         mensagem.ligarAoCliente(cliente.getPagador() == null ? null
                 : cliente.getPagador().getId(), cliente.getId(), null);
         mensagens.save(mensagem);
-
         marcarEntradasRespondidas(unidadeId);
+
+        // A tentativa de entrega fica FORA de transacao nossa: canal fora do ar
+        // nao pode desfazer a gravacao do que a pessoa escreveu.
         tentarEnviar(mensagem);
         return mensagens.save(mensagem);
+    }
+
+    /**
+     * Começa uma conversa nova, do jeito que a pessoa quiser.
+     *
+     * Serve para os dois casos do dia a dia: chamar um cliente que ainda não
+     * falou com a gente, e falar com um número que não está em cliente nenhum.
+     * Número solto entra como conversa sem dono, e depois alguém liga ao
+     * cliente certo, exatamente como acontece com quem chega de fora.
+     */
+    public Mensagem comecar(UUID unidadeId, String numero, String texto) {
+        if (texto == null || texto.isBlank()) {
+            throw new IllegalArgumentException("Escreva a mensagem antes de chamar o cliente.");
+        }
+        if (unidadeId != null) {
+            return responder(unidadeId, texto, numero);
+        }
+        if (numero == null || numero.isBlank()) {
+            throw new IllegalArgumentException(
+                    "Escolha um cliente ou escreva o número do WhatsApp.");
+        }
+        if (soNumeros(numero).length() < 10) {
+            throw new IllegalArgumentException(
+                    "O número parece incompleto. Use DDD e o número, como (11) 90000-0000.");
+        }
+
+        Mensagem mensagem = new Mensagem(contexto.exigirEmpresaId(), "WHATSAPP", "SAIDA",
+                numero.trim(), texto.trim(), contexto.autor());
+        mensagens.save(mensagem);
+        tentarEnviar(mensagem);
+        return mensagens.save(mensagem);
+    }
+
+    /** Todos os clientes da empresa, para escolher quem chamar. */
+    public List<ClienteEspelho> todosOsClientes() {
+        return clientes.findByEmpresaIdAndAtivoTrueOrderByRazaoSocial(contexto.exigirEmpresaId());
     }
 
     /**
@@ -229,7 +266,16 @@ public class Conversas {
                     .formatted(soNumeros(mensagem.getDestino()), escapar(mensagem.getCorpo()));
             String resposta = integracaoServico.executar(canal.get().getId(),
                     enviar.get().getId(), corpo);
-            mensagem.marcarEnviada(idDaResposta(resposta));
+            String idLaFora = idDaResposta(resposta);
+            if (idLaFora == null) {
+                // Resposta sem identificador e recusa disfarcada: o provedor
+                // respondeu, mas nao aceitou a mensagem. Marcar como enviada
+                // aqui seria mentir para quem esta cobrando.
+                mensagem.marcarFalha("o canal respondeu sem confirmar o envio: "
+                        + recortar(resposta));
+                return;
+            }
+            mensagem.marcarEnviada(idLaFora);
             registrarNaHistoria(mensagem);
         } catch (RuntimeException erro) {
             LOG.debug("envio de whatsapp falhou: {}", erro.getMessage());
@@ -242,6 +288,15 @@ public class Conversas {
                 .filter(Integracao::isAtiva)
                 .filter(i -> i.getProvedor() == br.com.itia.financeiro.dominio.Conector.WHATSAPP)
                 .findFirst();
+    }
+
+    /** Um pedaco da resposta, para caber no motivo sem virar um calhamaco. */
+    private String recortar(String resposta) {
+        if (resposta == null || resposta.isBlank()) {
+            return "resposta vazia";
+        }
+        String limpo = resposta.replaceAll("\s+", " ").trim();
+        return limpo.length() <= 200 ? limpo : limpo.substring(0, 200) + "...";
     }
 
     private String idDaResposta(String resposta) {

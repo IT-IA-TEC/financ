@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
-<head th:replace="~{layout :: cabeca('Conversas')}"></head>
+<head th:replace="~{layout :: cabeca('Mesa de cobrança')}"></head>
 <body>
 <header th:replace="~{layout :: topo('cobranca')}"></header>
 
@@ -9,20 +9,20 @@
 
   <div class="cabecalho-pagina com-resumo">
     <div>
-      <span class="olho"><i></i>WhatsApp na plataforma</span>
-      <h1>Conversas</h1>
+      <span class="olho"><i></i>Com quem falar agora</span>
+      <h1>Mesa de cobrança</h1>
     </div>
 
     <div class="cartoes-topo">
       <div class="cartao-topo inverso">
         <span class="rotulo">Esperando</span>
-        <b th:text="${#lists.size(linhas.?[esperando > 0])}">0</b>
-        <small>clientes que responderam</small>
+        <b th:text="${#lists.size(fila.?[urgencia == 'espera'])}">0</b>
+        <small>responderam e ninguém voltou</small>
       </div>
       <div class="cartao-topo">
-        <span class="rotulo">Conversas</span>
-        <b th:text="${linhas.size()}">0</b>
-        <small>abertas até agora</small>
+        <span class="rotulo">Na fila</span>
+        <b th:text="${fila.size()}">0</b>
+        <small>clientes neste recorte</small>
       </div>
       <div class="cartao-topo">
         <span class="rotulo">Sem dono</span>
@@ -36,56 +36,649 @@
                         ? 'a mensagem sai daqui' : 'a mensagem fica na fila'"></small>
       </div>
     </div>
+
+    <div class="acoes" style="margin:0">
+      <button class="botao" type="button" data-abre="janela-chamar">+ Chamar cliente</button>
+    </div>
   </div>
 
-  <nav th:replace="~{layout :: abas-cobranca('conversas')}" class="modulo"></nav>
+  <nav th:replace="~{layout :: abas-cobranca('conversas')}"></nav>
 
-  <div class="alerta-box atencao" th:unless="${canalLigado}" style="margin-bottom:18px">
-    O canal do WhatsApp ainda não está ligado nesta empresa. As mensagens continuam sendo
-    escritas e guardadas aqui, com o texto pronto, e saem sozinhas assim que o canal for ligado
-    em <a href="/integracoes">Integrações</a>.
-  </div>
+  <div class="mesa">
 
-  <div class="tabela-caixa" th:if="${!linhas.isEmpty()}">
-    <table>
-      <thead>
-      <tr>
-        <th>Cliente</th>
-        <th>Número</th>
-        <th>Última mensagem</th>
-        <th class="centro">Quando</th>
-        <th class="centro">Em aberto</th>
-        <th class="centro">Esperando</th>
-      </tr>
-      </thead>
-      <tbody>
-      <tr th:each="l : ${linhas}">
-        <td>
-          <a th:if="${l.unidadeId != null}" th:href="@{'/conversas/' + ${l.unidadeId}}"
-             th:text="${l.quem}">cliente</a>
-          <span th:if="${l.unidadeId == null}" th:text="${l.quem}">desconhecido</span>
-        </td>
-        <td class="mono" style="font-size:12px" th:text="${l.destino}"></td>
-        <td style="max-width:420px">
-          <small th:text="${#strings.abbreviate(l.ultima, 140)}"></small>
-        </td>
-        <td class="centro mono" th:text="${#temporals.format(l.quando, 'dd/MM HH:mm')}">01/01</td>
-        <td class="centro mono"
-            th:text="'R$ ' + ${#numbers.formatDecimal(l.emAberto, 1, 'POINT', 2, 'COMMA')}"></td>
-        <td class="centro">
-          <span class="marca-situacao" th:if="${l.esperando > 0}"
-                th:classappend="'s-vencido'" th:text="${l.esperando}">0</span>
-          <span th:if="${l.esperando == 0}">-</span>
-        </td>
-      </tr>
-      </tbody>
-    </table>
-  </div>
-  <div class="vazio" th:if="${linhas.isEmpty()}">
-    Nenhuma conversa ainda. Elas começam pelo disparo de cobrança ou pela ficha do cliente.
+    <!-- ------------------------------------------------------------ a fila -->
+    <aside class="coluna-fila">
+      <form method="get" action="/conversas" class="busca-fila">
+        <input name="busca" th:value="${busca}"
+               placeholder="buscar por nome ou valor">
+        <input type="hidden" name="recorte" th:value="${recorte}">
+        <button class="botao pequeno" type="submit">Buscar</button>
+      </form>
+
+      <div class="recortes">
+        <a th:each="r : ${recortes}"
+           th:href="@{'/conversas'(recorte=${r.chave},busca=${busca})}"
+           th:classappend="${recorte == r.chave} ? 'escolhido'"
+           class="recorte">
+          <span th:text="${r.nome}">recorte</span>
+          <b th:text="${r.quantos}">0</b>
+        </a>
+      </div>
+
+      <a class="item-fila" th:each="f : ${fila}"
+         th:href="@{'/conversas'(cliente=${f.unidadeId},recorte=${recorte},busca=${busca})}"
+         th:classappend="(${f.unidadeId == escolhido} ? 'aberto ' : '') + 'u-' + ${f.urgencia}">
+        <span class="topo-item">
+          <b th:text="${f.quem}">cliente</b>
+          <span class="valor-item mono"
+                th:text="${f.quitado} ? 'quitado'
+                         : 'R$ ' + ${#numbers.formatDecimal(f.emAberto, 1, 'POINT', 2, 'COMMA')}"></span>
+        </span>
+        <span class="resumo-fila" th:text="${f.resumo}">resumo</span>
+        <span class="tags-item">
+          <span class="etiqueta-fila" th:text="${f.etiqueta}">etiqueta</span>
+          <span class="etiqueta-fila leve" th:if="${f.unidades > 1}"
+                th:text="${f.unidades} + ' unidades'"></span>
+          <span class="etiqueta-fila leve" th:if="${f.minha}">seu</span>
+        </span>
+      </a>
+
+      <div class="vazio-coluna" th:if="${fila.isEmpty()}">ninguém neste recorte</div>
+
+      <div th:if="${!semDono.isEmpty()}" class="bloco-sem-dono">
+        <div class="cabeca-coluna-mesa">
+          <span>Sem cliente ligado</span>
+          <b th:text="${semDono.size()}">0</b>
+        </div>
+        <div class="item-sem-dono" th:each="m : ${semDono}">
+          <b class="mono" th:text="${m.destino}">número</b>
+          <span class="resumo-fila" th:text="${#strings.abbreviate(m.corpo, 70)}"></span>
+          <form method="post" th:action="@{'/conversas/' + ${m.id} + '/dono'}">
+            <select name="unidadeId" required>
+              <option th:each="c : ${clientes}" th:value="${c.id}"
+                      th:text="${c.razaoSocial}"></option>
+            </select>
+            <button class="botao pequeno vazado" type="submit">Ligar</button>
+          </form>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ------------------------------------------------------------- o caso -->
+    <section class="coluna-caso" th:if="${escolhido != null}">
+
+      <div class="cabeca-cliente">
+        <div>
+          <b th:text="${cliente.razaoSocial}">Cliente</b>
+          <span class="mono" th:text="${cliente.telefone} ?: 'sem telefone'"></span>
+        </div>
+        <div class="chips">
+          <span class="chip forte"
+                th:text="'deve R$ ' + ${#numbers.formatDecimal(emAberto, 1, 'POINT', 2, 'COMMA')}"></span>
+          <span class="chip" th:if="${!titulos.isEmpty()}"
+                th:text="${titulos.size()} + ' documento(s)'"></span>
+          <span class="chip" th:if="${caso != null and caso.pausada(hoje)}"
+                th:text="'régua pausada até ' + ${#temporals.format(caso.pausadaAte, 'dd/MM')}"></span>
+          <span class="chip" th:text="'tom ' + ${cliente.tomDeCobranca.toLowerCase()}"></span>
+          <span class="chip" th:if="${unidades.size() > 1}"
+                th:text="${unidades.size()} + ' unidades do mesmo dono'"></span>
+        </div>
+      </div>
+
+      <div class="conversa-caixa">
+        <div class="linha-conversa" th:each="m : ${mensagens}"
+             th:classappend="${m.deEntrada()} ? 'deles' : 'nossa'">
+          <div class="balao">
+            <p th:text="${m.corpo}"></p>
+            <span class="pe">
+              <span th:text="${#temporals.format(m.criadoEm, 'dd/MM HH:mm')}">01/01</span>
+              <span th:text="' · ' + ${m.situacaoLegivel}"></span>
+              <span th:if="${m.criadoPor != null}" th:text="' · ' + ${m.criadoPor}"></span>
+            </span>
+          </div>
+        </div>
+        <div class="vazio-coluna" th:if="${mensagens.isEmpty()}">
+          nenhuma mensagem com este cliente ainda
+        </div>
+      </div>
+
+      <div class="ferramentas-conversa">
+        <span class="nome-bloco">Ferramentas da conversa</span>
+        <div class="grade-ferramentas">
+          <button class="ferramenta-botao" type="button" data-comando="2via">
+            <span class="tecla">F2</span> Segunda via
+          </button>
+          <button class="ferramenta-botao" type="button" data-comando="pix">
+            <span class="tecla">F3</span> Mandar chave PIX
+          </button>
+          <button class="ferramenta-botao" type="button" data-comando="tudo">
+            <span class="tecla">F4</span> Cobrar tudo de uma vez
+          </button>
+          <button class="ferramenta-botao" type="button" data-abre="janela-promessa">
+            <span class="tecla">F5</span> Registrar promessa
+          </button>
+          <button class="ferramenta-botao" type="button" data-abre="janela-simular">
+            <span class="tecla">F6</span> Simular parcelamento
+          </button>
+          <a class="ferramenta-botao" th:href="@{'/acordos'(cliente=${escolhido})}">
+            <span class="tecla">F7</span> Criar acordo
+          </a>
+          <a class="ferramenta-botao" href="/comprovantes">
+            <span class="tecla">F8</span> Conferir comprovante
+          </a>
+          <button class="ferramenta-botao" type="button" data-abre="janela-ligacao">
+            <span class="tecla">F9</span> Registrar ligação
+          </button>
+          <button class="ferramenta-botao" type="button" data-abre="janela-retorno">
+            <span class="tecla">F10</span> Agendar retorno
+          </button>
+          <button class="ferramenta-botao" type="button" data-abre="janela-transferir">
+            <span class="tecla">F11</span> Passar o caso
+          </button>
+          <button class="ferramenta-botao" type="button" data-abre="janela-pausa"
+                  th:if="${caso == null or !caso.pausada(hoje)}">
+            <span class="tecla">F12</span> Pausar a régua
+          </button>
+          <form method="post" th:if="${caso != null and caso.pausada(hoje)}"
+                th:action="@{'/conversas/' + ${escolhido} + '/religar'}">
+            <button class="ferramenta-botao" type="submit">
+              <span class="tecla">F12</span> Religar a régua
+            </button>
+          </form>
+          <button class="ferramenta-botao" type="button" data-abre="janela-nota">
+            <span class="tecla">N</span> Nota interna
+          </button>
+          <button class="ferramenta-botao perigo" type="button" data-abre="janela-bloqueio">
+            <span class="tecla">B</span> Pedir bloqueio
+          </button>
+          <form method="post" th:if="${iaPronta}"
+                th:action="@{'/conversas/' + ${escolhido} + '/ia'}">
+            <button class="ferramenta-botao" type="submit">
+              <span class="tecla">IA</span> Ler o caso
+            </button>
+          </form>
+          <button class="ferramenta-botao" type="button" data-abre="janela-fechar">
+            <span class="tecla">F</span> Finalizar atendimento
+          </button>
+        </div>
+      </div>
+
+      <div class="escrever-mesa">
+        <form method="post" th:action="@{'/conversas/' + ${escolhido} + '/responder'}">
+          <div class="caixa-comandos">
+            <textarea id="mesa-texto" name="texto" rows="4" required
+                      th:text="${rascunho}"
+                      placeholder="Escreva para o cliente, ou digite / para usar um comando."></textarea>
+            <div id="menu-comandos" class="menu-comandos" hidden>
+              <button class="linha-comando" type="button" th:each="c : ${comandos}"
+                      th:data-texto="${c.value}" th:data-nome="${c.key}">
+                <b th:text="'/' + ${c.key}">/saldo</b>
+                <span th:text="${#strings.abbreviate(c.value, 90)}"></span>
+              </button>
+            </div>
+          </div>
+          <div class="pe-escrever">
+            <button class="botao" type="submit">Mandar</button>
+            <span class="dica" style="margin:0">
+              digite / para comandos ·
+              <span th:text="${canalLigado} ? 'canal ligado'
+                             : 'canal desligado: a mensagem fica na fila'"></span>
+            </span>
+          </div>
+        </form>
+
+        <form method="post" th:action="@{'/conversas/' + ${escolhido} + '/anotar'}"
+              class="anotar-fora">
+          <label for="mesa-fora">O cliente respondeu por fora</label>
+          <input id="mesa-fora" name="texto" required
+                 placeholder="ex.: ligou dizendo que paga sexta">
+          <button class="botao vazado pequeno" type="submit">Registrar</button>
+        </form>
+      </div>
+
+      <div class="copiloto" th:if="${leituraDaIa != null}">
+        <span class="nome-bloco">Leitura do modelo</span>
+        <div class="corpo-bloco">
+          <p style="white-space:pre-wrap" th:text="${leituraDaIa}"></p>
+          <small>confira antes de mandar: o modelo erra, e quem assina é você</small>
+        </div>
+      </div>
+
+      <div class="copiloto">
+        <span class="nome-bloco">O que costuma resolver</span>
+        <div class="corpo-bloco">
+          <p th:text="${copiloto.texto}">leitura</p>
+          <small th:if="${copiloto.base >= 3}"
+                 th:text="'olhando ' + ${copiloto.base} + ' caso(s) parecido(s) desta empresa'"></small>
+        </div>
+      </div>
+    </section>
+
+    <section class="coluna-caso vazia" th:if="${escolhido == null}">
+      <div class="vazio">Escolha alguém da fila para abrir o caso.</div>
+    </section>
+
+    <!-- ---------------------------------------------------------- o cliente -->
+    <aside class="coluna-cliente" th:if="${escolhido != null}">
+      <nav class="abas-lado">
+        <a th:each="a : ${ {'resumo','cobrancas','pagamentos','acordos'} }"
+           th:href="@{'/conversas'(cliente=${escolhido},recorte=${recorte},aba=${a})}"
+           th:classappend="${aba == a} ? 'ativa'"
+           th:text="${a == 'resumo'} ? 'Resumo'
+                    : (${a == 'cobrancas'} ? 'Cobranças'
+                    : (${a == 'pagamentos'} ? 'Pagamentos' : 'Acordos'))">Resumo</a>
+      </nav>
+
+      <!-- resumo: a ficha que a empresa configurou -->
+      <th:block th:if="${aba == 'resumo'}">
+        <div class="linha-resumo" th:each="l : ${linhasDaFicha}"
+             th:classappend="${l.atencao} ? 'atencao'">
+          <span class="rotulo-resumo" th:text="${l.rotulo}">rótulo</span>
+          <b th:text="${l.valor}">valor</b>
+          <small th:if="${l.detalhe != null}" th:text="${l.detalhe}"></small>
+        </div>
+        <div class="vazio-coluna" th:if="${linhasDaFicha.isEmpty()}">
+          nenhuma linha configurada
+        </div>
+        <p class="dica-coluna">
+          <a href="/inteligencia">mudar o que aparece aqui</a>
+        </p>
+      </th:block>
+
+      <!-- cobranças em aberto -->
+      <th:block th:if="${aba == 'cobrancas'}">
+        <div class="documento-lado" th:each="t : ${titulos}">
+          <b class="mono" th:text="${t.identificadorPix}"></b>
+          <span th:text="${t.descricao}"></span>
+          <span class="pe-fila">
+            <span th:text="${#temporals.format(t.vencimento, 'dd/MM/yyyy')}"></span>
+            <span class="mono"
+                  th:text="'R$ ' + ${#numbers.formatDecimal(t.saldo, 1, 'POINT', 2, 'COMMA')}"></span>
+          </span>
+          <span class="pe-fila" th:if="${t.diasDeAtraso(hoje) > 0}">
+            <span class="atrasado" th:text="${t.diasDeAtraso(hoje)} + ' dias de atraso'"></span>
+          </span>
+        </div>
+        <div class="vazio-coluna" th:if="${titulos.isEmpty()}">nada em aberto</div>
+      </th:block>
+
+      <!-- pagamentos que já entraram -->
+      <th:block th:if="${aba == 'pagamentos'}">
+        <div class="documento-lado" th:each="p : ${pagamentos}">
+          <b class="mono" th:text="${p.documento}"></b>
+          <span class="pe-fila">
+            <span th:text="${p.quando != null}
+                           ? ${#temporals.format(p.quando, 'dd/MM/yyyy')} : 'sem data'"></span>
+            <span class="mono"
+                  th:text="'R$ ' + ${#numbers.formatDecimal(p.valor, 1, 'POINT', 2, 'COMMA')}"></span>
+          </span>
+          <span class="resumo-fila"
+                th:text="${p.atraso == 0} ? 'pagou em dia'
+                         : 'pagou com ' + ${p.atraso} + ' dias de atraso'"></span>
+        </div>
+        <div class="vazio-coluna" th:if="${pagamentos.isEmpty()}">
+          este cliente ainda não pagou nada aqui
+        </div>
+      </th:block>
+
+      <!-- acordos -->
+      <th:block th:if="${aba == 'acordos'}">
+        <div class="documento-lado" th:each="a : ${acordos}">
+          <b>
+            <a th:href="@{'/acordos/' + ${a.id}}" th:text="'Acordo ' + ${a.numero}">Acordo</a>
+          </b>
+          <span class="pe-fila">
+            <span th:text="${a.situacaoLegivel}"></span>
+            <span class="mono"
+                  th:text="'R$ ' + ${#numbers.formatDecimal(a.valorCombinado, 1, 'POINT', 2, 'COMMA')}"></span>
+          </span>
+          <span class="resumo-fila" th:text="${a.parcelas} + ' parcela(s)'"></span>
+        </div>
+        <div class="vazio-coluna" th:if="${acordos.isEmpty()}">nenhum acordo</div>
+      </th:block>
+
+    </aside>
+
+    <!-- ----------------------------------------------------- apoio do caso -->
+    <aside class="coluna-apoio" th:if="${escolhido != null}">
+      <div class="cabeca-coluna-mesa"><span>De um clique</span></div>
+      <div class="ferramentas">
+        <a class="ferramenta" th:href="@{'/clientes/unidades/' + ${cliente.id}}">
+          <b>Ficha completa do cliente</b>
+          <span>cadastro, contatos e contratos</span>
+        </a>
+        <a class="ferramenta" th:href="@{'/titulos'}">
+          <b>Contas a receber</b>
+          <span>todos os documentos da empresa</span>
+        </a>
+        <a class="ferramenta" href="/esteira">
+          <b>Esteira</b>
+          <span>onde ele está na cobrança</span>
+        </a>
+      </div>
+
+      <div class="cabeca-coluna-mesa"><span>História</span></div>
+      <div class="momento-lado" th:each="h : ${historia}">
+        <span class="quando mono" th:text="${#temporals.format(h.ocorridoEm, 'dd/MM HH:mm')}"></span>
+        <b th:text="${h.tipoLegivel}"></b>
+        <span th:text="${#strings.abbreviate(h.descricao, 90)}"></span>
+      </div>
+      <div class="vazio-coluna" th:if="${historia.isEmpty()}">nada registrado ainda</div>
+    </aside>
   </div>
 </main>
 
 <script th:replace="~{layout :: scripts}"></script>
+
+<dialog id="janela-chamar" class="janela">
+  <form method="post" action="/conversas/nova">
+    <div class="janela-topo">
+      <div>
+        <span class="olho"><i></i>Começar uma conversa</span>
+        <h2>Chamar cliente</h2>
+      </div>
+      <button type="button" class="fechar" data-fecha aria-label="Fechar">&#10005;</button>
+    </div>
+    <div class="janela-corpo">
+      <p class="dica">Escolha um cliente da lista, ou escreva um número solto. Número que não
+        é de cliente nenhum entra como conversa sem dono, e depois você liga ao cadastro certo.</p>
+      <div class="campos">
+        <div style="grid-column:1/-1">
+          <label for="ch-cliente">Cliente</label>
+          <select id="ch-cliente" name="unidadeId">
+            <option value="">nenhum, vou digitar o número</option>
+            <option th:each="c : ${clientes}" th:value="${c.id}"
+                    th:text="${c.razaoSocial} + (${c.telefone != null} ? ' · ' + ${c.telefone} : '')"></option>
+          </select>
+        </div>
+        <div style="grid-column:1/-1">
+          <label for="ch-numero">Número do WhatsApp</label>
+          <input id="ch-numero" name="numero" placeholder="(11) 90000-0000">
+        </div>
+        <div style="grid-column:1/-1">
+          <label for="ch-texto">Mensagem</label>
+          <textarea id="ch-texto" name="texto" rows="4" required
+                    placeholder="Oi, tudo bem? Aqui é da empresa, sobre o pagamento."></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="janela-pe">
+      <button type="button" class="botao vazado" data-fecha>Cancelar</button>
+      <button class="botao" type="submit">Chamar</button>
+    </div>
+  </form>
+</dialog>
+
+<th:block th:if="${escolhido != null}">
+  <dialog id="janela-promessa" class="janela">
+    <form method="post" th:action="@{'/conversas/' + ${escolhido} + '/promessa'}">
+      <div class="janela-topo">
+        <div>
+          <span class="olho"><i></i>O que ficou combinado</span>
+          <h2>Registrar promessa</h2>
+        </div>
+        <button type="button" class="fechar" data-fecha aria-label="Fechar">&#10005;</button>
+      </div>
+      <div class="janela-corpo">
+        <p class="dica">Enquanto a promessa estiver de pé, a cobrança automática segura este
+          cliente. Se a data passar sem pagamento, ele volta para o topo da fila.</p>
+        <div class="campos">
+          <div>
+            <label for="pm-quando">Prometeu pagar em</label>
+            <input id="pm-quando" name="quando" type="date" required>
+          </div>
+          <div>
+            <label for="pm-valor">Valor</label>
+            <input id="pm-valor" name="valor" inputmode="decimal" th:value="${emAberto}">
+          </div>
+        </div>
+      </div>
+      <div class="janela-pe">
+        <button type="button" class="botao vazado" data-fecha>Cancelar</button>
+        <button class="botao" type="submit">Registrar</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="janela-simular" class="janela">
+    <form method="post" th:action="@{'/conversas/' + ${escolhido} + '/simular'}">
+      <div class="janela-topo">
+        <div>
+          <span class="olho"><i></i>Sem criar nada</span>
+          <h2>Simular parcelamento</h2>
+        </div>
+        <button type="button" class="fechar" data-fecha aria-label="Fechar">&#10005;</button>
+      </div>
+      <div class="janela-corpo">
+        <p class="dica">A simulação só escreve o texto na caixa, com os números certos. O acordo
+          de verdade continua sendo criado na tela de acordos, por quem tem alçada.</p>
+        <div class="campos">
+          <div>
+            <label for="sm-vezes">Em quantas vezes</label>
+            <input id="sm-vezes" name="vezes" inputmode="numeric" value="3">
+          </div>
+          <div>
+            <label for="sm-primeiro">Primeira parcela em</label>
+            <input id="sm-primeiro" name="primeiro" type="date">
+          </div>
+        </div>
+      </div>
+      <div class="janela-pe">
+        <button type="button" class="botao vazado" data-fecha>Cancelar</button>
+        <button class="botao" type="submit">Simular</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="janela-ligacao" class="janela">
+    <form method="post" th:action="@{'/conversas/' + ${escolhido} + '/ligacao'}">
+      <div class="janela-topo">
+        <div>
+          <span class="olho"><i></i>Fora do WhatsApp</span>
+          <h2>Registrar ligação</h2>
+        </div>
+        <button type="button" class="fechar" data-fecha aria-label="Fechar">&#10005;</button>
+      </div>
+      <div class="janela-corpo">
+        <div class="campos">
+          <div style="grid-column:1/-1">
+            <label for="lg-texto">O que foi falado</label>
+            <textarea id="lg-texto" name="texto" rows="3"
+                      placeholder="quem atendeu, o que ficou combinado"></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="janela-pe">
+        <button type="button" class="botao vazado" data-fecha>Cancelar</button>
+        <button class="botao" type="submit">Registrar</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="janela-retorno" class="janela">
+    <form method="post" th:action="@{'/conversas/' + ${escolhido} + '/retorno'}">
+      <div class="janela-topo">
+        <div>
+          <span class="olho"><i></i>Para não esquecer</span>
+          <h2>Agendar retorno</h2>
+        </div>
+        <button type="button" class="fechar" data-fecha aria-label="Fechar">&#10005;</button>
+      </div>
+      <div class="janela-corpo">
+        <div class="campos">
+          <div>
+            <label for="rt-quando">Voltar a falar em</label>
+            <input id="rt-quando" name="quando" type="date" required>
+          </div>
+          <div style="grid-column:2/-1">
+            <label for="rt-fazer">O que fazer</label>
+            <input id="rt-fazer" name="oQueFazer" placeholder="conferir se o PIX caiu">
+          </div>
+        </div>
+      </div>
+      <div class="janela-pe">
+        <button type="button" class="botao vazado" data-fecha>Cancelar</button>
+        <button class="botao" type="submit">Agendar</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="janela-pausa" class="janela">
+    <form method="post" th:action="@{'/conversas/' + ${escolhido} + '/pausar'}">
+      <div class="janela-topo">
+        <div>
+          <span class="olho"><i></i>Sem cobrar por cima</span>
+          <h2>Pausar a régua</h2>
+        </div>
+        <button type="button" class="fechar" data-fecha aria-label="Fechar">&#10005;</button>
+      </div>
+      <div class="janela-corpo">
+        <p class="dica">Nenhuma cobrança automática sai para este cliente até a data escolhida.
+          A data de fim é obrigatória: régua parada para sempre é dívida esquecida.</p>
+        <div class="campos">
+          <div>
+            <label for="ps-ate">Parada até</label>
+            <input id="ps-ate" name="ate" type="date" required>
+          </div>
+          <div style="grid-column:2/-1">
+            <label for="ps-motivo">Por quê</label>
+            <input id="ps-motivo" name="motivo" placeholder="acordo em dia, combinado com o cliente">
+          </div>
+        </div>
+      </div>
+      <div class="janela-pe">
+        <button type="button" class="botao vazado" data-fecha>Cancelar</button>
+        <button class="botao" type="submit">Pausar</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="janela-nota" class="janela">
+    <form method="post" th:action="@{'/conversas/' + ${escolhido} + '/nota'}">
+      <div class="janela-topo">
+        <div>
+          <span class="olho"><i></i>Só para a equipe</span>
+          <h2>Nota interna</h2>
+        </div>
+        <button type="button" class="fechar" data-fecha aria-label="Fechar">&#10005;</button>
+      </div>
+      <div class="janela-corpo">
+        <p class="dica">O cliente não vê esta nota. Ela fica na história, para quem pegar o caso
+          depois entender o que já aconteceu.</p>
+        <div class="campos">
+          <div style="grid-column:1/-1">
+            <textarea name="texto" rows="3" required
+                      placeholder="ex.: o dono pediu para falar só com o contador"></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="janela-pe">
+        <button type="button" class="botao vazado" data-fecha>Cancelar</button>
+        <button class="botao" type="submit">Guardar</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="janela-transferir" class="janela">
+    <form method="post" th:action="@{'/conversas/' + ${escolhido} + '/transferir'}">
+      <div class="janela-topo">
+        <div>
+          <span class="olho"><i></i>Passar adiante</span>
+          <h2>Passar o caso</h2>
+        </div>
+        <button type="button" class="fechar" data-fecha aria-label="Fechar">&#10005;</button>
+      </div>
+      <div class="janela-corpo">
+        <div class="campos">
+          <div style="grid-column:1/-1">
+            <label for="tr-quem">Para quem</label>
+            <input id="tr-quem" name="paraQuem" required placeholder="nome de quem assume">
+          </div>
+        </div>
+      </div>
+      <div class="janela-pe">
+        <button type="button" class="botao vazado" data-fecha>Cancelar</button>
+        <button class="botao" type="submit">Passar</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="janela-bloqueio" class="janela">
+    <form method="post" th:action="@{'/conversas/' + ${escolhido} + '/bloqueio'}">
+      <div class="janela-topo">
+        <div>
+          <span class="olho"><i></i>Último recurso</span>
+          <h2>Pedir bloqueio</h2>
+        </div>
+        <button type="button" class="fechar" data-fecha aria-label="Fechar">&#10005;</button>
+      </div>
+      <div class="janela-corpo">
+        <p class="dica">O pedido fica registrado com o motivo e com quem pediu. Bloquear de
+          verdade continua sendo decisão de quem cuida do serviço.</p>
+        <div class="campos">
+          <div style="grid-column:1/-1">
+            <label for="bl-motivo">Motivo</label>
+            <input id="bl-motivo" name="motivo" required
+                   placeholder="ex.: 90 dias de atraso e três promessas quebradas">
+          </div>
+        </div>
+      </div>
+      <div class="janela-pe">
+        <button type="button" class="botao vazado" data-fecha>Cancelar</button>
+        <button class="botao perigo" type="submit">Pedir bloqueio</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="janela-fechar" class="janela">
+    <form method="post" th:action="@{'/conversas/' + ${escolhido} + '/finalizar'}">
+      <div class="janela-topo">
+        <div>
+          <span class="olho"><i></i>Fim do atendimento</span>
+          <h2>Finalizar atendimento</h2>
+        </div>
+        <button type="button" class="fechar" data-fecha aria-label="Fechar">&#10005;</button>
+      </div>
+      <div class="janela-corpo">
+        <div class="campos">
+          <div>
+            <label for="fc-situacao">Como o caso fica</label>
+            <select id="fc-situacao" name="situacao">
+              <option th:each="s : ${situacoes}" th:value="${s}"
+                      th:text="${s == 'EM_COBRANCA'} ? 'em cobrança'
+                               : (${s == 'PROMESSA'} ? 'promessa de pagamento'
+                               : (${s == 'EM_ACORDO'} ? 'em acordo'
+                               : (${s == 'CONTESTADO'} ? 'contestado'
+                               : (${s == 'PARADO'} ? 'parado' : 'jurídico'))))"></option>
+            </select>
+          </div>
+          <div>
+            <label for="fc-data">Voltar a falar em</label>
+            <input id="fc-data" name="proximaData" type="date">
+          </div>
+          <div>
+            <label for="fc-acao">O que fazer na volta</label>
+            <input id="fc-acao" name="proximaAcao" placeholder="conferir se o PIX caiu">
+          </div>
+        </div>
+        <div class="campos" style="margin-top:16px">
+          <div style="grid-column:1/-1">
+            <label for="fc-combinado">O que ficou combinado</label>
+            <textarea id="fc-combinado" name="combinado" rows="3"
+                      placeholder="fica na história do cliente, para quem pegar o caso depois"></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="janela-pe">
+        <button type="button" class="botao vazado" data-fecha>Cancelar</button>
+        <button class="botao" type="submit">Finalizar</button>
+      </div>
+    </form>
+  </dialog>
+</th:block>
+
+<script src="/js/janelas.js?v=1"></script>
+<script src="/js/mesa.js?v=2"></script>
+
 </body>
 </html>

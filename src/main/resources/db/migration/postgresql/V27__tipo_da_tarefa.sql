@@ -1,0 +1,12 @@
+-- O "+ Novo" da Cupula nao abre so tarefa: abre seis coisas diferentes, a
+-- mesma lista do sistema matriz. Todas viram linha nesta mesma tabela, porque
+-- o ciclo de vida e identico (alguem pede, alguem faz, quem pediu confere). O
+-- que muda e o rotulo e o vocabulario da tela.
+--
+--   TAREFA   uma coisa para uma pessoa ou para o setor
+--   DEMANDA  o guarda-chuva: varias tarefas filhas de uma vez so
+--   DECISAO  uma decisao que precisa ser tomada e registrada
+--   ALERTA   aviso que so precisa ser lido, nao tem trabalho embutido
+--   CHAMADO  problema de sistema para quem cuida disso
+--   COMPRA   pedido de compra para quem autoriza
+alter table tarefa add column tipo varchar(20) not null default 'TAREFA';

@@ -73,6 +73,27 @@ public enum Conector {
                             "Manda um modelo já aprovado, para começar conversa fora da janela "
                                     + "de 24 horas."))),
 
+    TAREFAS_DE_OUTRO_SISTEMA("Tarefas de outro sistema",
+            "Traz para a Cúpula as demandas que nascem em outro sistema, como o Supabase do "
+                    + "ERP. Funciona nos dois sentidos: o IT.FC busca a lista, e o outro lado "
+                    + "também pode empurrar pelo endereço de recebimento.",
+            TipoIntegracao.API_REST, TipoAutenticacao.CHAVE_NO_CABECALHO, null,
+            List.of(new Sugestao("Listar tarefas", "GET",
+                            "/rest/v1/cupula_subtarefas?select=*&setor=eq.Financeiro",
+                            "Traz as demandas do financeiro. Ajuste a tabela e o filtro para "
+                                    + "os nomes reais do outro sistema."),
+                    new Sugestao("Marcar como recebida", "PATCH",
+                            "/rest/v1/cupula_subtarefas?id=eq.{id}",
+                            "Opcional: avisa o outro sistema de que a tarefa chegou aqui."))),
+
+    MODELO_DE_IA("Modelo de inteligência",
+            "Um modelo de linguagem que lê o caso e escreve. O que ele pode ver e o que pode "
+                    + "fazer é decidido chave por chave, na tela de inteligência.",
+            TipoIntegracao.API_REST, TipoAutenticacao.CHAVE_NO_CABECALHO, null,
+            List.of(new Sugestao("Gerar resposta", "POST", "/v1/messages",
+                    "Manda o caso e recebe o texto. Confira o caminho na documentação do "
+                            + "provedor antes de ligar."))),
+
     ARQUIVO_BANCARIO("Arquivo de retorno",
             "Processa arquivo de retorno bancário ou extrato para dar baixa em lote.",
             TipoIntegracao.ARQUIVO, TipoAutenticacao.NENHUMA, null,

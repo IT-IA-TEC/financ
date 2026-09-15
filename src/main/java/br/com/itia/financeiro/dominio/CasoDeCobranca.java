@@ -48,6 +48,13 @@ public class CasoDeCobranca {
     @Column(length = 1000)
     private String observacao;
 
+    /** Até quando a cobrança automática fica parada para este cliente. */
+    @Column(name = "pausada_ate")
+    private LocalDate pausadaAte;
+
+    @Column(name = "motivo_da_pausa")
+    private String motivoDaPausa;
+
     @Column(name = "criado_em", nullable = false)
     private OffsetDateTime criadoEm = OffsetDateTime.now();
 
@@ -88,8 +95,51 @@ public class CasoDeCobranca {
      * régua: é assim que se perde um cliente que estava resolvendo.
      */
     public boolean aceitaCobrancaAutomatica() {
+        return aceitaCobrancaAutomatica(LocalDate.now());
+    }
+
+    public boolean aceitaCobrancaAutomatica(LocalDate hoje) {
+        if (pausadaAte != null && !pausadaAte.isBefore(hoje)) {
+            return false;
+        }
         return !"EM_ACORDO".equals(situacao) && !"CONTESTADO".equals(situacao)
                 && !"JURIDICO".equals(situacao);
+    }
+
+    /**
+     * Para a cobrança automática até tal dia.
+     *
+     * A data de fim é obrigatória de propósito: régua parada para sempre é
+     * dívida esquecida.
+     */
+    public void pausar(LocalDate ate, String motivo, String quem) {
+        if (ate == null || ate.isBefore(LocalDate.now())) {
+            throw new IllegalArgumentException(
+                    "Diga até quando a régua fica parada, com uma data daqui para frente.");
+        }
+        this.pausadaAte = ate;
+        this.motivoDaPausa = motivo;
+        this.atualizadoEm = OffsetDateTime.now();
+        this.atualizadoPor = quem;
+    }
+
+    public void voltarACobrar(String quem) {
+        this.pausadaAte = null;
+        this.motivoDaPausa = null;
+        this.atualizadoEm = OffsetDateTime.now();
+        this.atualizadoPor = quem;
+    }
+
+    public boolean pausada(LocalDate hoje) {
+        return pausadaAte != null && !pausadaAte.isBefore(hoje);
+    }
+
+    public LocalDate getPausadaAte() {
+        return pausadaAte;
+    }
+
+    public String getMotivoDaPausa() {
+        return motivoDaPausa;
     }
 
     public boolean atrasado(LocalDate hoje) {

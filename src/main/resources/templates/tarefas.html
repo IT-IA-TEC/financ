@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head th:replace="~{layout :: cabeca('Tarefas')}"></head>
+<body class="tela-cheia">
+<header th:replace="~{layout :: topo('cupula')}"></header>
+
+<main class="largo">
+  <div th:replace="~{layout :: recados}"></div>
+
+  <div class="cabecalho-pagina com-resumo">
+    <div>
+      <span class="olho"><i></i>O que precisa de você</span>
+      <h1>Tarefas</h1>
+    </div>
+
+    <div class="cartoes-topo">
+      <div class="cartao-topo inverso">
+        <span class="rotulo">Na fila</span>
+        <b th:text="${resumo.central}">0</b>
+        <small>ainda não vistas</small>
+      </div>
+      <div class="cartao-topo">
+        <span class="rotulo">Comigo</span>
+        <b th:text="${resumo.minhas}">0</b>
+        <small>abertas para eu fazer</small>
+      </div>
+      <div class="cartao-topo">
+        <span class="rotulo">Atrasadas</span>
+        <b th:text="${resumo.atrasadas}">0</b>
+        <small>passaram do prazo</small>
+      </div>
+      <div class="cartao-topo listrado">
+        <span class="rotulo">Esperando você</span>
+        <b th:text="${resumo.esperandoRevisao}">0</b>
+        <small>terminadas, faltando conferir</small>
+      </div>
+    </div>
+
+    <!-- O "+ Novo" abre a mesma lista da Cúpula do sistema matriz: seis coisas
+         diferentes, cada uma com o seu vocabulário na janela. -->
+    <div class="acoes menu-novo" style="margin:0">
+      <button class="botao" type="button" id="botao-novo" aria-haspopup="true"
+              aria-expanded="false">+ Novo</button>
+      <div class="lista-novo" id="lista-novo" hidden>
+        <button type="button" data-novo="TAREFA">
+          <b>Criar tarefa</b><span>Ticket único</span>
+          <small>uma coisa só, para uma pessoa ou para o setor</small>
+        </button>
+        <button type="button" data-novo="DEMANDA">
+          <b>Nova demanda</b><span>Vários tickets</span>
+          <small>um nome só e várias tarefas abertas de uma vez</small>
+        </button>
+        <button type="button" data-novo="DECISAO">
+          <b>Nova decisão</b><span>Precisa de resposta</span>
+          <small>uma escolha que alguém tem que bater o martelo e ficar registrada</small>
+        </button>
+        <button type="button" data-novo="ALERTA">
+          <b>Alerta informativo</b><span>Só para saber</span>
+          <small>aviso que precisa ser lido, sem trabalho embutido</small>
+        </button>
+        <button type="button" data-novo="CHAMADO">
+          <b>Chamado técnico</b><span>Algo não funciona</span>
+          <small>problema de sistema para quem cuida disso resolver</small>
+        </button>
+        <button type="button" data-novo="COMPRA">
+          <b>Solicitação de compra</b><span>Precisa de autorização</span>
+          <small>pedido de compra para quem aprova gasto</small>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <nav class="abas-inversas">
+    <a th:href="@{'/tarefas'(aba='central')}" th:classappend="${aba == 'central'} ? 'ativa'"
+       th:text="'Central (' + ${resumo.central} + ')'">Central</a>
+    <a th:href="@{'/tarefas'(aba='recebidas')}" th:classappend="${aba == 'recebidas'} ? 'ativa'"
+       th:text="'Recebidas (' + ${resumo.minhas} + ')'">Recebidas</a>
+    <a th:href="@{'/tarefas'(aba='enviadas')}"
+       th:classappend="${aba == 'enviadas'} ? 'ativa'">Enviadas</a>
+    <a th:href="@{'/tarefas'(aba='faco_parte')}"
+       th:classappend="${aba == 'faco_parte'} ? 'ativa'">Faço parte</a>
+    <a th:href="@{'/tarefas'(aba='do_setor')}" th:classappend="${aba == 'do_setor'} ? 'ativa'"
+       th:text="'Do setor (' + ${resumo.doSetor} + ')'">Do setor</a>
+  </nav>
+
+  <div class="mesa tres-colunas">
+
+    <!-- ------------------------------------------------------------- a lista -->
+    <aside class="coluna-fila">
+      <div class="cabeca-coluna-mesa">
+        <span th:text="${aba == 'central'} ? 'Fila do que não foi visto'
+                       : (${aba == 'recebidas'} ? 'Para eu fazer'
+                       : (${aba == 'enviadas'} ? 'Eu pedi'
+                       : (${aba == 'faco_parte'} ? 'Eu acompanho' : 'O setor inteiro')))">Lista</span>
+        <b th:text="${lista.size()}">0</b>
+      </div>
+      <p class="dica-coluna" th:if="${aba == 'central'}">
+        Do mais antigo para o mais novo. Abrir tira da fila.
+      </p>
+      <p class="dica-coluna" th:if="${aba == 'do_setor'}">
+        As sem dono vêm primeiro: quem pegar vira o responsável.
+      </p>
+
+      <a class="item-fila" th:each="t : ${lista}"
+         th:href="@{'/tarefas'(aba=${aba},tarefa=${t.id})}"
+         th:classappend="(${tarefa != null and t.id == tarefa.id} ? 'aberto ' : '')
+                         + (${t.atrasada(hoje)} ? 'u-espera'
+                         : (${t.esperandoRevisao()} ? 'u-promessa' : 'u-calmo'))">
+        <span class="topo-item">
+          <b th:text="${t.titulo}">título</b>
+          <span class="valor-item mono" th:text="${t.codigo}">T-1</span>
+        </span>
+        <span class="resumo-fila"
+              th:text="${t.doSetor()} ? 'sem dono, aberta para ' + ${t.setor}
+                       : 'com ' + ${t.responsavel}"></span>
+        <span class="tags-item">
+          <span class="etiqueta-fila forte" th:if="${t.tipo != 'TAREFA'}"
+                th:text="${t.rotuloDoTipo}">Demanda</span>
+          <span class="etiqueta-fila" th:text="${t.situacaoLegivel}">a fazer</span>
+          <span class="etiqueta-fila leve" th:if="${t.prazo != null}"
+                th:text="${t.atrasada(hoje)} ? 'venceu ' + ${#temporals.format(t.prazo, 'dd/MM')}
+                         : 'até ' + ${#temporals.format(t.prazo, 'dd/MM')}"></span>
+          <span class="etiqueta-fila leve" th:if="${t.prioridade != 'NORMAL'}"
+                th:text="${t.prioridadeLegivel}"></span>
+          <span class="etiqueta-fila leve" th:if="${t.origem != 'MANUAL'}">de fora</span>
+        </span>
+      </a>
+
+      <div class="vazio-coluna" th:if="${lista.isEmpty()}">
+        <span th:if="${aba == 'central'}">fila limpa</span>
+        <span th:unless="${aba == 'central'}">nada aqui</span>
+      </div>
+    </aside>
+
+    <!-- ------------------------------------------------------ a tarefa aberta -->
+    <section class="coluna-caso" th:if="${tarefa != null}">
+
+      <div class="cabeca-cliente">
+        <div>
+          <b th:text="${tarefa.titulo}">título</b>
+          <span class="mono"
+                th:text="${tarefa.codigo} + ' · pedida por ' + ${tarefa.pedidaPor}"></span>
+        </div>
+        <div class="chips">
+          <span class="chip forte" th:if="${tarefa.tipo != 'TAREFA'}"
+                th:text="${tarefa.rotuloDoTipo}">Demanda</span>
+          <span class="chip forte" th:text="${tarefa.situacaoLegivel}">a fazer</span>
+          <span class="chip" th:if="${tarefa.prazo != null}"
+                th:text="${tarefa.atrasada(hoje)}
+                         ? 'venceu em ' + ${#temporals.format(tarefa.prazo, 'dd/MM/yyyy')}
+                         : 'até ' + ${#temporals.format(tarefa.prazo, 'dd/MM/yyyy')}"></span>
+          <span class="chip" th:text="'prioridade ' + ${tarefa.prioridadeLegivel}"></span>
+          <span class="chip" th:if="${tarefa.origem != 'MANUAL'}">veio de outro sistema</span>
+        </div>
+      </div>
+
+      <div class="acoes-caso-mesa">
+        <form method="post" th:if="${tarefa.doSetor()}"
+              th:action="@{'/tarefas/' + ${tarefa.id} + '/pegar'}">
+          <button class="botao" type="submit">Pegar para mim</button>
+        </form>
+        <form method="post" th:if="${tarefa.situacao == 'A_FAZER' and !tarefa.doSetor()}"
+              th:action="@{'/tarefas/' + ${tarefa.id} + '/comecar'}">
+          <button class="botao" type="submit">Começar</button>
+        </form>
+        <button class="botao" type="button" data-abre="janela-terminar"
+                th:if="${tarefa.situacao == 'EM_ANDAMENTO'}">Terminei</button>
+        <form method="post" th:if="${tarefa.esperandoRevisao() and eu == tarefa.pedidaPor}"
+              th:action="@{'/tarefas/' + ${tarefa.id} + '/aceitar'}">
+          <button class="botao" type="submit">Aceitar e fechar</button>
+        </form>
+        <button class="botao vazado" type="button" data-abre="janela-refazer"
+                th:if="${tarefa.esperandoRevisao() and eu == tarefa.pedidaPor}">Mandar refazer</button>
+        <button class="botao vazado" type="button" data-abre="janela-cobrar"
+                th:if="${tarefa.aberta()}">Pedir posição</button>
+        <button class="botao vazado" type="button" data-abre="janela-passar"
+                th:if="${tarefa.aberta()}">Trocar responsável</button>
+        <button class="botao vazado" type="button" data-abre="janela-prazo"
+                th:if="${tarefa.aberta()}">Mudar prazo</button>
+        <button class="botao vazado" type="button" data-abre="janela-acompanhar">Acompanhar</button>
+        <button class="botao perigo" type="button" data-abre="janela-cancelar"
+                th:if="${tarefa.aberta()}">Cancelar</button>
+      </div>
+
+      <div class="ficha-caso">
+        <span class="nome-bloco">A tarefa</span>
+        <div class="corpo-bloco">
+          <dl class="linhas-ficha">
+            <div>
+              <dt>Quem faz</dt>
+              <dd th:text="${tarefa.responsavel} ?: 'ninguém ainda, aberta para ' + ${tarefa.setor}"></dd>
+            </div>
+            <div th:if="${tarefa.descricao != null}">
+              <dt>Detalhe</dt>
+              <dd style="white-space:pre-wrap" th:text="${tarefa.descricao}"></dd>
+            </div>
+            <div th:if="${!acompanhantes.isEmpty()}">
+              <dt>Acompanham</dt>
+              <dd th:text="${#strings.listJoin(acompanhantes, ', ')}"></dd>
+            </div>
+            <div th:if="${tarefa.origem != 'MANUAL'}">
+              <dt>Veio de</dt>
+              <dd>
+                <span th:text="${tarefa.origem == 'API'} ? 'outro sistema, empurrada por API'
+                               : 'outro sistema, pela busca'"></span>
+                <a th:if="${tarefa.linkExterno != null}" th:href="${tarefa.linkExterno}"
+                   target="_blank" rel="noopener">abrir lá</a>
+              </dd>
+            </div>
+          </dl>
+
+          <p class="alerta-ficha" th:if="${tarefa.motivoRetrabalho != null}"
+             th:text="'Voltou para refazer: ' + ${tarefa.motivoRetrabalho}"></p>
+          <p class="alerta-ficha" th:if="${tarefa.motivoCancelamento != null}"
+             th:text="'Cancelada: ' + ${tarefa.motivoCancelamento}"></p>
+        </div>
+      </div>
+
+      <!-- os tickets da demanda: cada um e uma tarefa de verdade, com dono e
+           prazo proprios, e abre no lugar desta -->
+      <div class="ficha-caso" th:if="${!filhas.isEmpty()}">
+        <span class="nome-bloco" th:text="'Tickets desta demanda (' + ${filhas.size()} + ')'">
+          Tickets</span>
+        <div class="corpo-bloco">
+          <a class="ticket-filho" th:each="f : ${filhas}"
+             th:href="@{'/tarefas'(aba=${aba},tarefa=${f.id})}">
+            <b th:text="${f.titulo}">título</b>
+            <span class="mono" th:text="${f.codigo}">T-1</span>
+            <span th:text="${f.doSetor()} ? 'sem dono, aberto para ' + ${f.setor}
+                           : 'com ' + ${f.responsavel}"></span>
+            <span class="etiqueta-fila" th:text="${f.situacaoLegivel}">a fazer</span>
+            <span class="etiqueta-fila leve" th:if="${f.prazo != null}"
+                  th:text="'até ' + ${#temporals.format(f.prazo, 'dd/MM')}"></span>
+          </a>
+        </div>
+      </div>
+
+      <span class="nome-bloco">O que aconteceu</span>
+      <div class="conversa-caixa">
+        <div class="momento-fio" th:each="a : ${fio}"
+             th:classappend="${a.doSistema()} ? 'do-sistema' : ''">
+          <span class="quando mono"
+                th:text="${#temporals.format(a.criadoEm, 'dd/MM HH:mm')} + ' · ' + ${a.autor}"></span>
+          <span class="tipo-fio" th:if="${!a.doSistema()}" th:text="${a.tipoLegivel}"></span>
+          <p th:text="${a.texto}"></p>
+        </div>
+        <div class="vazio-coluna" th:if="${fio.isEmpty()}">nada registrado ainda</div>
+      </div>
+
+      <div class="escrever-mesa">
+        <form method="post" th:action="@{'/tarefas/' + ${tarefa.id} + '/comentar'}">
+          <textarea name="texto" rows="3" required
+                    placeholder="Escreva o que precisa ficar registrado nesta tarefa."></textarea>
+          <div class="pe-escrever">
+            <button class="botao" type="submit">Mandar</button>
+            <select name="tipo" style="width:auto">
+              <option value="COMENTARIO">comentário</option>
+              <option value="DUVIDA">dúvida</option>
+            </select>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <section class="coluna-caso vazia" th:if="${tarefa == null}">
+      <div class="vazio">Escolha uma tarefa da lista para abrir.</div>
+    </section>
+
+    <!-- --------------------------------------------------------------- apoio -->
+    <aside class="coluna-apoio">
+      <div class="cabeca-coluna-mesa">
+        <span>Esperando dono</span>
+        <b th:text="${semDono.size()}">0</b>
+      </div>
+      <a class="documento-lado" th:each="t : ${semDono}"
+         th:href="@{'/tarefas'(aba='do_setor',tarefa=${t.id})}">
+        <b th:text="${t.titulo}">título</b>
+        <span class="pe-fila">
+          <span th:text="${t.setor}">setor</span>
+          <span class="mono" th:text="${t.prazo != null}
+                ? ${#temporals.format(t.prazo, 'dd/MM')} : 'sem prazo'"></span>
+        </span>
+      </a>
+      <div class="vazio-coluna" th:if="${semDono.isEmpty()}">ninguém esperando</div>
+
+      <div class="cabeca-coluna-mesa"><span>De outro sistema</span></div>
+      <div class="documento-lado" th:each="f : ${fontes}">
+        <b th:text="${f.nome}">fonte</b>
+        <span class="resumo-fila"
+              th:text="${f.ultimaPuxada != null}
+                       ? 'última busca ' + ${#temporals.format(f.ultimaPuxada, 'dd/MM HH:mm')}
+                       : 'nunca buscou'"></span>
+        <span class="resumo-fila" th:if="${f.ultimoResultado != null}"
+              th:text="${f.ultimoResultado}"></span>
+        <form method="post" th:action="@{'/tarefas/fontes/' + ${f.id} + '/puxar'}"
+              style="margin-top:6px">
+          <button class="botao pequeno vazado" type="submit">Buscar agora</button>
+        </form>
+      </div>
+      <div class="vazio-coluna" th:if="${fontes.isEmpty()}">nenhuma fonte ligada</div>
+
+      <div class="ferramentas">
+        <a class="ferramenta" href="/fontes-de-tarefas">
+          <b>Configurar as fontes</b>
+          <span>de onde as tarefas de fora chegam</span>
+        </a>
+      </div>
+    </aside>
+  </div>
+</main>
+
+<script th:replace="~{layout :: scripts}"></script>
+
+<dialog id="janela-tarefa" class="janela">
+  <form method="post" action="/tarefas">
+    <input type="hidden" name="tipo" id="tf-tipo" value="TAREFA">
+    <div class="janela-topo">
+      <div>
+        <span class="olho"><i></i><em id="tf-olho">Pedir para alguém</em></span>
+        <h2 id="tf-titulo-janela">Nova tarefa</h2>
+      </div>
+      <button type="button" class="fechar" data-fecha aria-label="Fechar">&#10005;</button>
+    </div>
+    <div class="janela-corpo">
+      <p class="dica" id="tf-dica">Deixe "quem faz" em branco para abrir a tarefa ao setor
+        inteiro: ela fica na fila de todos até alguém pegar.</p>
+      <div class="campos">
+        <div style="grid-column:1/-1">
+          <label for="tf-titulo" id="tf-rotulo-titulo">O que precisa ser feito</label>
+          <input id="tf-titulo" name="titulo" required
+                 placeholder="Conferir os comprovantes de setembro">
+        </div>
+        <div data-so-ticket-unico>
+          <label for="tf-responsavel">Quem faz</label>
+          <input id="tf-responsavel" name="responsavel" list="lista-pessoas"
+                 placeholder="deixe vazio para o setor">
+          <datalist id="lista-pessoas">
+            <option th:each="p : ${pessoas}" th:value="${p}"></option>
+          </datalist>
+        </div>
+        <div>
+          <label for="tf-setor">Setor</label>
+          <input id="tf-setor" name="setor" value="Financeiro">
+        </div>
+        <div>
+          <label for="tf-prazo">Para quando</label>
+          <input id="tf-prazo" name="prazo" type="date">
+        </div>
+        <div>
+          <label for="tf-prioridade">Prioridade</label>
+          <select id="tf-prioridade" name="prioridade">
+            <option value="BAIXA">baixa</option>
+            <option value="NORMAL" selected>normal</option>
+            <option value="ALTA">alta</option>
+            <option value="CRITICA">crítica</option>
+          </select>
+        </div>
+        <div style="grid-column:1/-1">
+          <label for="tf-descricao" id="tf-rotulo-descricao">Detalhe</label>
+          <textarea id="tf-descricao" name="descricao" rows="3"
+                    placeholder="o que quem for fazer precisa saber"></textarea>
+        </div>
+      </div>
+
+      <!-- Os tickets da demanda: só aparecem quando o tipo escolhido é demanda.
+           Cada linha vira uma tarefa filha, com dono e prazo próprios. -->
+      <div class="tickets-demanda" id="tf-tickets" hidden>
+        <div class="nome-bloco">
+          <span>Tickets desta demanda</span>
+          <button type="button" class="mais-ticket" id="tf-mais-ticket">+ Adicionar</button>
+        </div>
+        <p class="dica">Cada linha abre uma tarefa separada. Sem dono, a linha fica aberta para o
+          setor da demanda.</p>
+        <div id="tf-linhas-ticket">
+          <div class="linha-ticket">
+            <span class="conta-ticket">1</span>
+            <input name="ticketTitulo" placeholder="o que precisa ser feito" data-ticket-titulo>
+            <input name="ticketResponsavel" list="lista-pessoas" placeholder="quem faz">
+            <input name="ticketSetor" placeholder="setor">
+            <input name="ticketPrazo" type="date" aria-label="prazo do ticket">
+            <button type="button" class="tirar-ticket" aria-label="Tirar este ticket">&#10005;</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="janela-pe">
+      <button type="button" class="botao vazado" data-fecha>Cancelar</button>
+      <button class="botao" type="submit" id="tf-criar">Criar</button>
+    </div>
+  </form>
+</dialog>
+
+<th:block th:if="${tarefa != null}">
+  <dialog id="janela-terminar" class="janela">
+    <form method="post" th:action="@{'/tarefas/' + ${tarefa.id} + '/terminar'}">
+      <div class="janela-topo">
+        <div>
+          <span class="olho"><i></i>Antes de fechar</span>
+          <h2>Terminei</h2>
+        </div>
+        <button type="button" class="fechar" data-fecha aria-label="Fechar">&#10005;</button>
+      </div>
+      <div class="janela-corpo">
+        <p class="dica">A tarefa vai para quem pediu conferir. Ela só fecha quando a pessoa
+          aceitar.</p>
+        <div class="campos">
+          <div style="grid-column:1/-1">
+            <label for="tm-feito">O que foi feito</label>
+            <textarea id="tm-feito" name="oQueFoiFeito" rows="3"
+                      placeholder="conferi tudo, faltou o comprovante da Loja da Maria"></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="janela-pe">
+        <button type="button" class="botao vazado" data-fecha>Cancelar</button>
+        <button class="botao" type="submit">Terminei</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="janela-refazer" class="janela">
+    <form method="post" th:action="@{'/tarefas/' + ${tarefa.id} + '/refazer'}">
+      <div class="janela-topo">
+        <div>
+          <span class="olho"><i></i>Faltou alguma coisa</span>
+          <h2>Mandar refazer</h2>
+        </div>
+        <button type="button" class="fechar" data-fecha aria-label="Fechar">&#10005;</button>
+      </div>
+      <div class="janela-corpo">
+        <div class="campos">
+          <div style="grid-column:1/-1">
+            <label for="rf-motivo">O que precisa mudar</label>
+            <textarea id="rf-motivo" name="motivo" rows="3" required
+                      placeholder="sem isso escrito, quem fez não sabe o que corrigir"></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="janela-pe">
+        <button type="button" class="botao vazado" data-fecha>Cancelar</button>
+        <button class="botao" type="submit">Mandar refazer</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="janela-cobrar" class="janela">
+    <form method="post" th:action="@{'/tarefas/' + ${tarefa.id} + '/cobrar'}">
+      <div class="janela-topo">
+        <div>
+          <span class="olho"><i></i>Como está isso</span>
+          <h2>Pedir posição</h2>
+        </div>
+        <button type="button" class="fechar" data-fecha aria-label="Fechar">&#10005;</button>
+      </div>
+      <div class="janela-corpo">
+        <div class="campos">
+          <div style="grid-column:1/-1">
+            <label for="cb-texto">O que perguntar</label>
+            <input id="cb-texto" name="texto" placeholder="consegue me dar uma posição hoje?">
+          </div>
+        </div>
+      </div>
+      <div class="janela-pe">
+        <button type="button" class="botao vazado" data-fecha>Cancelar</button>
+        <button class="botao" type="submit">Pedir</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="janela-passar" class="janela">
+    <form method="post" th:action="@{'/tarefas/' + ${tarefa.id} + '/responsavel'}">
+      <div class="janela-topo">
+        <div>
+          <span class="olho"><i></i>Quem faz</span>
+          <h2>Trocar responsável</h2>
+        </div>
+        <button type="button" class="fechar" data-fecha aria-label="Fechar">&#10005;</button>
+      </div>
+      <div class="janela-corpo">
+        <div class="campos">
+          <div style="grid-column:1/-1">
+            <label for="ps-quem">Passar para</label>
+            <input id="ps-quem" name="paraQuem" list="lista-pessoas"
+                   placeholder="deixe vazio para devolver ao setor">
+          </div>
+        </div>
+      </div>
+      <div class="janela-pe">
+        <button type="button" class="botao vazado" data-fecha>Cancelar</button>
+        <button class="botao" type="submit">Passar</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="janela-prazo" class="janela">
+    <form method="post" th:action="@{'/tarefas/' + ${tarefa.id} + '/prazo'}">
+      <div class="janela-topo">
+        <div>
+          <span class="olho"><i></i>Data combinada</span>
+          <h2>Mudar prazo</h2>
+        </div>
+        <button type="button" class="fechar" data-fecha aria-label="Fechar">&#10005;</button>
+      </div>
+      <div class="janela-corpo">
+        <div class="campos">
+          <div>
+            <label for="pz-novo">Novo prazo</label>
+            <input id="pz-novo" name="novo" type="date" th:value="${tarefa.prazo}">
+          </div>
+        </div>
+      </div>
+      <div class="janela-pe">
+        <button type="button" class="botao vazado" data-fecha>Cancelar</button>
+        <button class="botao" type="submit">Mudar</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="janela-acompanhar" class="janela">
+    <form method="post" th:action="@{'/tarefas/' + ${tarefa.id} + '/acompanhar'}">
+      <div class="janela-topo">
+        <div>
+          <span class="olho"><i></i>Quem mais precisa saber</span>
+          <h2>Acompanhar</h2>
+        </div>
+        <button type="button" class="fechar" data-fecha aria-label="Fechar">&#10005;</button>
+      </div>
+      <div class="janela-corpo">
+        <p class="dica">Quem acompanha vê a tarefa na aba "Faço parte", sem virar responsável.</p>
+        <div class="campos">
+          <div style="grid-column:1/-1">
+            <label for="ac-quem">Quem</label>
+            <input id="ac-quem" name="quem" required list="lista-pessoas">
+          </div>
+        </div>
+      </div>
+      <div class="janela-pe">
+        <button type="button" class="botao vazado" data-fecha>Cancelar</button>
+        <button class="botao" type="submit">Acrescentar</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="janela-cancelar" class="janela">
+    <form method="post" th:action="@{'/tarefas/' + ${tarefa.id} + '/cancelar'}">
+      <div class="janela-topo">
+        <div>
+          <span class="olho"><i></i>Não vai acontecer</span>
+          <h2>Cancelar tarefa</h2>
+        </div>
+        <button type="button" class="fechar" data-fecha aria-label="Fechar">&#10005;</button>
+      </div>
+      <div class="janela-corpo">
+        <p class="dica">A tarefa não some: fica marcada como cancelada, com o motivo e quem
+          cancelou. É assim que se responde depois por que algo parou.</p>
+        <div class="campos">
+          <div style="grid-column:1/-1">
+            <label for="cl-motivo">Motivo</label>
+            <input id="cl-motivo" name="motivo" required
+                   placeholder="o cliente desistiu do serviço">
+          </div>
+        </div>
+      </div>
+      <div class="janela-pe">
+        <button type="button" class="botao vazado" data-fecha>Voltar</button>
+        <button class="botao perigo" type="submit">Cancelar tarefa</button>
+      </div>
+    </form>
+  </dialog>
+</th:block>
+
+<script src="/js/janelas.js?v=1"></script>
+<script src="/js/tarefas.js?v=1"></script>
+
+</body>
+</html>

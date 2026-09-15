@@ -11,7 +11,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="format-detection" content="telephone=no">
   <title th:text="'IT.FC · ' + ${titulo}">IT.FC</title>
-  <link rel="stylesheet" href="/css/itia.css?v=51">
+  <link rel="stylesheet" href="/css/itia.css?v=68">
 </head>
 <body>
 
@@ -22,6 +22,7 @@
 
     <nav class="menu" th:if="${empresa != null}">
       <a href="/" th:classappend="${secao == 'painel'} ? 'ativo'">Painel</a>
+      <a href="/tarefas" th:classappend="${secao == 'cupula'} ? 'ativo'">Tarefas</a>
       <a href="/titulos" th:classappend="${secao == 'titulos'} ? 'ativo'">Contas a receber</a>
       <a href="/pagar" th:classappend="${secao == 'pagar'} ? 'ativo'">Contas a pagar</a>
       <a href="/conciliacao" th:classappend="${secao == 'conciliacao'} ? 'ativo'">Conciliação</a>
@@ -29,6 +30,7 @@
       <a href="/clientes" th:classappend="${secao == 'clientes'} ? 'ativo'">Clientes</a>
       <a href="/servicos" th:classappend="${secao == 'servicos'} ? 'ativo'">Pacotes &amp; serviços</a>
       <a href="/integracoes" th:classappend="${secao == 'integracoes'} ? 'ativo'">Integrações</a>
+      <a href="/inteligencia" th:classappend="${secao == 'inteligencia'} ? 'ativo'">Inteligência</a>
       <a href="/etiquetas" th:classappend="${secao == 'etiquetas'} ? 'ativo'">Tags</a>
     </nav>
 
@@ -147,3 +149,4 @@
 
 </body>
 </html>
+

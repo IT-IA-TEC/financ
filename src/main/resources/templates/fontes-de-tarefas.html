@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head th:replace="~{layout :: cabeca('Tarefas de fora')}"></head>
+<body>
+<header th:replace="~{layout :: topo('integracoes')}"></header>
+
+<main class="largo">
+  <div th:replace="~{layout :: recados}"></div>
+
+  <div class="cabecalho-pagina com-resumo">
+    <div>
+      <span class="olho"><i></i>De onde as demandas chegam</span>
+      <h1>Tarefas de outro sistema</h1>
+    </div>
+
+    <div class="cartoes-topo">
+      <div class="cartao-topo inverso">
+        <span class="rotulo">Fontes</span>
+        <b th:text="${fontes.size()}">0</b>
+        <small>configuradas</small>
+      </div>
+      <div class="cartao-topo">
+        <span class="rotulo">Ativas</span>
+        <b th:text="${#lists.size(fontes.?[ativa])}">0</b>
+        <small>trazendo tarefas</small>
+      </div>
+      <div class="cartao-topo">
+        <span class="rotulo">Integrações</span>
+        <b th:text="${integracoes.size()}">0</b>
+        <small>disponíveis para usar</small>
+      </div>
+      <div class="cartao-topo listrado">
+        <span class="rotulo">Os dois lados</span>
+        <b>busca e webhook</b>
+        <small>puxamos de lá, e lá pode empurrar para cá</small>
+      </div>
+    </div>
+  </div>
+
+  <div class="alerta-box" style="margin-bottom:18px">
+    Para trazer as demandas de outro sistema, primeiro crie a ligação em
+    <a href="/integracoes">Integrações</a>, com o modelo <b>Tarefas de outro sistema</b>: lá
+    ficam o endereço e a chave, guardados cifrados. Aqui você só diz qual campo de lá vira qual
+    campo daqui.
+  </div>
+
+  <div class="alerta-box atencao" style="margin-bottom:22px">
+    O campo do identificador é o mais importante da lista. É ele que impede a mesma tarefa de
+    virar dez tarefas repetidas a cada busca: quando o identificador já existe aqui, o sistema
+    atualiza em vez de criar outra.
+  </div>
+
+  <span class="rotulo-bloco" th:if="${!fontes.isEmpty()}">As fontes desta empresa</span>
+  <th:block th:each="f : ${fontes}">
+    <div class="tabela-caixa" style="margin-bottom:18px">
+      <form method="post" action="/fontes-de-tarefas">
+        <input type="hidden" name="id" th:value="${f.id}">
+        <div class="janela-corpo">
+          <div class="campos">
+            <div>
+              <label th:for="'nome-' + ${f.id}">Nome</label>
+              <input th:id="'nome-' + ${f.id}" name="nome" th:value="${f.nome}" required>
+            </div>
+            <div>
+              <label th:for="'int-' + ${f.id}">Ligação</label>
+              <select th:id="'int-' + ${f.id}" name="integracaoId" required>
+                <option th:each="i : ${integracoes}" th:value="${i.id}" th:text="${i.nome}"
+                        th:selected="${i.id == f.integracaoId}"></option>
+              </select>
+            </div>
+            <div>
+              <label th:for="'op-' + ${f.id}">Operação que traz a lista</label>
+              <select th:id="'op-' + ${f.id}" name="operacaoId">
+                <option value="">escolha</option>
+                <option th:each="o : ${operacoes.get(f.id)}" th:value="${o.id}"
+                        th:text="${o.nome}" th:selected="${o.id == f.operacaoId}"></option>
+              </select>
+            </div>
+          </div>
+
+          <span class="rotulo-bloco" style="margin-top:18px">Qual campo de lá é o quê</span>
+          <div class="campos">
+            <div>
+              <label th:for="'cid-' + ${f.id}">Identificador</label>
+              <input th:id="'cid-' + ${f.id}" name="campoId" th:value="${f.campoId}" required>
+            </div>
+            <div>
+              <label th:for="'ct-' + ${f.id}">Título</label>
+              <input th:id="'ct-' + ${f.id}" name="campoTitulo" th:value="${f.campoTitulo}"
+                     required>
+            </div>
+            <div>
+              <label th:for="'cd-' + ${f.id}">Detalhe</label>
+              <input th:id="'cd-' + ${f.id}" name="campoDescricao" th:value="${f.campoDescricao}">
+            </div>
+            <div>
+              <label th:for="'cs-' + ${f.id}">Situação</label>
+              <input th:id="'cs-' + ${f.id}" name="campoSituacao" th:value="${f.campoSituacao}">
+            </div>
+            <div>
+              <label th:for="'cr-' + ${f.id}">Quem faz</label>
+              <input th:id="'cr-' + ${f.id}" name="campoResponsavel"
+                     th:value="${f.campoResponsavel}">
+            </div>
+            <div>
+              <label th:for="'cp-' + ${f.id}">Prazo</label>
+              <input th:id="'cp-' + ${f.id}" name="campoPrazo" th:value="${f.campoPrazo}">
+            </div>
+            <div>
+              <label th:for="'cpr-' + ${f.id}">Prioridade</label>
+              <input th:id="'cpr-' + ${f.id}" name="campoPrioridade"
+                     th:value="${f.campoPrioridade}">
+            </div>
+            <div>
+              <label th:for="'cl-' + ${f.id}">Link para abrir lá</label>
+              <input th:id="'cl-' + ${f.id}" name="campoLink" th:value="${f.campoLink}">
+            </div>
+            <div>
+              <label th:for="'st-' + ${f.id}">Setor daqui</label>
+              <input th:id="'st-' + ${f.id}" name="setorPadrao" th:value="${f.setorPadrao}"
+                     placeholder="Financeiro">
+            </div>
+          </div>
+
+          <p class="dica" style="margin-top:14px">
+            <label style="display:flex;align-items:center;gap:8px">
+              <input type="checkbox" name="ativa" value="true" th:checked="${f.ativa}">
+              ativa
+            </label>
+            Última busca:
+            <span th:text="${f.ultimaPuxada != null}
+                           ? ${#temporals.format(f.ultimaPuxada, 'dd/MM/yyyy HH:mm')} + ' · '
+                             + ${f.ultimoResultado}
+                           : 'nunca buscou'"></span>
+          </p>
+
+          <div class="acoes" style="margin-top:14px">
+            <button class="botao" type="submit">Guardar</button>
+          </div>
+        </div>
+      </form>
+
+      <div class="janela-pe">
+        <form method="post" th:action="@{'/fontes-de-tarefas/' + ${f.id} + '/puxar'}">
+          <button class="botao vazado" type="submit">Buscar agora</button>
+        </form>
+      </div>
+    </div>
+  </th:block>
+
+  <span class="rotulo-bloco">Nova fonte</span>
+  <div class="tabela-caixa">
+    <form method="post" action="/fontes-de-tarefas">
+      <div class="janela-corpo">
+        <div class="campos">
+          <div>
+            <label for="nf-nome">Nome</label>
+            <input id="nf-nome" name="nome" required placeholder="Cúpula do ERP">
+          </div>
+          <div>
+            <label for="nf-int">Ligação</label>
+            <select id="nf-int" name="integracaoId" required>
+              <option value="">escolha a integração</option>
+              <option th:each="i : ${integracoes}" th:value="${i.id}" th:text="${i.nome}"></option>
+            </select>
+          </div>
+          <div>
+            <label for="nf-setor">Setor daqui</label>
+            <input id="nf-setor" name="setorPadrao" value="Financeiro">
+          </div>
+        </div>
+        <div class="campos" style="margin-top:16px">
+          <div>
+            <label for="nf-id">Campo do identificador</label>
+            <input id="nf-id" name="campoId" value="id" required>
+          </div>
+          <div>
+            <label for="nf-titulo">Campo do título</label>
+            <input id="nf-titulo" name="campoTitulo" value="titulo" required>
+          </div>
+          <div>
+            <label for="nf-situacao">Campo da situação</label>
+            <input id="nf-situacao" name="campoSituacao" value="status">
+          </div>
+          <div>
+            <label for="nf-resp">Campo de quem faz</label>
+            <input id="nf-resp" name="campoResponsavel" value="responsavel">
+          </div>
+          <div>
+            <label for="nf-prazo">Campo do prazo</label>
+            <input id="nf-prazo" name="campoPrazo" value="prazo">
+          </div>
+          <div>
+            <label for="nf-link">Campo do link</label>
+            <input id="nf-link" name="campoLink" value="link">
+          </div>
+        </div>
+        <p class="dica" style="margin-top:14px">
+          <label style="display:flex;align-items:center;gap:8px">
+            <input type="checkbox" name="ativa" value="true" checked>
+            já começar ativa
+          </label>
+          Depois de guardar, escolha a operação que traz a lista e clique em "Buscar agora"
+          para testar com o dado real.
+        </p>
+        <div class="acoes" style="margin-top:14px">
+          <button class="botao" type="submit">Criar fonte</button>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <span class="rotulo-bloco">Quando o outro sistema empurra para cá</span>
+  <div class="alerta-box">
+    A ligação criada com o modelo <b>Tarefas de outro sistema</b> também tem um endereço de
+    recebimento próprio, que aparece na tela da integração. Quem chamar aquele endereço com o
+    conteúdo da tarefa cria ou atualiza a tarefa aqui na hora, sem esperar a próxima busca.
+    O sistema entende os nomes de campo mais comuns (id, titulo, descricao, situacao,
+    responsavel, prazo, prioridade, link) e o mesmo identificador nunca vira duas tarefas.
+  </div>
+</main>
+
+<script th:replace="~{layout :: scripts}"></script>
+</body>
+</html>

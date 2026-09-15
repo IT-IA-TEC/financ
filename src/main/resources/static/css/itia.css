@@ -15,6 +15,11 @@
   --surface-page: var(--itia-white);
   --surface-card: var(--itia-white);
   --surface-inverse: var(--itia-black);
+  /* segunda superficie escura, para separar blocos dentro do escuro */
+  --surface-inverse-2: var(--itia-charcoal);
+  --text-on-inverse: var(--itia-white);
+  --text-on-inverse-muted: var(--itia-mist);
+  --border-on-inverse: var(--itia-graphite);
   --text-primary: var(--itia-black);
   --text-secondary: var(--itia-graphite);
   --text-muted: var(--itia-mist);
@@ -2175,3 +2180,997 @@ main > .abas-inversas {
   flex-wrap: wrap;
   overflow-x: visible;
 }
+
+
+/* ===================================================================== mesa
+   A mesa de cobranca em tres partes, e cada parte tem que se ler de longe:
+
+     fila e cliente  ->  neutro escuro (os 30% da marca), porque sao apoio
+     o caso          ->  neutro claro (os 60%), porque e onde se trabalha
+     vermelho        ->  so em quem precisa de atencao agora (os 10%)
+
+   Sem essa separacao a tela vira um borrao branco e ninguem acha nada. Cada
+   bloco tambem leva uma faixa com o nome dele, pelo mesmo motivo. */
+.mesa {
+  display: grid;
+  grid-template-columns: 300px minmax(0, 1fr) 290px;
+  gap: 14px;
+  align-items: start;
+  background: var(--surface-inverse);
+  border: 1px solid var(--itia-black);
+  padding: 14px;
+  margin-bottom: 26px;
+}
+
+/* ------------------------------------------------- as duas colunas de apoio */
+.coluna-fila,
+.coluna-cliente {
+  background: var(--surface-inverse-2);
+  border: 1px solid var(--border-on-inverse);
+  color: var(--text-on-inverse);
+  padding-bottom: 10px;
+  max-height: 76vh;
+  overflow-y: auto;
+}
+.coluna-caso {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+
+/* a faixa com o nome do bloco: no escuro e no claro, a mesma forma */
+.cabeca-coluna-mesa,
+.nome-bloco {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  background: var(--itia-black);
+  color: var(--text-on-inverse);
+  border-bottom: 2px solid var(--accent);
+  padding: 9px 14px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.cabeca-coluna-mesa { position: sticky; top: 0; z-index: 2; }
+.cabeca-coluna-mesa b { color: var(--accent); }
+.dica-coluna {
+  margin: 10px 14px 4px;
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--text-on-inverse-muted);
+}
+
+/* ------------------------------------------------------------ item da fila */
+.item-fila {
+  display: block;
+  padding: 11px 14px 11px 11px;
+  border-bottom: 1px solid var(--border-on-inverse);
+  border-left: 3px solid transparent;
+  color: var(--text-on-inverse);
+}
+.item-fila:hover { background: #202024; color: var(--text-on-inverse); }
+.item-fila.aberto { background: var(--itia-black); border-left-color: var(--accent); }
+.item-fila b { display: block; font-size: 13.5px; line-height: 1.3; }
+.etiqueta-fila {
+  display: inline-block;
+  margin: 6px 0 5px;
+  padding: 2px 7px;
+  border: 1px solid var(--border-on-inverse);
+  color: var(--text-on-inverse-muted);
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+/* quem respondeu e esta esperando e o unico vermelho da fila */
+.item-fila.u-espera .etiqueta-fila {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--itia-white);
+}
+.item-fila.u-promessa .etiqueta-fila {
+  background: var(--itia-white);
+  border-color: var(--itia-white);
+  color: var(--itia-black);
+}
+.resumo-fila {
+  display: block;
+  font-size: 11.5px;
+  line-height: 1.45;
+  color: var(--text-on-inverse-muted);
+}
+.pe-fila {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 6px;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: #6E6E76;
+}
+.pe-fila .minha { color: var(--accent); text-transform: uppercase; }
+
+.bloco-sem-dono { margin-top: 12px; }
+.item-sem-dono {
+  padding: 11px 14px;
+  border-bottom: 1px solid var(--border-on-inverse);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: var(--text-on-inverse);
+}
+.item-sem-dono form { display: flex; gap: 6px; }
+.item-sem-dono select {
+  height: 28px;
+  font-size: 12px;
+  background: var(--itia-black);
+  color: var(--text-on-inverse);
+  border-color: var(--border-on-inverse);
+}
+.item-sem-dono .botao.vazado {
+  color: var(--text-on-inverse);
+  border-color: var(--border-on-inverse);
+}
+.item-sem-dono .botao.vazado:hover { background: var(--itia-white); color: var(--itia-black); }
+
+/* --------------------------------------------------- o caso, no claro (60%) */
+.ficha-caso,
+.copiloto,
+.conversa-caixa,
+.escrever-mesa {
+  background: var(--surface-card);
+  border: 1px solid var(--border-default);
+}
+.corpo-bloco { padding: 16px 18px; }
+
+.titulo-ficha {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  border-bottom: 2px solid var(--itia-black);
+  padding-bottom: 10px;
+  margin-bottom: 12px;
+}
+.titulo-ficha b { display: block; font-family: var(--font-display); font-size: 18px; }
+.linhas-ficha { margin: 0; display: flex; flex-direction: column; gap: 9px; }
+.linhas-ficha > div { display: grid; grid-template-columns: 104px 1fr; gap: 12px; }
+.linhas-ficha dt {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  padding-top: 2px;
+}
+.linhas-ficha dd { margin: 0; font-size: 13.5px; line-height: 1.5; }
+.alerta-ficha {
+  margin: 14px 0 0;
+  border-left: 3px solid var(--accent);
+  padding: 9px 12px;
+  background: #FDF0F0;
+  font-size: 13px;
+  color: var(--text-primary);
+}
+
+/* o copiloto e leitura, nao ordem: listra da marca, nenhum vermelho */
+.copiloto .corpo-bloco {
+  background: repeating-linear-gradient(45deg,
+      #FAFAFB, #FAFAFB 7px, #F1F1F3 7px, #F1F1F3 14px);
+}
+.copiloto p { margin: 0; font-size: 13.5px; line-height: 1.6; }
+.copiloto small {
+  display: block;
+  margin-top: 8px;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+/* a barra de acoes fica escura: e a divisa entre ler e agir */
+.acoes-caso-mesa {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  background: var(--surface-inverse-2);
+  border: 1px solid var(--border-on-inverse);
+  padding: 12px 14px;
+}
+.acoes-caso-mesa form { display: inline; }
+.acoes-caso-mesa .botao.vazado {
+  color: var(--text-on-inverse);
+  border-color: var(--border-on-inverse);
+}
+.acoes-caso-mesa .botao.vazado:hover { background: var(--itia-white); color: var(--itia-black); }
+
+/* -------------------------------------------------------------- a conversa */
+.conversa-caixa {
+  padding: 16px 18px;
+  max-height: 420px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 0;
+}
+.linha-conversa { display: flex; }
+.linha-conversa.nossa { justify-content: flex-end; }
+.linha-conversa.deles { justify-content: flex-start; }
+.linha-conversa .balao {
+  max-width: 68%;
+  border: 1px solid var(--border-default);
+  padding: 12px 14px;
+}
+/* nos falamos no escuro, o cliente fala no claro: le-se de longe quem e quem */
+.linha-conversa.nossa .balao {
+  background: var(--surface-inverse);
+  border-color: var(--surface-inverse);
+  color: var(--text-on-inverse);
+}
+.linha-conversa.deles .balao { background: #F4F4F6; }
+.linha-conversa .balao p {
+  margin: 0;
+  white-space: pre-wrap;
+  font-size: 13.5px;
+  line-height: 1.55;
+}
+.linha-conversa .balao .pe {
+  display: block;
+  margin-top: 8px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+.linha-conversa.nossa .balao .pe { color: var(--text-on-inverse-muted); }
+
+/* --------------------------------------------------------- escrever na mesa */
+.escrever-mesa .corpo-bloco { display: flex; flex-direction: column; gap: 14px; }
+.atalhos-texto { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.rotulo-atalhos {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  margin-right: 4px;
+}
+.atalho {
+  border: 1px solid var(--border-default);
+  background: transparent;
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  padding: 5px 10px;
+  cursor: pointer;
+}
+.atalho:hover {
+  background: var(--itia-black);
+  border-color: var(--itia-black);
+  color: var(--text-on-inverse);
+}
+.anotar-fora {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  border-top: 1px solid var(--border-default);
+  padding-top: 12px;
+}
+.anotar-fora label {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+.anotar-fora input { flex: 1; min-width: 200px; }
+
+/* -------------------------------------------------------- coluna do cliente */
+.coluna-cliente .linhas-ficha { padding: 12px 14px; }
+.coluna-cliente .linhas-ficha > div { grid-template-columns: 92px 1fr; }
+.coluna-cliente .linhas-ficha dt { color: var(--text-on-inverse-muted); }
+.coluna-cliente .linhas-ficha dd { color: var(--text-on-inverse); font-size: 12.5px; }
+.documento-lado,
+.momento-lado {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border-on-inverse);
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 12px;
+  color: var(--text-on-inverse-muted);
+}
+.documento-lado b, .momento-lado b { font-size: 12.5px; color: var(--text-on-inverse); }
+.momento-lado .quando { font-size: 10.5px; color: #6E6E76; }
+.ferramentas { display: flex; flex-direction: column; }
+.ferramenta {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border-on-inverse);
+  color: var(--text-on-inverse);
+  display: block;
+}
+.ferramenta:hover { background: var(--itia-white); color: var(--itia-black); }
+.ferramenta:hover span { color: var(--text-secondary); }
+.ferramenta b { display: block; font-size: 13px; }
+.ferramenta span { font-size: 11.5px; color: var(--text-on-inverse-muted); }
+
+.coluna-caso.vazia { background: var(--surface-card); border: 1px solid var(--border-default); }
+.coluna-caso.vazia .vazio { border: none; }
+
+@media (max-width: 1300px) {
+  .mesa { grid-template-columns: 260px minmax(0, 1fr); }
+  .coluna-cliente { grid-column: 1 / -1; max-height: none; }
+}
+@media (max-width: 900px) {
+  .mesa { grid-template-columns: 1fr; padding: 10px; }
+  .coluna-fila { max-height: 320px; }
+  .linha-conversa .balao { max-width: 88%; }
+}
+
+
+/* O vermelho e destaque, nao decoracao: a faixa de cada bloco fica no grafite,
+   e o vermelho sobra para a fila (onde mora a urgencia) e para o alerta. */
+.nome-bloco,
+.cabeca-coluna-mesa { border-bottom-color: var(--border-on-inverse); }
+.coluna-fila > .cabeca-coluna-mesa:first-child { border-bottom-color: var(--accent); }
+
+/* A caixa da conversa tem UM tamanho, sempre o mesmo: com duas mensagens ou
+   com duzentas, o bloco nao muda de altura e a tela nao dança embaixo de quem
+   esta trabalhando. O que passa disso rola por dentro. */
+.conversa-caixa {
+  height: 560px;
+  max-height: none;
+}
+/* as mensagens encostam embaixo, como em qualquer conversa; o margin-top:auto
+   no primeiro balao faz isso sem quebrar a rolagem */
+.conversa-caixa > :first-child { margin-top: auto; }
+/* so no celular ela encolhe, porque ai a tela inteira e menor que a caixa */
+@media (max-width: 900px) {
+  .conversa-caixa { height: 420px; }
+}
+
+/* ------------------------------------------------ mesa: busca e recortes */
+.busca-fila {
+  display: flex;
+  gap: 6px;
+  padding: 12px 12px 8px;
+  border-bottom: 1px solid var(--border-on-inverse);
+}
+.busca-fila input {
+  flex: 1;
+  min-width: 0;
+  height: 30px;
+  font-size: 12.5px;
+  background: var(--itia-black);
+  color: var(--text-on-inverse);
+  border-color: var(--border-on-inverse);
+}
+.busca-fila input::placeholder { color: #6E6E76; }
+
+.recortes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border-on-inverse);
+}
+.recorte {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--border-on-inverse);
+  padding: 3px 8px;
+  font-size: 11px;
+  color: var(--text-on-inverse-muted);
+}
+.recorte b { color: var(--text-on-inverse); font-family: var(--font-mono); }
+.recorte:hover { border-color: var(--itia-white); color: var(--text-on-inverse); }
+.recorte.escolhido {
+  background: var(--itia-white);
+  border-color: var(--itia-white);
+  color: var(--itia-black);
+}
+.recorte.escolhido b { color: var(--accent); }
+
+/* ------------------------------------------------------- item da fila novo */
+.topo-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+}
+.valor-item { font-size: 12.5px; color: var(--accent); white-space: nowrap; }
+.item-fila.u-calmo .valor-item { color: var(--text-on-inverse-muted); }
+.tags-item { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 6px; }
+.etiqueta-fila.leve {
+  background: transparent;
+  border-color: var(--border-on-inverse);
+  color: var(--text-on-inverse-muted);
+}
+
+/* -------------------------------------------------- cabecalho do cliente */
+.cabeca-cliente {
+  background: var(--surface-card);
+  border: 1px solid var(--border-default);
+  border-top: 3px solid var(--itia-black);
+  padding: 14px 18px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.cabeca-cliente b { font-family: var(--font-display); font-size: 19px; display: block; }
+.cabeca-cliente > div > span { font-size: 12.5px; color: var(--text-secondary); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip {
+  border: 1px solid var(--border-default);
+  padding: 3px 9px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--text-secondary);
+}
+.chip.forte {
+  background: var(--itia-black);
+  border-color: var(--itia-black);
+  color: var(--itia-white);
+}
+
+/* ------------------------------------------------- ferramentas da conversa */
+.ferramentas-conversa {
+  background: var(--surface-card);
+  border: 1px solid var(--border-default);
+}
+.grade-ferramentas {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(178px, 1fr));
+  gap: 1px;
+  background: var(--border-default);
+  border-top: 1px solid var(--border-default);
+}
+.grade-ferramentas form { display: contents; }
+.ferramenta-botao {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  background: var(--surface-card);
+  border: none;
+  padding: 11px 12px;
+  font-family: var(--font-body);
+  font-size: 12.5px;
+  color: var(--text-primary);
+  text-align: left;
+  cursor: pointer;
+}
+.ferramenta-botao:hover { background: var(--itia-black); color: var(--text-on-inverse); }
+.ferramenta-botao .tecla {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  border: 1px solid var(--border-default);
+  padding: 1px 5px;
+  color: var(--text-secondary);
+  min-width: 28px;
+  text-align: center;
+}
+.ferramenta-botao:hover .tecla {
+  border-color: var(--border-on-inverse);
+  color: var(--itia-white);
+}
+.ferramenta-botao.perigo { color: var(--accent); }
+.ferramenta-botao.perigo:hover { background: var(--accent); color: var(--itia-white); }
+.ferramenta-botao.perigo:hover .tecla { border-color: var(--itia-white); }
+.ferramenta-botao[disabled] { opacity: 0.4; cursor: default; }
+
+/* ------------------------------------------------- caixa com comandos "/" */
+.caixa-comandos { position: relative; }
+.menu-comandos {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(100% + 4px);
+  background: var(--itia-black);
+  border: 1px solid var(--border-on-inverse);
+  max-height: 260px;
+  overflow-y: auto;
+  z-index: 5;
+}
+.linha-comando {
+  display: block;
+  width: 100%;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--border-on-inverse);
+  padding: 9px 12px;
+  text-align: left;
+  cursor: pointer;
+  color: var(--text-on-inverse-muted);
+}
+.linha-comando:hover { background: #202024; }
+.linha-comando b {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--accent);
+}
+.linha-comando span { font-size: 11.5px; }
+.pe-escrever { display: flex; align-items: center; gap: 12px; margin-top: 10px; flex-wrap: wrap; }
+.escrever-mesa { padding: 16px 18px; display: flex; flex-direction: column; gap: 14px; }
+
+/* ------------------------------------------------------ abas da lateral */
+.abas-lado {
+  display: flex;
+  background: var(--itia-black);
+  border-bottom: 2px solid var(--accent);
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+.abas-lado a {
+  flex: 1;
+  text-align: center;
+  padding: 9px 4px;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-on-inverse-muted);
+}
+.abas-lado a:hover { color: var(--itia-white); }
+.abas-lado a.ativa { color: var(--itia-white); background: #202024; }
+
+.linha-resumo {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border-on-inverse);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.linha-resumo .rotulo-resumo {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-on-inverse-muted);
+}
+.linha-resumo b { font-size: 14px; color: var(--text-on-inverse); }
+.linha-resumo small { font-size: 11px; color: #6E6E76; }
+.linha-resumo.atencao b { color: var(--accent); }
+.documento-lado .atrasado { color: var(--accent); }
+.dica-coluna a { color: var(--itia-white); text-decoration: underline; }
+
+
+/* As tres colunas da mesa terminam na mesma linha: as laterais acompanham a
+   altura do meio, que e quem manda no tamanho, e rolam por dentro. Coluna que
+   para no meio do caminho deixa a tela com cara de quebrada. */
+.mesa { align-items: stretch; }
+.coluna-fila,
+.coluna-cliente {
+  max-height: none;
+  height: 100%;
+  overflow-y: auto;
+}
+@media (max-width: 1300px) {
+  .coluna-cliente { height: auto; }
+}
+@media (max-width: 900px) {
+  .coluna-fila { height: auto; max-height: 320px; }
+}
+
+/* ================================================== profundidade nas telas
+   Antes o fundo da pagina e as caixas eram os dois brancos, e a tela virava
+   uma folha unica sem hierarquia. Agora o fundo e o neutro claro da marca e as
+   caixas sao brancas: a mesma paleta, so que cada superficie no seu papel. */
+body { background: #F1F1F3; }
+.tabela-caixa,
+.cartao,
+.janela,
+.alerta-box,
+.vazio { background: var(--surface-card); }
+.tabela-caixa { border-color: #DCDCE0; }
+tbody tr:nth-child(even) { background: #FAFAFA; }
+tbody tr:nth-child(even):hover,
+tbody tr:hover { background: #F1F1F3; }
+
+/* bloco de formulario dentro de uma caixa: fundo levemente cinza, campos
+   brancos, para os campos aparecerem sem precisar de sombra */
+.tabela-caixa .janela-corpo { background: #F7F7F9; }
+.tabela-caixa .janela-corpo input,
+.tabela-caixa .janela-corpo select,
+.tabela-caixa .janela-corpo textarea { background: var(--surface-card); }
+
+/* o rotulo de bloco vira uma faixa com o tracinho da marca */
+.rotulo-bloco {
+  border-left: 3px solid var(--accent);
+  padding-left: 10px;
+}
+
+/* ------------------------------------------- o que a inteligencia nunca faz
+   Regra dura merece peso: fundo preto listrado, como o cartao de alerta do
+   kit, e o marcador em vermelho. */
+.nunca-faz {
+  background: var(--itia-black);
+  background-image: repeating-linear-gradient(45deg,
+      transparent, transparent 8px, rgba(255, 255, 255, 0.05) 8px,
+      rgba(255, 255, 255, 0.05) 16px);
+  border: 1px solid var(--itia-black);
+  color: var(--text-on-inverse);
+  padding: 16px 18px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 10px 22px;
+}
+.nunca-faz span {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 13.5px;
+}
+.nunca-faz span::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  background: var(--accent);
+  flex: 0 0 auto;
+}
+
+/* ------------------------------------------------- chaves da inteligencia */
+.linha-chave td { vertical-align: top; }
+.linha-chave.ligada { background: #FBF4F4; }
+.linha-chave.ligada td:first-child { border-left: 3px solid var(--accent); }
+.linha-chave td:first-child { border-left: 3px solid transparent; }
+.chave-nome { font-weight: 600; }
+.chave-motivo { color: var(--text-secondary); font-size: 13px; }
+
+/* ------------------------------------------------ mesa com quatro colunas
+   A conversa perde um pouco de largura e ganha uma coluna de apoio: o que se
+   abre com um clique e a historia do cliente saem de dentro do painel de
+   numeros e ficam a mao, sem competir com ele. */
+.mesa { grid-template-columns: 280px minmax(0, 1fr) 270px 235px; }
+.coluna-apoio {
+  background: var(--surface-inverse-2);
+  border: 1px solid var(--border-on-inverse);
+  color: var(--text-on-inverse);
+  height: 100%;
+  overflow-y: auto;
+  padding-bottom: 10px;
+}
+.coluna-apoio .cabeca-coluna-mesa { border-bottom-color: var(--border-on-inverse); }
+
+@media (max-width: 1500px) {
+  .mesa { grid-template-columns: 260px minmax(0, 1fr) 250px; }
+  .coluna-apoio { grid-column: 1 / -1; height: auto; }
+}
+@media (max-width: 1300px) {
+  .mesa { grid-template-columns: 250px minmax(0, 1fr); }
+  .coluna-cliente, .coluna-apoio { grid-column: 1 / -1; height: auto; }
+}
+@media (max-width: 900px) {
+  .mesa { grid-template-columns: 1fr; }
+}
+
+/* ==================================================================== cupula
+   A fila da Central e o quadro de tres colunas. Mesma leitura da mesa de
+   cobranca: o que pede atencao aparece primeiro e em vermelho, o resto fica
+   quieto no neutro. */
+.fila-tarefas {
+  border: 1px solid var(--border-default);
+  background: var(--surface-card);
+  margin-bottom: 26px;
+}
+.linha-tarefa {
+  display: grid;
+  grid-template-columns: 70px 1fr auto 110px;
+  gap: 14px;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border-default);
+  border-left: 3px solid transparent;
+  color: var(--text-primary);
+}
+.linha-tarefa:last-child { border-bottom: none; }
+.linha-tarefa:hover { background: #F1F1F3; color: var(--text-primary); }
+.linha-tarefa.nova { border-left-color: var(--itia-black); }
+.linha-tarefa.atrasada { border-left-color: var(--accent); }
+.linha-tarefa .codigo { font-size: 12px; color: var(--text-secondary); }
+.linha-tarefa .assunto b { display: block; font-size: 14px; }
+.linha-tarefa .assunto small { color: var(--text-secondary); font-size: 12px; }
+.linha-tarefa .marcas { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+.linha-tarefa .prazo { font-size: 12px; color: var(--text-secondary); text-align: right; }
+
+.quadro-tarefas {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  margin-bottom: 26px;
+}
+.coluna-quadro {
+  border: 1px solid var(--border-default);
+  background: var(--surface-card);
+  display: flex;
+  flex-direction: column;
+}
+.cartao-tarefa {
+  display: block;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border-default);
+  border-left: 3px solid transparent;
+  color: var(--text-primary);
+}
+.cartao-tarefa:hover { background: #F1F1F3; color: var(--text-primary); }
+.cartao-tarefa.atrasada { border-left-color: var(--accent); }
+.cartao-tarefa b { font-size: 13.5px; line-height: 1.3; }
+.cartao-tarefa .codigo { font-size: 11px; color: var(--text-secondary); }
+.cartao-tarefa .etiqueta-fila {
+  border-color: var(--border-default);
+  color: var(--text-secondary);
+}
+.coluna-quadro .vazio-coluna { color: var(--text-muted); }
+
+/* -------------------------------------------------------- a tarefa aberta */
+.tarefa-aberta {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 14px;
+  margin-bottom: 26px;
+  align-items: start;
+}
+.dados-tarefa,
+.fio-tarefa {
+  border: 1px solid var(--border-default);
+  background: var(--surface-card);
+}
+.dados-tarefa { padding: 16px 18px; }
+.acoes-tarefa {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  background: var(--surface-inverse-2);
+  border: 1px solid var(--border-on-inverse);
+  padding: 12px 14px;
+  order: -1;
+}
+.acoes-tarefa form { display: inline; }
+.acoes-tarefa .botao.vazado {
+  color: var(--text-on-inverse);
+  border-color: var(--border-on-inverse);
+}
+.acoes-tarefa .botao.vazado:hover { background: var(--itia-white); color: var(--itia-black); }
+.momento-fio {
+  padding: 11px 0;
+  border-bottom: 1px solid var(--border-default);
+}
+.momento-fio:last-of-type { border-bottom: none; }
+.momento-fio .quando {
+  display: block;
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+.momento-fio .tipo-fio {
+  display: inline-block;
+  margin-top: 4px;
+  border: 1px solid var(--border-default);
+  padding: 1px 6px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+.momento-fio p { margin: 5px 0 0; font-size: 13.5px; line-height: 1.55; white-space: pre-wrap; }
+.momento-fio.do-sistema p { color: var(--text-secondary); font-size: 12.5px; }
+.escrever-fio {
+  display: flex;
+  gap: 8px;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  border-top: 2px solid var(--itia-black);
+  padding-top: 14px;
+  margin-top: 6px;
+}
+.escrever-fio textarea { flex: 1; min-width: 220px; }
+.escrever-fio select { width: auto; }
+
+@media (max-width: 1100px) {
+  .quadro-tarefas { grid-template-columns: 1fr; }
+  .tarefa-aberta { grid-template-columns: 1fr; }
+  .linha-tarefa { grid-template-columns: 60px 1fr; }
+  .linha-tarefa .marcas, .linha-tarefa .prazo { grid-column: 2; justify-content: flex-start; text-align: left; }
+}
+
+/* ---------------------------------------------- tarefas: ajustes da mesa
+   A tela de Tarefas usa a mesma mesa da cobranca. So duas diferencas: o item
+   da lista tem o codigo no lugar do valor, e o bloco de apoio e clicavel. */
+.item-fila.u-calmo .valor-item { color: var(--text-on-inverse-muted); }
+.coluna-apoio a.documento-lado { display: block; color: var(--text-on-inverse); }
+.coluna-apoio a.documento-lado:hover { background: #202024; }
+.coluna-apoio .documento-lado b { display: block; line-height: 1.35; }
+/* o fio da tarefa fica na mesma caixa de altura fixa da conversa */
+.coluna-caso .conversa-caixa { padding: 4px 18px; }
+.coluna-caso .conversa-caixa .momento-fio:first-child { margin-top: auto; }
+
+/* A tela de Tarefas usa a mesma mesa, mas com tres colunas: lista, a tarefa
+   aberta e o apoio. Sem isso sobrava uma coluna vazia na direita. */
+.mesa.tres-colunas { grid-template-columns: 280px minmax(0, 1fr) 280px; }
+@media (max-width: 1300px) {
+  .mesa.tres-colunas { grid-template-columns: 250px minmax(0, 1fr); }
+}
+@media (max-width: 900px) {
+  .mesa.tres-colunas { grid-template-columns: 1fr; }
+}
+
+/* ------------------------------------------ tela que cabe inteira na janela
+   Antes a mesa de Tarefas parava no meio da tela e sobrava um vazio branco
+   embaixo, e ainda assim a pagina rolava. Agora o topo, os numeros e as abas
+   ficam parados e a mesa ocupa exatamente o que sobra ate a beirada de baixo.
+   Quem rola e cada coluna, por dentro. So vale em tela grande: no celular as
+   colunas viram uma embaixo da outra e ai a pagina rola normal. */
+@media (min-width: 1000px) {
+  body.tela-cheia {
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  body.tela-cheia > main {
+    /* o "margin: 0 auto" que centraliza as telas normais faz a caixa encolher
+       ate o tamanho do conteudo quando ela vira parte de uma coluna flexivel.
+       Aqui a tela e de ponta a ponta, entao a margem sai e a largura e a toda. */
+    width: 100%;
+    max-width: none;
+    margin-left: 0;
+    margin-right: 0;
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    padding-bottom: 16px;
+    overflow: auto;
+  }
+  body.tela-cheia .mesa {
+    flex: 1 1 auto;
+    min-height: 420px;
+    margin-bottom: 0;
+    align-items: stretch;
+  }
+  body.tela-cheia .coluna-fila,
+  body.tela-cheia .coluna-cliente,
+  body.tela-cheia .coluna-apoio,
+  body.tela-cheia .coluna-caso {
+    height: 100%;
+    min-height: 0;
+    max-height: none;
+    overflow-y: auto;
+  }
+  /* a caixa do fio deixa de ter altura fixa aqui: ela estica ate o pe da mesa,
+     que e o que faz as tres colunas terminarem na mesma linha */
+  body.tela-cheia .coluna-caso .conversa-caixa {
+    height: auto;
+    flex: 1 1 auto;
+    min-height: 180px;
+  }
+}
+
+/* --------------------------------------------- tarefas: a lista do "+ Novo"
+   O botao nao abre direto a janela: abre a mesma lista da Cupula do sistema
+   matriz. Cada linha diz o nome, o que ela e em duas palavras e para que
+   serve, porque "decisao" e "alerta" so ficam claros com o exemplo do lado. */
+.menu-novo { position: relative; }
+.lista-novo {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 6px);
+  z-index: 60;
+  width: 330px;
+  background: var(--surface-card);
+  border: 1px solid var(--itia-black);
+  border-top: 2px solid var(--accent);
+  display: flex;
+  flex-direction: column;
+}
+.lista-novo button {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 2px 10px;
+  text-align: left;
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--border-default);
+  padding: 11px 14px;
+  font: inherit;
+  cursor: pointer;
+  color: var(--text-primary);
+}
+.lista-novo button:last-child { border-bottom: none; }
+.lista-novo button:hover { background: var(--itia-black); color: var(--text-on-inverse); }
+.lista-novo b { font-size: 14px; }
+.lista-novo span {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  align-self: center;
+}
+.lista-novo small { grid-column: 1 / -1; font-size: 12px; color: var(--text-secondary); }
+.lista-novo button:hover span,
+.lista-novo button:hover small { color: var(--text-on-inverse-muted); }
+
+/* --------------------------------------------- tarefas: tickets da demanda */
+.tickets-demanda { margin-top: 18px; border: 1px solid var(--itia-black); }
+.tickets-demanda > .dica { margin: 12px 14px 4px; }
+.tickets-demanda .mais-ticket {
+  background: var(--accent);
+  color: var(--itia-white);
+  border: none;
+  padding: 4px 10px;
+  font: inherit;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.linha-ticket {
+  display: grid;
+  grid-template-columns: 26px minmax(0, 2fr) minmax(0, 1.2fr) minmax(0, 1fr) 150px 30px;
+  gap: 8px;
+  align-items: center;
+  padding: 8px 14px;
+  border-top: 1px solid var(--border-default);
+}
+.linha-ticket:first-child { border-top: none; }
+.linha-ticket .conta-ticket {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+.linha-ticket input { margin: 0; }
+.linha-ticket .tirar-ticket {
+  background: none;
+  border: 1px solid var(--border-default);
+  color: var(--text-secondary);
+  cursor: pointer;
+  height: 30px;
+  font-size: 12px;
+}
+.linha-ticket .tirar-ticket:hover {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--itia-white);
+}
+@media (max-width: 760px) {
+  .linha-ticket { grid-template-columns: 26px 1fr 30px; }
+  .linha-ticket input { grid-column: 2; }
+  .lista-novo { width: min(330px, 86vw); }
+}
+
+/* cada ticket da demanda dentro da ficha: uma linha clicavel, com o codigo e o
+   dono do lado, porque a demanda so se entende vendo as partes dela */
+.ticket-filho {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--border-default);
+  color: var(--text-primary);
+  text-decoration: none;
+}
+.ticket-filho:last-child { border-bottom: none; }
+.ticket-filho:hover b { color: var(--accent); }
+.ticket-filho b { flex: 1 1 200px; font-size: 13.5px; }
+.ticket-filho .mono { font-size: 11.5px; color: var(--text-secondary); }
+.ticket-filho > span:nth-of-type(2) { font-size: 12.5px; color: var(--text-secondary); }

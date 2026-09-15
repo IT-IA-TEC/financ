@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head th:replace="~{layout :: cabeca('Inteligência')}"></head>
+<body>
+<header th:replace="~{layout :: topo('inteligencia')}"></header>
+
+<main class="largo">
+  <div th:replace="~{layout :: recados}"></div>
+
+  <div class="cabecalho-pagina com-resumo">
+    <div>
+      <span class="olho"><i></i>Modelo com coleira curta</span>
+      <h1>Inteligência</h1>
+    </div>
+
+    <div class="cartoes-topo">
+      <div class="cartao-topo inverso">
+        <span class="rotulo">Situação</span>
+        <b th:text="${agente.ativo} ? 'ligado' : 'desligado'">desligado</b>
+        <small th:text="${agente.modoLegivel}">só sugere</small>
+      </div>
+      <div class="cartao-topo">
+        <span class="rotulo">Chaves ligadas</span>
+        <b th:text="${#lists.size(chaves.values().?[#this == true])}">0</b>
+        <small th:text="'de ' + ${chaves.size()} + ' possíveis'">de 13</small>
+      </div>
+      <div class="cartao-topo">
+        <span class="rotulo">Usos</span>
+        <b th:text="${quantosUsos}">0</b>
+        <small th:text="${quantasAcoes} + ' viraram ação'">0</small>
+      </div>
+      <div class="cartao-topo listrado">
+        <span class="rotulo">Teto</span>
+        <b th:text="${agente.tetoValor.signum() == 0} ? 'sem teto'
+                    : 'R$ ' + ${#numbers.formatDecimal(agente.tetoValor, 1, 'POINT', 2, 'COMMA')}">sem teto</b>
+        <small th:text="${agente.tetoMensagensDia} + ' mensagem(ns) por dia'">1</small>
+      </div>
+    </div>
+  </div>
+
+  <div class="alerta-box atencao" style="margin-bottom:18px">
+    O modelo não tem acesso a nada por padrão. Cada coisa que ele pode ver e cada coisa que ele
+    pode fazer é uma chave ligada aqui, e a chave é conferida duas vezes: na hora de montar o
+    que vai para ele (o que está desligado nem chega lá) e na hora de fazer (sem chave, a ação
+    é recusada e o motivo fica gravado).
+  </div>
+
+  <span class="rotulo-bloco">O que ele nunca faz, com chave nenhuma</span>
+  <div class="nunca-faz" style="margin-bottom:22px">
+    <span th:each="n : ${nunca}" th:text="${n}"></span>
+  </div>
+
+  <span class="rotulo-bloco">Como ele está ligado</span>
+  <div class="tabela-caixa" style="margin-bottom:22px">
+    <form method="post" action="/inteligencia">
+      <div class="janela-corpo">
+        <div class="campos">
+          <div>
+            <label for="ia-integracao">Modelo (integração)</label>
+            <select id="ia-integracao" name="integracaoId">
+              <option value="">nenhuma escolhida</option>
+              <option th:each="i : ${integracoes}" th:value="${i.id}" th:text="${i.nome}"
+                      th:selected="${agente.integracaoId != null and agente.integracaoId == i.id}"></option>
+            </select>
+          </div>
+          <div>
+            <label for="ia-modelo">Nome do modelo</label>
+            <input id="ia-modelo" name="modelo" th:value="${agente.modelo}"
+                   placeholder="como está na documentação do provedor">
+          </div>
+          <div>
+            <label for="ia-modo">Até onde ele vai</label>
+            <select id="ia-modo" name="modo">
+              <option value="SO_SUGERE" th:selected="${agente.modo == 'SO_SUGERE'}">
+                só sugere, não fala com ninguém
+              </option>
+              <option value="RESPONDE_COM_REVISAO"
+                      th:selected="${agente.modo == 'RESPONDE_COM_REVISAO'}">
+                escreve, alguém revisa e manda
+              </option>
+              <option value="RESPONDE_SOZINHO" th:selected="${agente.modo == 'RESPONDE_SOZINHO'}">
+                responde sozinho
+              </option>
+            </select>
+          </div>
+        </div>
+        <div class="campos" style="margin-top:16px">
+          <div>
+            <label for="ia-teto">Teto de valor que ele pode propor</label>
+            <input id="ia-teto" name="tetoValor" inputmode="decimal"
+                   th:value="${agente.tetoValor}">
+          </div>
+          <div>
+            <label for="ia-mensagens">Mensagens por dia, por cliente</label>
+            <input id="ia-mensagens" name="tetoMensagensDia" inputmode="numeric"
+                   th:value="${agente.tetoMensagensDia}">
+          </div>
+          <div>
+            <label style="display:flex;align-items:center;gap:8px;margin-top:22px">
+              <input type="checkbox" name="ativo" value="true" th:checked="${agente.ativo}">
+              ligado
+            </label>
+          </div>
+        </div>
+        <div class="campos" style="margin-top:16px">
+          <div style="grid-column:1/-1">
+            <label for="ia-instrucao">O que esta empresa quer dele</label>
+            <textarea id="ia-instrucao" name="instrucao" rows="4"
+                      th:text="${agente.instrucao}"
+                      placeholder="como falar, o que nunca oferecer, o que sempre lembrar"></textarea>
+          </div>
+        </div>
+        <div class="acoes" style="margin-top:16px">
+          <button class="botao" type="submit">Guardar</button>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <span class="rotulo-bloco">O que ele pode ver e o que pode fazer</span>
+  <form method="post" action="/inteligencia/chaves">
+    <div class="tabela-caixa" style="margin-bottom:14px">
+      <table>
+        <thead>
+        <tr>
+          <th class="centro">Liga</th>
+          <th>Pode ver</th>
+          <th>O que é</th>
+          <th>Por quê</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="p : ${leituras}" class="linha-chave"
+            th:classappend="${chaves.get(p)} ? 'ligada'">
+          <td class="centro">
+            <input type="checkbox" name="ligadas" th:value="${p.name()}"
+                   th:checked="${chaves.get(p)}">
+          </td>
+          <td class="chave-nome" th:text="${p.rotulo}"></td>
+          <td th:text="${p.explicacao}"></td>
+          <td class="chave-motivo" th:text="${p.motivo}"></td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="tabela-caixa" style="margin-bottom:14px">
+      <table>
+        <thead>
+        <tr>
+          <th class="centro">Liga</th>
+          <th>Pode fazer</th>
+          <th>O que é</th>
+          <th>Por quê</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="p : ${acoes}" class="linha-chave"
+            th:classappend="${chaves.get(p)} ? 'ligada'">
+          <td class="centro">
+            <input type="checkbox" name="ligadas" th:value="${p.name()}"
+                   th:checked="${chaves.get(p)}">
+          </td>
+          <td class="chave-nome" th:text="${p.rotulo}"></td>
+          <td th:text="${p.explicacao}"></td>
+          <td class="chave-motivo" th:text="${p.motivo}"></td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="acoes" style="margin-bottom:26px">
+      <button class="botao" type="submit">Guardar as chaves</button>
+    </div>
+  </form>
+
+  <span class="rotulo-bloco">O que aconteceria agora, se o modelo tentasse</span>
+  <div class="alerta-box" style="margin-bottom:14px">
+    Esta tabela não executa nada: ela pergunta ao porteiro, ação por ação, o que ele deixaria
+    passar com as chaves de agora. É a prova de que a trava vale, e não só aparece.
+  </div>
+  <div class="tabela-caixa" style="margin-bottom:26px">
+    <table>
+      <thead>
+      <tr>
+        <th>Se o modelo tentar</th>
+        <th class="centro">O porteiro</th>
+        <th>Motivo</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr th:each="t : ${travas}">
+        <td th:text="${t.acao.rotulo}"></td>
+        <td class="centro">
+          <span class="marca-situacao" th:classappend="${t.deixa} ? 's-pago' : 's-vencido'"
+                th:text="${t.deixa} ? 'deixa' : 'barra'">barra</span>
+        </td>
+        <td th:text="${t.motivo} ?: 'chave ligada e dentro dos tetos'"></td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <span class="rotulo-bloco">A ficha do caso desta empresa</span>
+  <div class="alerta-box" style="margin-bottom:14px">
+    Estas são as linhas que aparecem na mesa de cobrança, na ordem que você escolher. Cada
+    número sai do que está gravado no sistema: nenhuma linha é digitada por alguém.
+  </div>
+  <th:block th:each="l : ${linhas}">
+    <form th:id="'linha-' + ${l.id}" method="post"
+          th:action="@{'/inteligencia/ficha/' + ${l.id}}"></form>
+    <form th:id="'tirar-' + ${l.id}" method="post"
+          th:action="@{'/inteligencia/ficha/' + ${l.id} + '/tirar'}"></form>
+  </th:block>
+
+  <div class="tabela-caixa" style="margin-bottom:14px">
+    <table>
+      <thead>
+      <tr>
+        <th class="centro">Ordem</th>
+        <th>Como aparece</th>
+        <th>De onde sai</th>
+        <th class="centro">Mostra</th>
+        <th>O que fazer</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr th:each="l : ${linhas}">
+        <td class="centro">
+          <input name="ordem" inputmode="numeric" style="width:60px"
+                 th:value="${l.ordem}" th:form="'linha-' + ${l.id}">
+        </td>
+        <td><input name="rotulo" th:value="${l.rotulo}" th:form="'linha-' + ${l.id}"></td>
+        <td th:text="${l.daFonte().explicacao}"></td>
+        <td class="centro">
+          <input type="checkbox" name="ativa" value="true" th:checked="${l.ativa}"
+                 th:form="'linha-' + ${l.id}">
+        </td>
+        <td class="acoes-movimento">
+          <button class="botao pequeno" type="submit" th:form="'linha-' + ${l.id}">Guardar</button>
+          <button class="botao pequeno perigo" type="submit"
+                  th:form="'tirar-' + ${l.id}">Tirar</button>
+        </td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <form method="post" action="/inteligencia/ficha" class="acoes-movimento"
+        style="margin-bottom:26px">
+    <select name="fonte" required>
+      <option th:each="f : ${fontes}" th:value="${f.name()}"
+              th:text="${f.rotuloPadrao} + ' · ' + ${f.explicacao}"></option>
+    </select>
+    <input name="rotulo" placeholder="como você quer chamar esta linha">
+    <button class="botao vazado" type="submit">+ Acrescentar linha</button>
+  </form>
+
+  <span class="rotulo-bloco" th:if="${!usos.isEmpty()}">O que o modelo leu e fez</span>
+  <div class="tabela-caixa" th:if="${!usos.isEmpty()}">
+    <table>
+      <thead>
+      <tr>
+        <th class="centro">Quando</th>
+        <th class="centro">O que foi</th>
+        <th>Chaves usadas</th>
+        <th>Resultado</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr th:each="u : ${usos}">
+        <td class="centro mono" th:text="${#temporals.format(u.ocorridoEm, 'dd/MM HH:mm')}"></td>
+        <td class="centro" th:text="${u.tipo.toLowerCase().replace('_', ' ')}"></td>
+        <td style="font-size:12px" th:text="${u.permissoes}"></td>
+        <td>
+          <span class="marca-situacao"
+                th:classappend="${u.recusa != null} ? 's-vencido'
+                                : (${u.executada} ? 's-pago' : 's-aberto')"
+                th:text="${u.recusa != null} ? 'recusado' : (${u.executada} ? 'feito' : 'lido')"></span>
+          <small th:if="${u.recusa != null}" th:text="${u.recusa}"></small>
+          <small th:if="${u.resposta != null}"
+                 th:text="${#strings.abbreviate(u.resposta, 120)}"></small>
+        </td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+</main>
+
+<script th:replace="~{layout :: scripts}"></script>
+</body>
+</html>
