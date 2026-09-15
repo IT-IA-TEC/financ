@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head th:replace="~{layout :: cabeca('Acordo')}"></head>
+<body>
+<header th:replace="~{layout :: topo('cobranca')}"></header>
+
+<main class="largo">
+  <div th:replace="~{layout :: recados}"></div>
+
+  <div class="cabecalho-pagina com-resumo">
+    <div>
+      <span class="olho"><i></i>Acordo de dívida</span>
+      <h1 th:text="'Acordo ' + ${acordo.numero}">Acordo</h1>
+    </div>
+
+    <div class="cartoes-topo">
+      <div class="cartao-topo inverso">
+        <span class="rotulo">Combinado</span>
+        <b th:text="'R$ ' + ${#numbers.formatDecimal(acordo.valorCombinado, 1, 'POINT', 2, 'COMMA')}">R$ 0,00</b>
+        <small th:text="${acordo.parcelas} + ' parcela(s)'">0</small>
+      </div>
+      <div class="cartao-topo">
+        <span class="rotulo">Já pago</span>
+        <b th:text="'R$ ' + ${#numbers.formatDecimal(jaPago, 1, 'POINT', 2, 'COMMA')}">R$ 0,00</b>
+        <small>somando as parcelas</small>
+      </div>
+      <div class="cartao-topo">
+        <span class="rotulo">Desconto</span>
+        <b th:text="'R$ ' + ${#numbers.formatDecimal(acordo.desconto, 1, 'POINT', 2, 'COMMA')}">R$ 0,00</b>
+        <small th:text="${acordo.autorizadoPor} != null
+                        ? 'por ' + ${acordo.autorizadoPor} : 'sem desconto'"></small>
+      </div>
+      <div class="cartao-topo listrado">
+        <span class="rotulo">Situação</span>
+        <b th:text="${acordo.situacaoLegivel}">ativo</b>
+        <small th:text="${acordo.motivoQuebra} ?: 'fechado por ' + ${acordo.criadoPor}"></small>
+      </div>
+    </div>
+
+    <div class="acoes" style="margin:0">
+      <a class="botao vazado pequeno" href="/acordos">Voltar</a>
+    </div>
+  </div>
+
+  <nav th:replace="~{layout :: abas-cobranca('acordos')}" class="modulo"></nav>
+
+  <div class="alerta-box" style="margin-bottom:18px">
+    Devia
+    <b th:text="'R$ ' + ${#numbers.formatDecimal(acordo.valorOriginal, 1, 'POINT', 2, 'COMMA')}"></b>,
+    mais juros e multa de
+    <b th:text="'R$ ' + ${#numbers.formatDecimal(acordo.acrescimo, 1, 'POINT', 2, 'COMMA')}"></b>,
+    menos desconto de
+    <b th:text="'R$ ' + ${#numbers.formatDecimal(acordo.desconto, 1, 'POINT', 2, 'COMMA')}"></b>,
+    fecha em
+    <b th:text="'R$ ' + ${#numbers.formatDecimal(acordo.valorCombinado, 1, 'POINT', 2, 'COMMA')}"></b>.
+    <span th:if="${acordo.motivoDesconto != null}"
+          th:text="' Motivo do desconto: ' + ${acordo.motivoDesconto} + '.'"></span>
+    <span th:if="${acordo.observacao != null}" th:text="' ' + ${acordo.observacao}"></span>
+  </div>
+
+  <form method="post" th:if="${acordo.estaAtivo()}"
+        th:action="@{'/acordos/' + ${acordo.id} + '/quebrar'}"
+        class="acoes-movimento" style="margin-bottom:22px">
+    <input name="motivo" placeholder="por que o acordo foi quebrado" style="max-width:360px">
+    <button class="botao pequeno perigo" type="submit">Quebrar o acordo</button>
+  </form>
+
+  <span class="rotulo-bloco">As parcelas</span>
+  <div class="tabela-caixa">
+    <table>
+      <thead>
+      <tr>
+        <th class="centro">Parcela</th>
+        <th>Documento</th>
+        <th class="centro">Vencimento</th>
+        <th class="centro">Valor</th>
+        <th class="centro">Saldo</th>
+        <th class="centro">Situação</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr th:each="p,i : ${parcelas}">
+        <td class="centro mono" th:text="${i.count}">1</td>
+        <td class="mono">
+          <a th:href="@{'/titulos/' + ${p.id}}" th:text="${p.identificadorPix}"></a>
+        </td>
+        <td class="centro mono" th:text="${#temporals.format(p.vencimento, 'dd/MM/yyyy')}"></td>
+        <td class="centro mono"
+            th:text="'R$ ' + ${#numbers.formatDecimal(p.valor, 1, 'POINT', 2, 'COMMA')}"></td>
+        <td class="centro mono"
+            th:text="'R$ ' + ${#numbers.formatDecimal(p.saldo, 1, 'POINT', 2, 'COMMA')}"></td>
+        <td class="centro">
+          <span class="marca-situacao"
+                th:classappend="${'s-' + p.situacao.name().toLowerCase()}"
+                th:text="${p.situacao}"></span>
+        </td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <span class="rotulo-bloco">O que entrou no acordo</span>
+  <div class="tabela-caixa">
+    <table>
+      <thead>
+      <tr>
+        <th>Documento</th>
+        <th>Descrição</th>
+        <th class="centro">Vencimento</th>
+        <th class="centro">Saldo que entrou</th>
+        <th class="centro">Situação</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr th:each="d : ${documentos}">
+        <td class="mono">
+          <a th:href="@{'/titulos/' + ${d.id}}" th:text="${d.identificadorPix}"></a>
+        </td>
+        <td th:text="${d.descricao}"></td>
+        <td class="centro mono" th:text="${#temporals.format(d.vencimento, 'dd/MM/yyyy')}"></td>
+        <td class="centro mono"
+            th:text="'R$ ' + ${#numbers.formatDecimal(d.saldo, 1, 'POINT', 2, 'COMMA')}"></td>
+        <td class="centro">
+          <span class="marca-situacao"
+                th:classappend="${'s-' + d.situacao.name().toLowerCase()}"
+                th:text="${d.situacao}"></span>
+        </td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+</main>
+
+<script th:replace="~{layout :: scripts}"></script>
+</body>
+</html>

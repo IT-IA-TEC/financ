@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head th:replace="~{layout :: cabeca('Comprovantes')}"></head>
+<body>
+<header th:replace="~{layout :: topo('titulos')}"></header>
+
+<main class="largo">
+  <div th:replace="~{layout :: recados}"></div>
+
+  <div class="cabecalho-pagina com-resumo">
+    <div>
+      <span class="olho"><i></i>Prova de pagamento</span>
+      <h1>Contas a receber</h1>
+      <nav th:replace="~{layout :: abas-receber('comprovantes')}"></nav>
+    </div>
+
+    <div class="cartoes-topo">
+      <div class="cartao-topo inverso">
+        <span class="rotulo">Na fila</span>
+        <b th:text="${esperando.size()}">0</b>
+        <small>esperando conferência</small>
+      </div>
+      <div class="cartao-topo">
+        <span class="rotulo">Recebidos</span>
+        <b th:text="${comprovantes.size()}">0</b>
+        <small>no total</small>
+      </div>
+      <div class="cartao-topo">
+        <span class="rotulo">Títulos em aberto</span>
+        <b th:text="${titulos.size()}">0</b>
+        <small>podem receber a baixa</small>
+      </div>
+      <div class="cartao-topo listrado">
+        <span class="rotulo">Destino conferido</span>
+        <b th:text="${empresa.chavePix != null} ? 'sim' : 'falta'">sim</b>
+        <small th:text="${empresa.chavePix != null}
+                        ? 'pela chave PIX da empresa' : 'cadastre a chave PIX'"></small>
+      </div>
+    </div>
+
+    <div class="acoes" style="margin:0">
+      <button class="botao" type="button" data-abre="janela-comprovante">+ Receber comprovante</button>
+    </div>
+  </div>
+
+  <div class="alerta-box atencao" th:if="${empresa.chavePix == null}" style="margin-bottom:18px">
+    Esta empresa não tem chave PIX cadastrada. Sem ela o sistema não consegue conferir se o
+    dinheiro caiu na conta certa, e nenhuma baixa por comprovante é liberada.
+    <a href="/empresas/configurar">Cadastrar a chave</a>.
+  </div>
+
+  <div class="alerta-box" style="margin-bottom:18px">
+    A leitura automática é do texto do comprovante: valor, data, destino e identificador da
+    transação. Ler a imagem do print depende de um serviço de fora, que ainda não está ligado.
+  </div>
+
+  <div class="tabela-caixa" th:if="${!comprovantes.isEmpty()}">
+    <table>
+      <thead>
+      <tr>
+        <th class="centro">Chegou</th>
+        <th class="centro">Valor lido</th>
+        <th class="centro">Data lida</th>
+        <th>Destino lido</th>
+        <th>Identificador</th>
+        <th class="centro">Situação</th>
+        <th>O que fazer</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr th:each="c : ${comprovantes}">
+        <td class="centro mono" th:text="${#temporals.format(c.criadoEm, 'dd/MM HH:mm')}">01/01</td>
+        <td class="centro mono"
+            th:text="${c.valorLido != null}
+                     ? 'R$ ' + ${#numbers.formatDecimal(c.valorLido, 1, 'POINT', 2, 'COMMA')}
+                     : 'não lido'">R$ 0,00</td>
+        <td class="centro mono"
+            th:text="${c.dataLida != null} ? ${#temporals.format(c.dataLida, 'dd/MM/yyyy')} : ''"></td>
+        <td class="mono" style="font-size:12px" th:text="${c.destinoLido} ?: 'não lido'"></td>
+        <td class="mono" style="font-size:11.5px" th:text="${c.identificadorLido} ?: 'não lido'"></td>
+        <td class="centro">
+          <span class="marca-situacao"
+                th:classappend="${c.situacao == 'CONFERIDO'} ? 's-pago'
+                                : (${c.situacao == 'RECUSADO'} ? 's-cancelado' : 's-vencido')"
+                th:text="${c.situacao == 'NA_FILA'} ? 'na fila' : ${c.situacao.toLowerCase()}">na fila</span>
+          <small th:if="${c.motivo != null}" th:text="${c.motivo}"></small>
+        </td>
+        <td>
+          <div th:if="${c.naFila()}" class="acoes-movimento">
+            <small th:if="${c.oQueFalta() != null}" style="color:var(--accent)"
+                   th:text="${c.oQueFalta()}"></small>
+            <form method="post" th:action="@{'/comprovantes/' + ${c.id} + '/conferir'}">
+              <select name="tituloId" required>
+                <option th:each="t : ${titulos}" th:value="${t.id}"
+                        th:text="${t.identificadorPix} + ' · ' + ${t.cliente.razaoSocial}
+                                 + ' · R$ ' + ${#numbers.formatDecimal(t.saldo, 1, 'POINT', 2, 'COMMA')}"></option>
+              </select>
+              <input name="valor" inputmode="decimal" style="width:110px"
+                     th:value="${c.valorLido}" placeholder="valor">
+              <button class="botao pequeno" type="submit">Conferir e baixar</button>
+            </form>
+            <form method="post" th:action="@{'/comprovantes/' + ${c.id} + '/recusar'}">
+              <input name="motivo" placeholder="motivo da recusa" required>
+              <button class="botao pequeno perigo" type="submit">Recusar</button>
+            </form>
+          </div>
+
+          <form method="post" th:unless="${c.naFila()}"
+                th:action="@{'/comprovantes/' + ${c.id} + '/voltar'}">
+            <button class="botao pequeno vazado" type="submit">Voltar para a fila</button>
+          </form>
+        </td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="vazio" th:if="${comprovantes.isEmpty()}">
+    Nenhum comprovante recebido ainda.
+  </div>
+</main>
+
+<script th:replace="~{layout :: scripts}"></script>
+
+<dialog id="janela-comprovante" class="janela">
+  <form method="post" action="/comprovantes" enctype="multipart/form-data">
+    <div class="janela-topo">
+      <div>
+        <span class="olho"><i></i>Prova de pagamento</span>
+        <h2>Receber comprovante</h2>
+      </div>
+      <button type="button" class="fechar" data-fecha aria-label="Fechar">&#10005;</button>
+    </div>
+    <div class="janela-corpo">
+      <p class="dica">Cole o texto do comprovante e, se tiver, anexe o arquivo. O sistema lê
+        valor, data, destino e identificador do texto.</p>
+      <div class="campos">
+        <div>
+          <label for="cp-cliente">Cliente</label>
+          <select id="cp-cliente" name="pagadorId">
+            <option value="">não sei ainda</option>
+            <option th:each="c : ${clientes}" th:value="${c.id}" th:text="${c.nome}"></option>
+          </select>
+        </div>
+        <div>
+          <label for="cp-origem">De onde veio</label>
+          <select id="cp-origem" name="origem">
+            <option value="DIGITADO">digitado aqui</option>
+            <option value="WHATSAPP">WhatsApp</option>
+            <option value="IMPORTADO">importado</option>
+          </select>
+        </div>
+        <div>
+          <label for="cp-arquivo">Arquivo</label>
+          <input id="cp-arquivo" name="arquivo" type="file">
+        </div>
+      </div>
+      <div class="campos" style="margin-top:16px">
+        <div style="grid-column:1/-1">
+          <label for="cp-texto">Texto do comprovante</label>
+          <textarea id="cp-texto" name="texto" rows="6"
+                    placeholder="Cole aqui o comprovante do aplicativo do banco"></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="janela-pe">
+      <button type="button" class="botao vazado" data-fecha>Cancelar</button>
+      <button class="botao" type="submit">Colocar na fila</button>
+    </div>
+  </form>
+</dialog>
+
+<script src="/js/janelas.js?v=1"></script>
+
+</body>
+</html>

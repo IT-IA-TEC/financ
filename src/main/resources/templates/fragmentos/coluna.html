@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<body>
+<!-- Cabeca de cada coluna: nome centralizado e o funil com o filtro do tipo certo. -->
+<div th:fragment="cabecaDeColuna(c)" class="cabeca-coluna">
+  <span class="titulo-coluna" th:text="${c.rotulo}">Coluna</span>
+
+  <details class="filtro">
+    <summary th:title="'Filtrar por ' + ${c.rotulo}">
+      <svg viewBox="0 0 16 16" aria-hidden="true">
+        <path d="M2 3h12l-4.6 5.4V13l-2.8 1.4V8.4z" fill="none" stroke="currentColor" stroke-width="1.4"/>
+      </svg>
+    </summary>
+    <div class="gaveta-filtro">
+
+      <th:block th:if="${c.formato.name() == 'TEXTO'}">
+        <label th:for="'f-' + ${c.name()}">Contém</label>
+        <input th:id="'f-' + ${c.name()}" th:name="'f_' + ${c.name()}"
+               th:value="${filtro.valor(c, '')}" placeholder="parte do texto">
+      </th:block>
+
+      <th:block th:if="${c.formato.name() == 'SITUACAO'}">
+        <label>Mostrar</label>
+        <div class="escolhas-situacao">
+          <label th:each="s : ${situacoes}" class="escolha">
+            <input type="checkbox" th:name="'f_' + ${c.name()}" th:value="${s}"
+                   th:checked="${filtro.marcado(c, s)}">
+            <span th:text="${s}">em dia</span>
+          </label>
+        </div>
+      </th:block>
+
+      <th:block th:if="${c.formato.name() == 'DINHEIRO' or c.formato.name() == 'NUMERO'}">
+        <label th:for="'f-' + ${c.name()} + '-de'">De</label>
+        <input th:id="'f-' + ${c.name()} + '-de'" th:name="'f_' + ${c.name()} + '_de'"
+               th:value="${filtro.valor(c, '_de')}" inputmode="decimal" placeholder="mínimo">
+        <label th:for="'f-' + ${c.name()} + '-ate'">Até</label>
+        <input th:id="'f-' + ${c.name()} + '-ate'" th:name="'f_' + ${c.name()} + '_ate'"
+               th:value="${filtro.valor(c, '_ate')}" inputmode="decimal" placeholder="máximo">
+      </th:block>
+
+      <th:block th:if="${c.formato.name() == 'DATA'}">
+        <label th:for="'f-' + ${c.name()} + '-de'">De</label>
+        <input type="date" th:id="'f-' + ${c.name()} + '-de'" th:name="'f_' + ${c.name()} + '_de'"
+               th:value="${filtro.valor(c, '_de')}">
+        <label th:for="'f-' + ${c.name()} + '-ate'">Até</label>
+        <input type="date" th:id="'f-' + ${c.name()} + '-ate'" th:name="'f_' + ${c.name()} + '_ate'"
+               th:value="${filtro.valor(c, '_ate')}">
+      </th:block>
+
+      <div class="pe-filtro">
+        <button class="botao pequeno" type="submit" form="filtros">Aplicar</button>
+      </div>
+    </div>
+  </details>
+</div>
+</body>
+</html>

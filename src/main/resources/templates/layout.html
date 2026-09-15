@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<!--
+  Pecas que todas as telas usam:
+    <head th:replace="~{layout :: cabeca('Titulo da tela')}">
+    <header th:replace="~{layout :: topo('titulos')}">
+    <div th:replace="~{layout :: recados}">
+-->
+<head th:fragment="cabeca(titulo)">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="format-detection" content="telephone=no">
+  <title th:text="'IT.FC · ' + ${titulo}">IT.FC</title>
+  <link rel="stylesheet" href="/css/itia.css?v=51">
+</head>
+<body>
+
+<header class="topo" th:fragment="topo(secao)"
+        th:classappend="${empresa == null} ? 'sem-empresa'">
+  <div class="faixa">
+    <span class="marca">IT<span>.</span>FC</span>
+
+    <nav class="menu" th:if="${empresa != null}">
+      <a href="/" th:classappend="${secao == 'painel'} ? 'ativo'">Painel</a>
+      <a href="/titulos" th:classappend="${secao == 'titulos'} ? 'ativo'">Contas a receber</a>
+      <a href="/pagar" th:classappend="${secao == 'pagar'} ? 'ativo'">Contas a pagar</a>
+      <a href="/conciliacao" th:classappend="${secao == 'conciliacao'} ? 'ativo'">Conciliação</a>
+      <a href="/disparos" th:classappend="${secao == 'cobranca'} ? 'ativo'">Cobrança</a>
+      <a href="/clientes" th:classappend="${secao == 'clientes'} ? 'ativo'">Clientes</a>
+      <a href="/servicos" th:classappend="${secao == 'servicos'} ? 'ativo'">Pacotes &amp; serviços</a>
+      <a href="/integracoes" th:classappend="${secao == 'integracoes'} ? 'ativo'">Integrações</a>
+      <a href="/etiquetas" th:classappend="${secao == 'etiquetas'} ? 'ativo'">Tags</a>
+    </nav>
+
+    <!-- chip da empresa com setinha: troca de empresa sem sair da tela -->
+    <details class="troca-empresa" th:if="${empresa != null}">
+      <summary class="empresa-atual">
+        empresa: <b th:text="${empresa.nome}"></b>
+        <svg viewBox="0 0 10 6" aria-hidden="true"><path d="M1 1l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
+      </summary>
+      <div class="gaveta">
+        <a th:each="e : ${empresasDoTopo}"
+           th:href="@{'/empresas/' + ${e.id} + '/entrar'}"
+           th:classappend="${e.id == empresa.id} ? 'atual'">
+          <b th:text="${e.nome}">Empresa</b>
+          <span th:text="${e.apelido}">apelido</span>
+        </a>
+        <a href="/empresas/configurar" class="gerenciar">Gerenciar empresas</a>
+      </div>
+    </details>
+
+    <details class="perfil">
+      <summary th:text="${usuario.iniciais}" title="Seu perfil">?</summary>
+      <div class="gaveta">
+        <div class="quem">
+          <b th:text="${usuario.nome}">Pessoa</b>
+          <span th:text="${usuario.email} ?: 'sem e-mail'"></span>
+        </div>
+        <a href="/perfil">
+          <svg th:replace="~{layout :: icone-pessoa}"></svg>
+          Meu perfil
+        </a>
+        <a href="/empresas/configurar">
+          <svg th:replace="~{layout :: engrenagem}"></svg>
+          Configurações
+        </a>
+        <a href="/empresas/regras" th:if="${empresa != null}">
+          <svg th:replace="~{layout :: engrenagem}"></svg>
+          Regras desta empresa
+        </a>
+        <a href="/empresas/pessoas" th:if="${empresa != null}">
+          <svg th:replace="~{layout :: icone-pessoa}"></svg>
+          Quem cuida desta empresa
+        </a>
+        <a href="/empresas">
+          <svg th:replace="~{layout :: icone-trocar}"></svg>
+          Trocar de empresa
+        </a>
+        <a href="/sair" class="sair">
+          <svg th:replace="~{layout :: icone-sair}"></svg>
+          Sair
+        </a>
+      </div>
+    </details>
+  </div>
+</header>
+
+<!-- as duas partes do modulo Contas a receber -->
+<nav class="abas-inversas" th:fragment="abas-receber(atual)">
+  <a href="/titulos" th:classappend="${atual == 'lancamentos'} ? 'ativa'">Contas a receber</a>
+  <a href="/comprovantes" th:classappend="${atual == 'comprovantes'} ? 'ativa'">Comprovantes</a>
+  <a href="/analises" th:classappend="${atual == 'analises'} ? 'ativa'">Análises</a>
+</nav>
+
+<!-- as partes do modulo Cobranca -->
+<nav class="abas-inversas" th:fragment="abas-cobranca(atual)">
+  <a href="/disparos" th:classappend="${atual == 'disparos'} ? 'ativa'">Disparos</a>
+  <a href="/conversas" th:classappend="${atual == 'conversas'} ? 'ativa'">Conversas</a>
+  <a href="/regua" th:classappend="${atual == 'regua'} ? 'ativa'">Régua</a>
+  <a href="/esteira" th:classappend="${atual == 'esteira'} ? 'ativa'">Esteira</a>
+  <a href="/acordos" th:classappend="${atual == 'acordos'} ? 'ativa'">Acordos</a>
+  <a href="/fluxos" th:classappend="${atual == 'fluxos'} ? 'ativa'">Fluxos</a>
+  <a href="/agente" th:classappend="${atual == 'agente'} ? 'ativa'">Agente</a>
+  <a href="/modelos" th:classappend="${atual == 'modelos'} ? 'ativa'">Modelos</a>
+</nav>
+
+<!-- as duas partes do modulo Pacotes e servicos -->
+<nav class="abas-inversas" th:fragment="abas-catalogo(atual)">
+  <a href="/servicos" th:classappend="${atual == 'servicos'} ? 'ativa'">Serviços</a>
+  <a href="/pacotes" th:classappend="${atual == 'pacotes'} ? 'ativa'">Pacotes</a>
+  <a href="/realizados" th:classappend="${atual == 'realizados'} ? 'ativa'">Serviços realizados</a>
+  <a href="/cobrancas" th:classappend="${atual == 'cobrancas'} ? 'ativa'">Cobranças</a>
+</nav>
+
+<div th:fragment="recados">
+  <div class="recado" th:if="${aviso}" th:text="${aviso}"></div>
+  <div class="recado erro" th:if="${erro}" th:text="${erro}"></div>
+</div>
+
+<!-- o funil que abre o filtro de cada coluna -->
+<svg th:fragment="funil" viewBox="0 0 16 16" aria-hidden="true">
+  <path d="M2 3h12l-4.6 5.4V13l-2.8 1.4V8.4z" fill="none" stroke="currentColor" stroke-width="1.4"/>
+</svg>
+
+<svg th:fragment="icone-pessoa" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+  <circle cx="12" cy="8" r="3.4" stroke="currentColor" stroke-width="1.5"/>
+  <path d="M4.8 20c0-3.5 3.2-5.6 7.2-5.6s7.2 2.1 7.2 5.6" stroke="currentColor" stroke-width="1.5"/>
+</svg>
+
+<svg th:fragment="icone-trocar" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+  <path d="M3 8h13M12 4l4 4-4 4" stroke="currentColor" stroke-width="1.5"/>
+  <path d="M21 16H8M12 12l-4 4 4 4" stroke="currentColor" stroke-width="1.5"/>
+</svg>
+
+<svg th:fragment="icone-sair" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+  <path d="M14 4H5v16h9" stroke="currentColor" stroke-width="1.5"/>
+  <path d="M17 8l4 4-4 4M21 12H10" stroke="currentColor" stroke-width="1.5"/>
+</svg>
+
+<svg th:fragment="engrenagem" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+  <path d="M12 15.5a3.5 3.5 0 100-7 3.5 3.5 0 000 7z" stroke="currentColor" stroke-width="1.7"/>
+  <path d="M19.4 13a7.7 7.7 0 000-2l2-1.5-2-3.4-2.3.9a7.6 7.6 0 00-1.8-1L14.9 3h-3.9l-.4 2.4a7.6 7.6 0 00-1.8 1l-2.3-.9-2 3.4L6.6 11a7.7 7.7 0 000 2l-2 1.5 2 3.4 2.3-.9c.6.4 1.2.8 1.8 1l.4 2.4h3.9l.4-2.4c.6-.2 1.2-.6 1.8-1l2.3.9 2-3.4-2-1.5z"
+        stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+</svg>
+
+<script th:fragment="scripts" src="/js/vivo.js?v=1"></script>
+
+</body>
+</html>

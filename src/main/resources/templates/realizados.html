@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head th:replace="~{layout :: cabeca('Serviços realizados')}"></head>
+<body>
+<header th:replace="~{layout :: topo('servicos')}"></header>
+
+<main class="largo">
+  <div th:replace="~{layout :: recados}"></div>
+
+  <div class="cabecalho-pagina">
+    <div>
+      <span class="olho"><i></i>Serviços realizados</span>
+      <h1>Pacotes &amp; serviços</h1>
+      <nav th:replace="~{layout :: abas-catalogo('realizados')}"></nav>
+    </div>
+    <div class="acoes" style="margin:0">
+      <button class="botao" type="button" data-abre="janela-registrar"
+              th:disabled="${clientes.isEmpty() or servicos.isEmpty()}">+ Registrar atendimento</button>
+    </div>
+  </div>
+
+  <p class="dica" style="margin-top:4px">Onde a equipe registra o que fez para o cliente.
+    O sistema confere o pacote e diz se está incluído ou se gera cobrança.</p>
+
+  <form class="barra-busca" method="get" action="/realizados">
+    <select name="cliente">
+      <option value="">Todos os clientes</option>
+      <option th:each="c : ${clientes}" th:value="${c.id}" th:text="${c.nome}"
+              th:selected="${clienteEscolhido != null and clienteEscolhido.toString() == c.id.toString()}"></option>
+    </select>
+    <select name="servico">
+      <option value="">Todos os serviços</option>
+      <option th:each="s : ${servicos}" th:value="${s.id}" th:text="${s.nome}"
+              th:selected="${servicoEscolhido != null and servicoEscolhido.toString() == s.id.toString()}"></option>
+    </select>
+    <select name="tratamento">
+      <option value="">Qualquer tratamento</option>
+      <option th:each="t : ${tratamentos}" th:value="${t}" th:text="${t.rotulo}"
+              th:selected="${tratamentoEscolhido == t.name()}"></option>
+    </select>
+    <input type="date" name="de" th:value="${de}" title="De">
+    <input type="date" name="ate" th:value="${ate}" title="Até">
+    <button class="botao pequeno" type="submit">Filtrar</button>
+    <a class="botao pequeno vazado" href="/realizados">Limpar</a>
+  </form>
+
+  <div class="tabela-caixa" th:if="${!atendimentos.isEmpty()}">
+    <table>
+      <thead>
+      <tr>
+        <th class="centro">Data</th>
+        <th>Cliente</th>
+        <th>Serviço</th>
+        <th class="centro">Quantidade</th>
+        <th class="centro">Itens</th>
+        <th>Responsável</th>
+        <th class="centro">Tratamento</th>
+        <th class="centro">Valor</th>
+        <th></th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr th:each="a : ${atendimentos}">
+        <td class="centro mono"
+            th:text="${#temporals.format(a.realizadoEm, 'dd/MM/yyyy')}">01/01/2026</td>
+        <td>
+          <b th:text="${a.pagador.nome}">Cliente</b>
+          <small th:if="${a.unidade != null}" th:text="${a.unidade.razaoSocial}"></small>
+        </td>
+        <td th:text="${a.servico.nome}">Serviço</td>
+        <td class="centro mono"
+            th:text="${#numbers.formatDecimal(a.quantidade, 1, 'POINT', 0, 'COMMA')}">1</td>
+        <td class="centro mono" th:text="${a.itens.size()}">0</td>
+        <td th:text="${a.responsavel}"></td>
+        <td class="centro">
+          <span class="marca-situacao"
+                th:classappend="${a.tratamento.name() == 'INCLUIDO_NO_PACOTE'} ? 's-pago'
+                                : (${a.tratamento.name() == 'GRATUITO'} ? 's-cancelado' : 's-aberto')"
+                th:text="${a.tratamento.rotulo}">Incluído no pacote</span>
+        </td>
+        <td class="centro mono" th:text="${a.valorResumido}">sem cobrança</td>
+        <td style="text-align:right">
+          <a class="botao pequeno vazado" th:href="@{'/realizados/' + ${a.id}}">Abrir</a>
+        </td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="vazio" th:if="${atendimentos.isEmpty()}">
+    Nenhum atendimento registrado com esses filtros.
+  </div>
+</main>
+
+<script th:replace="~{layout :: scripts}"></script>
+
+<dialog id="janela-registrar" class="janela">
+  <form method="post" action="/realizados" data-confere-pacote>
+    <div class="janela-topo">
+      <div>
+        <span class="olho"><i></i>Serviços realizados</span>
+        <h2>Registrar atendimento</h2>
+      </div>
+      <button type="button" class="fechar" data-fecha aria-label="Fechar">&#10005;</button>
+    </div>
+    <div class="janela-corpo">
+      <div class="alerta-box" data-aviso-pacote style="margin-bottom:18px">
+        Escolha o cliente e o serviço para o sistema conferir o pacote.
+      </div>
+
+      <div class="campos">
+        <div>
+          <label for="rz-cliente">Cliente atendido</label>
+          <select id="rz-cliente" name="pagadorId" required data-cliente>
+            <option th:each="c : ${clientes}" th:value="${c.id}"
+                    th:text="${c.nome} + (${c.cpf != null} ? ' · ' + ${c.cpf} : '')"></option>
+          </select>
+        </div>
+        <div>
+          <label for="rz-unidade">Unidade</label>
+          <select id="rz-unidade" name="unidadeId">
+            <option value="">sem unidade específica</option>
+            <option th:each="u : ${unidades}" th:value="${u.id}" th:text="${u.razaoSocial}"></option>
+          </select>
+        </div>
+        <div>
+          <label for="rz-servico">Serviço realizado</label>
+          <select id="rz-servico" name="servicoId" required data-servico>
+            <option th:each="s : ${servicos}" th:value="${s.id}"
+                    th:text="${s.codigo} + ' · ' + ${s.nome}"></option>
+          </select>
+        </div>
+        <div>
+          <label for="rz-data">Data</label>
+          <input id="rz-data" name="realizadoEm" type="date" th:value="${hoje}" data-dia>
+        </div>
+        <div>
+          <label for="rz-quantidade">Quantidade</label>
+          <input id="rz-quantidade" name="quantidade" type="number" step="1" min="1" value="1"
+                 data-quantidade>
+        </div>
+        <div>
+          <label for="rz-responsavel">Responsável</label>
+          <input id="rz-responsavel" name="responsavel" placeholder="quem executou">
+        </div>
+      </div>
+
+      <span class="rotulo-bloco">Itens executados</span>
+      <div class="lista-itens">
+        <th:block th:each="s : ${servicos}">
+          <label th:each="i : ${s.itensAtivos}" class="escolha-item" th:attr="data-de=${s.id}">
+            <input type="checkbox" name="itens" th:value="${i.id}">
+            <span th:text="${i.nome}">Item</span>
+          </label>
+        </th:block>
+        <p class="dica" data-sem-itens style="display:none">Este serviço não tem itens cadastrados.</p>
+      </div>
+
+      <span class="rotulo-bloco">Como vai ser tratado</span>
+      <div class="campos">
+        <div>
+          <label for="rz-tratamento">Tratamento</label>
+          <select id="rz-tratamento" name="tratamento" data-tratamento>
+            <option value="PELO_PACOTE">deixar o sistema decidir pelo pacote</option>
+            <option th:each="t : ${tratamentos}" th:value="${t}" th:text="${t.rotulo}"></option>
+          </select>
+        </div>
+        <div>
+          <label for="rz-valor">Valor cobrado (R$)</label>
+          <input id="rz-valor" name="valorCobrado" type="number" step="0.01" min="0"
+                 placeholder="vazio usa o preço do catálogo">
+        </div>
+        <div>
+          <label for="rz-desconto">Desconto (R$)</label>
+          <input id="rz-desconto" name="desconto" type="number" step="0.01" min="0">
+        </div>
+      </div>
+      <div class="campos" style="margin-top:16px">
+        <div style="grid-column:1/-1">
+          <label for="rz-obs">Observações</label>
+          <input id="rz-obs" name="observacao" placeholder="o que foi feito, e por quê">
+        </div>
+      </div>
+      <p class="dica">O comprovante é anexado depois de gravar, dentro do atendimento.</p>
+    </div>
+    <div class="janela-pe">
+      <button type="button" class="botao vazado" data-fecha>Cancelar</button>
+      <button class="botao" type="submit">Registrar</button>
+    </div>
+  </form>
+</dialog>
+
+<script src="/js/janelas.js?v=1"></script>
+<script src="/js/realizado.js?v=1"></script>
+
+</body>
+</html>

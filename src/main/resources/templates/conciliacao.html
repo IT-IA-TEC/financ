@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head th:replace="~{layout :: cabeca('Conciliação bancária')}"></head>
+<body>
+<header th:replace="~{layout :: topo('conciliacao')}"></header>
+
+<main class="largo">
+  <div th:replace="~{layout :: recados}"></div>
+
+  <div class="cabecalho-pagina com-resumo">
+    <div>
+      <span class="olho"><i></i>Banco</span>
+      <h1>Conciliação bancária</h1>
+    </div>
+
+    <div class="cartoes-topo">
+      <div class="cartao-topo inverso">
+        <span class="rotulo">Sem par</span>
+        <b th:text="${pendentes.size()}">0</b>
+        <small>movimentos pendentes</small>
+      </div>
+      <div class="cartao-topo">
+        <span class="rotulo">No extrato</span>
+        <b th:text="${movimentos.size()}">0</b>
+        <small>linhas importadas</small>
+      </div>
+      <div class="cartao-topo">
+        <span class="rotulo">Títulos em aberto</span>
+        <b th:text="${titulos.size()}">0</b>
+        <small>esperando dinheiro</small>
+      </div>
+      <div class="cartao-topo listrado">
+        <span class="rotulo">Contas a pagar</span>
+        <b th:text="${contasEmAberto.size()}">0</b>
+        <small>com saldo</small>
+      </div>
+    </div>
+
+    <div class="acoes" style="margin:0">
+      <form method="post" action="/conciliacao/casar">
+        <button class="botao vazado" type="submit">Casar pelo identificador</button>
+      </form>
+      <button class="botao" type="button" data-abre="janela-extrato">Importar extrato</button>
+    </div>
+  </div>
+
+  <div class="alerta-box" style="margin-bottom:18px">
+    O que casa pelo identificador do banco é ligado sozinho. O resto fica pendente e espera
+    decisão: valor parecido em data parecida nunca é motivo para casar nada.
+  </div>
+
+  <!-- ------------------------------------------------- extrato x sistema -->
+  <span class="rotulo-bloco">Extrato do banco</span>
+  <div class="tabela-caixa" th:if="${!movimentos.isEmpty()}">
+    <table>
+      <thead>
+      <tr>
+        <th class="centro">Quando</th>
+        <th class="centro">Tipo</th>
+        <th class="centro">Valor</th>
+        <th>Descrição</th>
+        <th>Identificador</th>
+        <th class="centro">Situação</th>
+        <th>O que fazer</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr th:each="m : ${movimentos}">
+        <td class="centro mono" th:text="${#temporals.format(m.ocorridoEm, 'dd/MM/yyyy')}">01/01</td>
+        <td class="centro">
+          <span class="marca-situacao" th:classappend="${m.entrou()} ? 's-pago' : 's-aberto'"
+                th:text="${m.entrou()} ? 'entrou' : 'saiu'">entrou</span>
+        </td>
+        <td class="centro mono"
+            th:text="'R$ ' + ${#numbers.formatDecimal(m.valor, 1, 'POINT', 2, 'COMMA')}">R$ 0,00</td>
+        <td th:text="${m.descricao}"></td>
+        <td class="mono" style="font-size:11.5px" th:text="${m.identificador}"></td>
+        <td class="centro">
+          <span class="marca-situacao"
+                th:classappend="${m.situacao == 'CONCILIADO'} ? 's-pago'
+                                : (${m.situacao == 'IGNORADO'} ? 's-cancelado' : 's-vencido')"
+                th:text="${m.situacao.toLowerCase()}">pendente</span>
+          <small th:if="${m.motivo != null}" th:text="${m.motivo}"></small>
+        </td>
+        <td>
+          <div th:if="${m.pendente()}" class="acoes-movimento">
+            <form method="post" th:action="@{'/conciliacao/' + ${m.id} + '/titulo'}"
+                  th:if="${m.entrou()}">
+              <select name="tituloId" required>
+                <option th:each="t : ${titulos}" th:value="${t.id}"
+                        th:text="${t.identificadorPix} + ' · ' + ${t.cliente.razaoSocial}
+                                 + ' · R$ ' + ${#numbers.formatDecimal(t.saldo, 1, 'POINT', 2, 'COMMA')}"></option>
+              </select>
+              <label class="escolha-item">
+                <input type="checkbox" name="darBaixa" value="true" checked>
+                <span>dar baixa</span>
+              </label>
+              <button class="botao pequeno" type="submit">Ligar ao título</button>
+            </form>
+
+            <form method="post" th:action="@{'/conciliacao/' + ${m.id} + '/conta'}"
+                  th:unless="${m.entrou()}">
+              <select name="obrigacaoId" required>
+                <option th:each="o : ${contasEmAberto}" th:value="${o.id}"
+                        th:text="${o.numero} + ' · ' + ${o.favorecido.nome}
+                                 + ' · R$ ' + ${#numbers.formatDecimal(o.saldo, 1, 'POINT', 2, 'COMMA')}"></option>
+              </select>
+              <label class="escolha-item">
+                <input type="checkbox" name="registrarPagamento" value="true" checked>
+                <span>registrar pagamento</span>
+              </label>
+              <button class="botao pequeno" type="submit">Ligar à conta</button>
+            </form>
+
+            <form method="post" th:action="@{'/conciliacao/' + ${m.id} + '/ignorar'}">
+              <input name="motivo" placeholder="tarifa, transferência própria" required>
+              <button class="botao pequeno vazado" type="submit">Ignorar</button>
+            </form>
+          </div>
+
+          <form method="post" th:unless="${m.pendente()}"
+                th:action="@{'/conciliacao/' + ${m.id} + '/desfazer'}">
+            <button class="botao pequeno vazado" type="submit">Desfazer</button>
+          </form>
+        </td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="vazio" th:if="${movimentos.isEmpty()}">
+    Nenhum extrato importado ainda. Use o botão acima para trazer o arquivo do banco.
+  </div>
+
+  <!-- --------------------------------------------------- fechamento do dia -->
+  <span class="rotulo-bloco">Fechamento dia a dia</span>
+  <form class="barra-busca" method="get" action="/conciliacao">
+    <input type="date" name="de" th:value="${de}">
+    <input type="date" name="ate" th:value="${ate}">
+    <button class="botao pequeno" type="submit">Ver período</button>
+  </form>
+
+  <div class="tabela-caixa" th:if="${!fechamento.isEmpty()}">
+    <table>
+      <thead>
+      <tr>
+        <th class="centro">Dia</th>
+        <th class="centro">Entrou</th>
+        <th class="centro">Saiu</th>
+        <th class="centro">Sem par</th>
+        <th class="centro">Situação do dia</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr th:each="d : ${fechamento}">
+        <td class="centro mono" th:text="${#temporals.format(d.dia, 'dd/MM/yyyy')}">01/01</td>
+        <td class="centro mono"
+            th:text="'R$ ' + ${#numbers.formatDecimal(d.entradas, 1, 'POINT', 2, 'COMMA')}">R$ 0,00</td>
+        <td class="centro mono"
+            th:text="'R$ ' + ${#numbers.formatDecimal(d.saidas, 1, 'POINT', 2, 'COMMA')}">R$ 0,00</td>
+        <td class="centro mono"
+            th:text="${d.pendentes} + ' · R$ ' + ${#numbers.formatDecimal(d.semPar, 1, 'POINT', 2, 'COMMA')}">0</td>
+        <td class="centro">
+          <span class="marca-situacao" th:classappend="${d.fecha()} ? 's-pago' : 's-vencido'"
+                th:text="${d.fecha()} ? 'fecha' : 'falta conferir'">fecha</span>
+        </td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="vazio" th:if="${fechamento.isEmpty()}">
+    Nenhum movimento neste período.
+  </div>
+
+  <!-- ------------------------------------------------------ importações -->
+  <span class="rotulo-bloco">Extratos importados</span>
+  <div class="tabela-caixa" th:if="${!importacoes.isEmpty()}">
+    <table>
+      <thead>
+      <tr>
+        <th>Arquivo</th>
+        <th class="centro">Linhas</th>
+        <th class="centro">Novos</th>
+        <th class="centro">Repetidos</th>
+        <th class="centro">Quando</th>
+        <th>Quem</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr th:each="i : ${importacoes}">
+        <td th:text="${i.arquivo}">extrato.csv</td>
+        <td class="centro mono" th:text="${i.linhas}">0</td>
+        <td class="centro mono" th:text="${i.novos}">0</td>
+        <td class="centro mono" th:text="${i.repetidos}">0</td>
+        <td class="centro mono" th:text="${#temporals.format(i.quando, 'dd/MM/yyyy HH:mm')}"></td>
+        <td th:text="${i.quem}"></td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="vazio" th:if="${importacoes.isEmpty()}">
+    Nenhuma importação registrada.
+  </div>
+</main>
+
+<script th:replace="~{layout :: scripts}"></script>
+
+<dialog id="janela-extrato" class="janela estreita">
+  <form method="post" action="/conciliacao/importar" enctype="multipart/form-data">
+    <div class="janela-topo">
+      <div>
+        <span class="olho"><i></i>Banco</span>
+        <h2>Importar extrato</h2>
+      </div>
+      <button type="button" class="fechar" data-fecha aria-label="Fechar">&#10005;</button>
+    </div>
+    <div class="janela-corpo">
+      <p class="dica">Arquivo de texto com quatro colunas separadas por ponto e vírgula:
+        data, valor, descrição e identificador da transação. Valor negativo é saída.</p>
+      <div class="mono" style="border:1px solid var(--border-default); padding:12px; font-size:12.5px">
+        15/09/2026;777,50;PIX recebido;E0041696820260915123<br>
+        15/09/2026;-180,00;Pagamento fornecedor;DOC998877
+      </div>
+      <div class="campos" style="margin-top:16px">
+        <div>
+          <label for="ex-conta">Conta do extrato</label>
+          <select id="ex-conta" name="contaId">
+            <option value="">não informada</option>
+            <option th:each="c : ${contasFinanceiras}" th:value="${c.id}" th:text="${c.resumo}"></option>
+          </select>
+        </div>
+        <div>
+          <label for="ex-arquivo">Arquivo</label>
+          <input id="ex-arquivo" name="arquivo" type="file" accept=".csv,.txt" required>
+        </div>
+      </div>
+      <p class="dica">O mesmo arquivo não entra duas vezes: a conferência é pelo conteúdo, então
+        renomear não adianta. Movimento com identificador repetido também é recusado.</p>
+    </div>
+    <div class="janela-pe">
+      <button type="button" class="botao vazado" data-fecha>Cancelar</button>
+      <button class="botao" type="submit">Importar</button>
+    </div>
+  </form>
+</dialog>
+
+<script src="/js/janelas.js?v=1"></script>
+
+</body>
+</html>

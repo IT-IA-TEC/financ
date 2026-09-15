@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head th:replace="~{layout :: cabeca('Pacote')}"></head>
+<body>
+<header th:replace="~{layout :: topo('servicos')}"></header>
+
+<main class="largo">
+  <div th:replace="~{layout :: recados}"></div>
+
+  <div class="cabecalho-pagina">
+    <div>
+      <span class="olho"><i></i><span class="mono" th:text="${pacote.codigo}">P0001</span></span>
+      <h1 th:text="${pacote.nome}">Pacote</h1>
+      <p th:if="${pacote.descricao != null}" th:text="${pacote.descricao}"></p>
+    </div>
+    <div class="acoes" style="margin:0">
+      <a class="botao vazado" href="/pacotes">Voltar aos pacotes</a>
+      <form method="post" th:action="@{'/pacotes/' + ${pacote.id} + '/inativar'}"
+            th:if="${pacote.ativo}">
+        <button class="botao perigo" type="submit">Inativar pacote</button>
+      </form>
+      <form method="post" th:action="@{'/pacotes/' + ${pacote.id} + '/reativar'}"
+            th:unless="${pacote.ativo}">
+        <button class="botao" type="submit">Reativar pacote</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="cartoes">
+    <div class="cartao">
+      <span class="rotulo">Valor do pacote</span>
+      <span class="numero" th:text="${pacote.valorResumido}">R$ 0,00</span>
+      <small th:text="${pacote.periodicidadeResumida}">Mensal</small>
+    </div>
+    <div class="cartao">
+      <span class="rotulo">Serviços incluídos</span>
+      <span class="numero" th:text="${pacote.composicao.size()}">0</span>
+      <small th:text="${pacote.composicao.size() == 1} ? 'linha na composição' : 'linhas na composição'">linhas na composição</small>
+    </div>
+    <div class="cartao">
+      <span class="rotulo">Contratações</span>
+      <span class="numero" th:text="${contratacoes.size()}">0</span>
+      <small th:text="${contratacoes.size() == 1} ? 'cliente com este pacote' : 'clientes com este pacote'">clientes com este pacote</small>
+    </div>
+    <div class="cartao">
+      <span class="rotulo">Situação</span>
+      <span class="numero" style="font-size:17px" th:text="${pacote.ativo} ? 'Ativo' : 'Inativo'">Ativo</span>
+      <small th:text="${pacote.ativo} ? 'aceita novas contratações' : 'fora das novas contratações'"></small>
+    </div>
+  </div>
+
+  <nav class="abas-tela">
+    <a th:href="@{'/pacotes/' + ${pacote.id}}"
+       th:classappend="${aba == 'dados'} ? 'ativa'">Dados do pacote</a>
+    <a th:href="@{'/pacotes/' + ${pacote.id} + '?aba=composicao'}"
+       th:classappend="${aba == 'composicao'} ? 'ativa'">Composição</a>
+    <a th:href="@{'/pacotes/' + ${pacote.id} + '?aba=contratacoes'}"
+       th:classappend="${aba == 'contratacoes'} ? 'ativa'">Contratações</a>
+  </nav>
+
+  <!-- ---------------------------------------------------- dados do pacote -->
+  <section th:if="${aba == 'dados'}">
+    <form class="bloco" method="post" th:action="@{'/pacotes/' + ${pacote.id} + '/dados'}">
+      <div class="campos">
+        <div>
+          <label for="nome">Nome</label>
+          <input id="nome" name="nome" th:value="${pacote.nome}" required>
+        </div>
+        <div>
+          <label for="valor">Valor do pacote (R$)</label>
+          <input id="valor" name="valor" type="number" step="0.01" min="0"
+                 th:value="${pacote.valor}" placeholder="vazio enquanto não for definido">
+        </div>
+        <div>
+          <label for="periodicidade">Periodicidade</label>
+          <select id="periodicidade" name="periodicidade">
+            <option th:each="p : ${periodicidades}" th:value="${p}" th:text="${p.rotulo}"
+                    th:selected="${p == pacote.periodicidade}"></option>
+          </select>
+        </div>
+        <div>
+          <label for="outra">Se for outra, qual</label>
+          <input id="outra" name="periodicidadeOutra" th:value="${pacote.periodicidadeOutra}"
+                 placeholder="a cada 45 dias">
+        </div>
+        <div>
+          <label for="ativo">Situação</label>
+          <select id="ativo" name="ativo">
+            <option value="true" th:selected="${pacote.ativo}">ativo</option>
+            <option value="false" th:selected="${!pacote.ativo}">inativo</option>
+          </select>
+        </div>
+      </div>
+      <div class="campos" style="margin-top:16px">
+        <div style="grid-column:1/-1">
+          <label for="descricao">Descrição</label>
+          <input id="descricao" name="descricao" th:value="${pacote.descricao}"
+                 placeholder="O que este pacote entrega ao cliente">
+        </div>
+      </div>
+      <div class="acoes">
+        <button class="botao" type="submit">Salvar dados</button>
+      </div>
+    </form>
+  </section>
+
+  <!-- -------------------------------------------------------- composição -->
+  <section th:if="${aba == 'composicao'}">
+    <div class="alerta-box" style="margin-bottom:22px">
+      O pacote reúne serviços que já estão no catálogo. Quantidade vazia com a marcação
+      de ilimitado quer dizer sem limite, e não zero.
+    </div>
+
+    <div class="cabecalho-pagina" style="margin-top:0">
+      <div>
+        <span class="olho"><i></i>Composição</span>
+        <h2>O que está incluído</h2>
+      </div>
+      <div class="acoes" style="margin:0">
+        <button class="botao" type="button" data-abre="janela-nova-linha"
+                th:disabled="${servicosDisponiveis.isEmpty()}">+ Incluir serviço</button>
+      </div>
+    </div>
+
+    <div class="vazio" th:if="${servicosDisponiveis.isEmpty()}">
+      Nenhum serviço ativo no catálogo. Cadastre um serviço antes de montar o pacote.
+    </div>
+
+    <div class="tabela-caixa" th:if="${!pacote.composicao.isEmpty()}">
+      <table>
+        <thead>
+        <tr>
+          <th>O que entra</th>
+          <th class="centro">Abrangência</th>
+          <th class="centro">Incluído</th>
+          <th class="centro">Período do limite</th>
+          <th class="centro">Excedente</th>
+          <th></th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="linha : ${pacote.composicao}">
+          <td>
+            <b th:text="${linha.resumoDoQueEntra}">Serviço</b>
+            <small th:if="${linha.observacao != null}" th:text="${linha.observacao}"></small>
+          </td>
+          <td class="centro" th:text="${linha.abrangencia.rotulo}">Serviço completo</td>
+          <td class="centro">
+            <span th:if="${linha.ilimitado}" class="marca-situacao s-pago">ilimitado</span>
+            <span th:unless="${linha.ilimitado}" class="mono"
+                  th:text="${linha.quantidadeIncluida != null}
+                           ? ${#numbers.formatDecimal(linha.quantidadeIncluida, 1, 'POINT', 0, 'COMMA')}
+                           : 'sem limite definido'">2</span>
+          </td>
+          <td class="centro" th:text="${linha.periodoLimite.rotulo}">A cada período do pacote</td>
+          <td class="centro" th:text="${linha.tratamentoExcedente.rotulo}">Cobrar pelo preço cadastrado</td>
+          <td style="text-align:right">
+            <button class="botao pequeno vazado" type="button"
+                    th:attr="data-abre='linha-' + ${linha.id}">Editar</button>
+          </td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="vazio" th:if="${pacote.composicao.isEmpty() and !servicosDisponiveis.isEmpty()}">
+      Nada incluído ainda. Use o botão acima para trazer um serviço do catálogo para dentro
+      deste pacote.
+    </div>
+  </section>
+
+  <!-- ------------------------------------------------------ contratações -->
+  <section th:if="${aba == 'contratacoes'}">
+    <div class="cabecalho-pagina" style="margin-top:0">
+      <div>
+        <span class="olho"><i></i>Contratação do cliente</span>
+        <h2>Quem tem este pacote</h2>
+      </div>
+      <div class="acoes" style="margin:0">
+        <button class="botao" type="button" data-abre="janela-contratar"
+                th:disabled="${clientes.isEmpty()}">+ Contratar para um cliente</button>
+      </div>
+    </div>
+
+    <div class="vazio" th:if="${clientes.isEmpty()}">
+      Nenhum cliente cadastrado nesta empresa ainda.
+    </div>
+
+    <div class="tabela-caixa" th:if="${!contratacoes.isEmpty()}">
+      <table>
+        <thead>
+        <tr>
+          <th>Cliente</th>
+          <th>Unidade</th>
+          <th class="centro">Valor acordado</th>
+          <th class="centro">Vigência</th>
+          <th class="centro">Situação</th>
+          <th></th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="c : ${contratacoes}">
+          <td>
+            <b th:text="${c.pagador.nome}">Cliente</b>
+            <small class="mono" th:if="${c.pagador.cpf != null}" th:text="${c.pagador.cpf}"></small>
+          </td>
+          <td th:text="${c.unidade != null} ? ${c.unidade.razaoSocial} : 'todas as unidades'"></td>
+          <td class="centro mono" th:text="${c.valorResumido}">R$ 0,00</td>
+          <td class="centro" th:text="${c.vigenciaResumida}">sem vigência informada</td>
+          <td class="centro">
+            <span class="marca-situacao"
+                  th:classappend="${c.situacao.name() == 'ATIVA'} ? 's-pago'
+                                  : (${c.situacao.name() == 'SUSPENSA'} ? 's-parcial' : 's-cancelado')"
+                  th:text="${c.situacao.rotulo}">ativa</span>
+          </td>
+          <td style="text-align:right">
+            <button class="botao pequeno vazado" type="button"
+                    th:attr="data-abre='contratacao-' + ${c.id}">Editar</button>
+          </td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="vazio" th:if="${contratacoes.isEmpty() and !clientes.isEmpty()}">
+      Ninguém contratou este pacote ainda.
+    </div>
+  </section>
+</main>
+
+<script th:replace="~{layout :: scripts}"></script>
+
+<!-- ------------------------------------------------ janela: incluir serviço -->
+<dialog id="janela-nova-linha" class="janela">
+  <form method="post" th:action="@{'/pacotes/' + ${pacote.id} + '/composicao'}">
+    <div class="janela-topo">
+      <div>
+        <span class="olho"><i></i>Composição</span>
+        <h2>Incluir serviço no pacote</h2>
+      </div>
+      <button type="button" class="fechar" data-fecha aria-label="Fechar">&#10005;</button>
+    </div>
+    <div class="janela-corpo">
+      <p class="dica">Para incluir mais de um item do mesmo serviço, repita esta inclusão
+        uma vez para cada item.</p>
+      <div class="campos">
+        <div>
+          <label for="nl-servico">Serviço do catálogo</label>
+          <select id="nl-servico" name="servicoId" required data-servico>
+            <option th:each="s : ${servicosDisponiveis}" th:value="${s.id}"
+                    th:text="${s.codigo} + ' · ' + ${s.nome}"></option>
+          </select>
+        </div>
+        <div>
+          <label for="nl-abrangencia">O que entra</label>
+          <select id="nl-abrangencia" name="abrangencia" data-abrangencia>
+            <option th:each="a : ${abrangencias}" th:value="${a}" th:text="${a.rotulo}"></option>
+          </select>
+        </div>
+        <div>
+          <label for="nl-item">Item, quando for só um</label>
+          <select id="nl-item" name="itemId" data-item>
+            <option value="">nenhum item escolhido</option>
+            <th:block th:each="s : ${servicosDisponiveis}">
+              <option th:each="i : ${s.itensAtivos}" th:value="${i.id}"
+                      th:attr="data-de=${s.id}" th:text="${i.nome}"></option>
+            </th:block>
+          </select>
+        </div>
+      </div>
+
+      <span class="rotulo-bloco">Limite</span>
+      <div class="campos">
+        <div>
+          <label for="nl-ilimitado">Utilização</label>
+          <select id="nl-ilimitado" name="ilimitado" data-ilimitado>
+            <option value="false">quantidade incluída</option>
+            <option value="true">ilimitada</option>
+          </select>
+        </div>
+        <div>
+          <label for="nl-quantidade">Quantidade incluída</label>
+          <input id="nl-quantidade" name="quantidadeIncluida" type="number" step="1" min="0"
+                 placeholder="2" data-quantidade>
+        </div>
+        <div>
+          <label for="nl-periodo">Período do limite</label>
+          <select id="nl-periodo" name="periodoLimite">
+            <option th:each="p : ${periodos}" th:value="${p}" th:text="${p.rotulo}"></option>
+          </select>
+        </div>
+        <div>
+          <label for="nl-excedente">Se passar do limite</label>
+          <select id="nl-excedente" name="excedente">
+            <option th:each="e : ${excedentes}" th:value="${e}" th:text="${e.rotulo}"></option>
+          </select>
+        </div>
+      </div>
+      <div class="campos" style="margin-top:16px">
+        <div style="grid-column:1/-1">
+          <label for="nl-obs">Observação</label>
+          <input id="nl-obs" name="observacao" placeholder="opcional">
+        </div>
+      </div>
+    </div>
+    <div class="janela-pe">
+      <button type="button" class="botao vazado" data-fecha>Cancelar</button>
+      <button class="botao" type="submit">Incluir no pacote</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- ------------------------------------------- janela: editar cada linha -->
+<dialog th:each="linha : ${pacote.composicao}" th:id="'linha-' + ${linha.id}" class="janela">
+  <form method="post" th:action="@{'/pacotes/' + ${pacote.id} + '/composicao/' + ${linha.id}}">
+    <div class="janela-topo">
+      <div>
+        <span class="olho"><i></i>Composição</span>
+        <h2 th:text="${linha.resumoDoQueEntra}">Serviço</h2>
+      </div>
+      <button type="button" class="fechar" data-fecha aria-label="Fechar">&#10005;</button>
+    </div>
+    <div class="janela-corpo">
+      <div class="campos">
+        <div>
+          <label th:for="'el-servico-' + ${linha.id}">Serviço do catálogo</label>
+          <select th:id="'el-servico-' + ${linha.id}" name="servicoId" required data-servico>
+            <option th:each="s : ${servicosDisponiveis}" th:value="${s.id}"
+                    th:text="${s.codigo} + ' · ' + ${s.nome}"
+                    th:selected="${s.id == linha.servico.id}"></option>
+          </select>
+        </div>
+        <div>
+          <label th:for="'el-abr-' + ${linha.id}">O que entra</label>
+          <select th:id="'el-abr-' + ${linha.id}" name="abrangencia" data-abrangencia>
+            <option th:each="a : ${abrangencias}" th:value="${a}" th:text="${a.rotulo}"
+                    th:selected="${a == linha.abrangencia}"></option>
+          </select>
+        </div>
+        <div>
+          <label th:for="'el-item-' + ${linha.id}">Item, quando for só um</label>
+          <select th:id="'el-item-' + ${linha.id}" name="itemId" data-item>
+            <option value="">nenhum item escolhido</option>
+            <th:block th:each="s : ${servicosDisponiveis}">
+              <option th:each="i : ${s.itensAtivos}" th:value="${i.id}" th:attr="data-de=${s.id}"
+                      th:text="${i.nome}"
+                      th:selected="${linha.item != null and linha.item.id == i.id}"></option>
+            </th:block>
+          </select>
+        </div>
+        <div>
+          <label th:for="'el-ordem-' + ${linha.id}">Ordem na lista</label>
+          <input th:id="'el-ordem-' + ${linha.id}" name="ordem" type="number" min="1"
+                 th:value="${linha.ordem}">
+        </div>
+      </div>
+
+      <span class="rotulo-bloco">Limite</span>
+      <div class="campos">
+        <div>
+          <label th:for="'el-ilim-' + ${linha.id}">Utilização</label>
+          <select th:id="'el-ilim-' + ${linha.id}" name="ilimitado" data-ilimitado>
+            <option value="false" th:selected="${!linha.ilimitado}">quantidade incluída</option>
+            <option value="true" th:selected="${linha.ilimitado}">ilimitada</option>
+          </select>
+        </div>
+        <div>
+          <label th:for="'el-qtd-' + ${linha.id}">Quantidade incluída</label>
+          <input th:id="'el-qtd-' + ${linha.id}" name="quantidadeIncluida" type="number"
+                 step="1" min="0" th:value="${linha.quantidadeIncluida}" data-quantidade>
+        </div>
+        <div>
+          <label th:for="'el-per-' + ${linha.id}">Período do limite</label>
+          <select th:id="'el-per-' + ${linha.id}" name="periodoLimite">
+            <option th:each="p : ${periodos}" th:value="${p}" th:text="${p.rotulo}"
+                    th:selected="${p == linha.periodoLimite}"></option>
+          </select>
+        </div>
+        <div>
+          <label th:for="'el-exc-' + ${linha.id}">Se passar do limite</label>
+          <select th:id="'el-exc-' + ${linha.id}" name="excedente">
+            <option th:each="e : ${excedentes}" th:value="${e}" th:text="${e.rotulo}"
+                    th:selected="${e == linha.tratamentoExcedente}"></option>
+          </select>
+        </div>
+      </div>
+      <div class="campos" style="margin-top:16px">
+        <div style="grid-column:1/-1">
+          <label th:for="'el-obs-' + ${linha.id}">Observação</label>
+          <input th:id="'el-obs-' + ${linha.id}" name="observacao" th:value="${linha.observacao}">
+        </div>
+      </div>
+    </div>
+    <div class="janela-pe">
+      <button type="button" class="botao vazado" data-fecha>Cancelar</button>
+      <button class="botao" type="submit">Salvar linha</button>
+    </div>
+  </form>
+  <form method="post" style="padding:0 22px 18px"
+        th:action="@{'/pacotes/' + ${pacote.id} + '/composicao/' + ${linha.id} + '/remover'}">
+    <button class="botao pequeno perigo" type="submit">Tirar do pacote</button>
+  </form>
+</dialog>
+
+<!-- ------------------------------------------------- janela: contratação -->
+<dialog id="janela-contratar" class="janela">
+  <form method="post" th:action="@{'/pacotes/' + ${pacote.id} + '/contratacoes'}">
+    <div class="janela-topo">
+      <div>
+        <span class="olho"><i></i>Contratação do cliente</span>
+        <h2>Contratar este pacote</h2>
+      </div>
+      <button type="button" class="fechar" data-fecha aria-label="Fechar">&#10005;</button>
+    </div>
+    <div class="janela-corpo">
+      <p class="dica">O valor acordado fica guardado nesta contratação. Mexer no preço do
+        pacote depois não muda o que já foi combinado aqui.</p>
+      <div class="campos">
+        <div>
+          <label for="ct-cliente">Cliente</label>
+          <select id="ct-cliente" name="pagadorId" required>
+            <option th:each="c : ${clientes}" th:value="${c.id}"
+                    th:text="${c.nome} + (${c.cpf != null} ? ' · ' + ${c.cpf} : '')"></option>
+          </select>
+        </div>
+        <div>
+          <label for="ct-unidade">Unidade</label>
+          <select id="ct-unidade" name="unidadeId">
+            <option value="">todas as unidades do cliente</option>
+            <option th:each="u : ${unidades}" th:value="${u.id}" th:text="${u.razaoSocial}"></option>
+          </select>
+        </div>
+        <div>
+          <label for="ct-valor">Valor acordado (R$)</label>
+          <input id="ct-valor" name="valorAcordado" type="number" step="0.01" min="0"
+                 th:value="${pacote.valor}" placeholder="vazio usa o valor do pacote">
+        </div>
+        <div>
+          <label for="ct-inicio">Início da vigência</label>
+          <input id="ct-inicio" name="inicio" type="date" th:value="${hoje}">
+        </div>
+        <div>
+          <label for="ct-fim">Fim da vigência</label>
+          <input id="ct-fim" name="fim" type="date">
+        </div>
+      </div>
+      <div class="campos" style="margin-top:16px">
+        <div style="grid-column:1/-1">
+          <label for="ct-obs">Observação</label>
+          <input id="ct-obs" name="observacao" placeholder="opcional">
+        </div>
+      </div>
+    </div>
+    <div class="janela-pe">
+      <button type="button" class="botao vazado" data-fecha>Cancelar</button>
+      <button class="botao" type="submit">Registrar contratação</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog th:each="c : ${contratacoes}" th:id="'contratacao-' + ${c.id}" class="janela">
+  <form method="post" th:action="@{'/pacotes/' + ${pacote.id} + '/contratacoes/' + ${c.id}}">
+    <div class="janela-topo">
+      <div>
+        <span class="olho"><i></i>Contratação do cliente</span>
+        <h2 th:text="${c.pagador.nome}">Cliente</h2>
+      </div>
+      <button type="button" class="fechar" data-fecha aria-label="Fechar">&#10005;</button>
+    </div>
+    <div class="janela-corpo">
+      <div class="campos">
+        <div>
+          <label th:for="'ec-cliente-' + ${c.id}">Cliente</label>
+          <select th:id="'ec-cliente-' + ${c.id}" name="pagadorId" required>
+            <option th:each="p : ${clientes}" th:value="${p.id}" th:text="${p.nome}"
+                    th:selected="${p.id == c.pagador.id}"></option>
+          </select>
+        </div>
+        <div>
+          <label th:for="'ec-unidade-' + ${c.id}">Unidade</label>
+          <select th:id="'ec-unidade-' + ${c.id}" name="unidadeId">
+            <option value="">todas as unidades do cliente</option>
+            <option th:each="u : ${unidades}" th:value="${u.id}" th:text="${u.razaoSocial}"
+                    th:selected="${c.unidade != null and c.unidade.id == u.id}"></option>
+          </select>
+        </div>
+        <div>
+          <label th:for="'ec-valor-' + ${c.id}">Valor acordado (R$)</label>
+          <input th:id="'ec-valor-' + ${c.id}" name="valorAcordado" type="number" step="0.01"
+                 min="0" th:value="${c.valorAcordado}">
+        </div>
+        <div>
+          <label th:for="'ec-inicio-' + ${c.id}">Início da vigência</label>
+          <input th:id="'ec-inicio-' + ${c.id}" name="inicio" type="date" th:value="${c.inicio}">
+        </div>
+        <div>
+          <label th:for="'ec-fim-' + ${c.id}">Fim da vigência</label>
+          <input th:id="'ec-fim-' + ${c.id}" name="fim" type="date" th:value="${c.fim}">
+        </div>
+        <div>
+          <label th:for="'ec-sit-' + ${c.id}">Situação</label>
+          <select th:id="'ec-sit-' + ${c.id}" name="situacao">
+            <option th:each="s : ${situacoesContratacao}" th:value="${s}" th:text="${s.rotulo}"
+                    th:selected="${s == c.situacao}"></option>
+          </select>
+        </div>
+      </div>
+      <div class="campos" style="margin-top:16px">
+        <div style="grid-column:1/-1">
+          <label th:for="'ec-obs-' + ${c.id}">Observação</label>
+          <input th:id="'ec-obs-' + ${c.id}" name="observacao" th:value="${c.observacao}">
+        </div>
+      </div>
+    </div>
+    <div class="janela-pe">
+      <button type="button" class="botao vazado" data-fecha>Cancelar</button>
+      <button class="botao" type="submit">Salvar contratação</button>
+    </div>
+  </form>
+  <form method="post" style="padding:0 22px 18px"
+        th:action="@{'/pacotes/' + ${pacote.id} + '/contratacoes/' + ${c.id} + '/encerrar'}">
+    <button class="botao pequeno perigo" type="submit">Encerrar contratação hoje</button>
+  </form>
+</dialog>
+
+<script src="/js/janelas.js?v=1"></script>
+<script src="/js/pacote.js?v=1"></script>
+
+</body>
+</html>

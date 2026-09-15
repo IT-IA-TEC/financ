@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head th:replace="~{layout :: cabeca('Conversas')}"></head>
+<body>
+<header th:replace="~{layout :: topo('cobranca')}"></header>
+
+<main class="largo">
+  <div th:replace="~{layout :: recados}"></div>
+
+  <div class="cabecalho-pagina com-resumo">
+    <div>
+      <span class="olho"><i></i>WhatsApp na plataforma</span>
+      <h1>Conversas</h1>
+    </div>
+
+    <div class="cartoes-topo">
+      <div class="cartao-topo inverso">
+        <span class="rotulo">Esperando</span>
+        <b th:text="${#lists.size(linhas.?[esperando > 0])}">0</b>
+        <small>clientes que responderam</small>
+      </div>
+      <div class="cartao-topo">
+        <span class="rotulo">Conversas</span>
+        <b th:text="${linhas.size()}">0</b>
+        <small>abertas até agora</small>
+      </div>
+      <div class="cartao-topo">
+        <span class="rotulo">Sem dono</span>
+        <b th:text="${semDono.size()}">0</b>
+        <small>números não reconhecidos</small>
+      </div>
+      <div class="cartao-topo listrado">
+        <span class="rotulo">Canal</span>
+        <b th:text="${canalLigado} ? 'ligado' : 'desligado'">ligado</b>
+        <small th:text="${canalLigado}
+                        ? 'a mensagem sai daqui' : 'a mensagem fica na fila'"></small>
+      </div>
+    </div>
+  </div>
+
+  <nav th:replace="~{layout :: abas-cobranca('conversas')}" class="modulo"></nav>
+
+  <div class="alerta-box atencao" th:unless="${canalLigado}" style="margin-bottom:18px">
+    O canal do WhatsApp ainda não está ligado nesta empresa. As mensagens continuam sendo
+    escritas e guardadas aqui, com o texto pronto, e saem sozinhas assim que o canal for ligado
+    em <a href="/integracoes">Integrações</a>.
+  </div>
+
+  <div class="tabela-caixa" th:if="${!linhas.isEmpty()}">
+    <table>
+      <thead>
+      <tr>
+        <th>Cliente</th>
+        <th>Número</th>
+        <th>Última mensagem</th>
+        <th class="centro">Quando</th>
+        <th class="centro">Em aberto</th>
+        <th class="centro">Esperando</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr th:each="l : ${linhas}">
+        <td>
+          <a th:if="${l.unidadeId != null}" th:href="@{'/conversas/' + ${l.unidadeId}}"
+             th:text="${l.quem}">cliente</a>
+          <span th:if="${l.unidadeId == null}" th:text="${l.quem}">desconhecido</span>
+        </td>
+        <td class="mono" style="font-size:12px" th:text="${l.destino}"></td>
+        <td style="max-width:420px">
+          <small th:text="${#strings.abbreviate(l.ultima, 140)}"></small>
+        </td>
+        <td class="centro mono" th:text="${#temporals.format(l.quando, 'dd/MM HH:mm')}">01/01</td>
+        <td class="centro mono"
+            th:text="'R$ ' + ${#numbers.formatDecimal(l.emAberto, 1, 'POINT', 2, 'COMMA')}"></td>
+        <td class="centro">
+          <span class="marca-situacao" th:if="${l.esperando > 0}"
+                th:classappend="'s-vencido'" th:text="${l.esperando}">0</span>
+          <span th:if="${l.esperando == 0}">-</span>
+        </td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="vazio" th:if="${linhas.isEmpty()}">
+    Nenhuma conversa ainda. Elas começam pelo disparo de cobrança ou pela ficha do cliente.
+  </div>
+</main>
+
+<script th:replace="~{layout :: scripts}"></script>
+</body>
+</html>

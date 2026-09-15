@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head th:replace="~{layout :: cabeca('Tags')}"></head>
+<body>
+<header th:replace="~{layout :: topo('etiquetas')}"></header>
+
+<main class="largo">
+  <div th:replace="~{layout :: recados}"></div>
+
+  <div class="cabecalho-pagina">
+    <div>
+      <span class="olho"><i></i>Tags</span>
+      <h1>Tags</h1>
+      <p>O papel de cada contato, e qualquer outra marcação, vem daqui.</p>
+    </div>
+    <div class="acoes" style="margin:0">
+      <form method="post" action="/etiquetas/sugestao" th:if="${etiquetas.isEmpty()}">
+        <button class="botao vazado" type="submit">Criar as primeiras</button>
+      </form>
+      <button class="botao" type="button" data-abre="janela-nova-etiqueta">+ Nova tag</button>
+    </div>
+  </div>
+
+  <div class="alerta-box" style="margin-bottom:22px">
+    Cada tag tem um código próprio, gerado do nome na criação e que nunca muda depois.
+    É esse código que permite a mesma tag existir em outro banco do grupo: o texto na tela
+    pode mudar, o código não.
+  </div>
+
+  <div class="tabela-caixa" th:if="${!etiquetas.isEmpty()}">
+    <table>
+      <thead>
+      <tr>
+        <th class="centro">Código</th>
+        <th>Tag</th>
+        <th>Descrição</th>
+        <th class="centro">Onde pode ser usada</th>
+        <th class="centro">Situação</th>
+        <th></th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr th:each="e : ${etiquetas}">
+        <td class="mono centro" th:text="${e.codigo}">codigo</td>
+        <td><b th:text="${e.nome}">Nome</b></td>
+        <td th:text="${e.descricao}"></td>
+        <td class="centro" th:text="${e.escopo}"></td>
+        <td class="centro">
+          <span class="marca-situacao" th:classappend="${e.ativo} ? 's-pago' : 's-cancelado'"
+                th:text="${e.ativo} ? 'ativa' : 'inativa'"></span>
+        </td>
+        <td style="text-align:right">
+          <button class="botao pequeno vazado" type="button"
+                  th:attr="data-abre='etiqueta-' + ${e.id}">Editar</button>
+        </td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="vazio" th:if="${etiquetas.isEmpty()}">
+    Nenhuma tag cadastrada. Use o botão acima para criar um conjunto inicial de papéis.
+  </div>
+</main>
+
+<script th:replace="~{layout :: scripts}"></script>
+
+<dialog id="janela-nova-etiqueta" class="janela estreita">
+  <form method="post" action="/etiquetas">
+    <div class="janela-topo">
+      <div>
+        <span class="olho"><i></i>Tags</span>
+        <h2>Nova tag</h2>
+      </div>
+      <button type="button" class="fechar" data-fecha aria-label="Fechar">&#10005;</button>
+    </div>
+    <div class="janela-corpo">
+      <div class="campos">
+        <div>
+          <label for="et-nome">Nome</label>
+          <input id="et-nome" name="nome" required placeholder="Paga, Assina, Contador">
+        </div>
+        <div>
+          <label for="et-escopo">Onde pode ser usada</label>
+          <select id="et-escopo" name="escopo">
+            <option th:each="s : ${escopos}" th:value="${s}" th:text="${s}"></option>
+          </select>
+        </div>
+      </div>
+      <div class="campos" style="margin-top:16px">
+        <div style="grid-column:1/-1">
+          <label for="et-desc">Descrição</label>
+          <input id="et-desc" name="descricao" placeholder="o que essa tag quer dizer">
+        </div>
+      </div>
+    </div>
+    <div class="janela-pe">
+      <button type="button" class="botao vazado" data-fecha>Cancelar</button>
+      <button class="botao" type="submit">Cadastrar</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog th:each="e : ${etiquetas}" th:id="'etiqueta-' + ${e.id}" class="janela estreita">
+  <form method="post" th:action="@{'/etiquetas/' + ${e.id}}">
+    <div class="janela-topo">
+      <div>
+        <span class="olho"><i></i><span class="mono" th:text="${e.codigo}">codigo</span></span>
+        <h2 th:text="${e.nome}">Tag</h2>
+      </div>
+      <button type="button" class="fechar" data-fecha aria-label="Fechar">&#10005;</button>
+    </div>
+    <div class="janela-corpo">
+      <p class="dica">O código não muda, mesmo que o nome mude. É ele que liga esta tag à
+        mesma tag em outro banco do grupo.</p>
+      <div class="campos">
+        <div>
+          <label th:for="'ee-nome-' + ${e.id}">Nome</label>
+          <input th:id="'ee-nome-' + ${e.id}" name="nome" th:value="${e.nome}" required>
+        </div>
+        <div>
+          <label th:for="'ee-esc-' + ${e.id}">Onde pode ser usada</label>
+          <select th:id="'ee-esc-' + ${e.id}" name="escopo">
+            <option th:each="s : ${escopos}" th:value="${s}" th:text="${s}"
+                    th:selected="${s == e.escopo}"></option>
+          </select>
+        </div>
+        <div>
+          <label th:for="'ee-ativo-' + ${e.id}">Situação</label>
+          <select th:id="'ee-ativo-' + ${e.id}" name="ativo">
+            <option value="true" th:selected="${e.ativo}">ativa</option>
+            <option value="false" th:selected="${!e.ativo}">inativa</option>
+          </select>
+        </div>
+      </div>
+      <div class="campos" style="margin-top:16px">
+        <div style="grid-column:1/-1">
+          <label th:for="'ee-desc-' + ${e.id}">Descrição</label>
+          <input th:id="'ee-desc-' + ${e.id}" name="descricao" th:value="${e.descricao}">
+        </div>
+      </div>
+    </div>
+    <div class="janela-pe">
+      <button type="button" class="botao vazado" data-fecha>Cancelar</button>
+      <button class="botao" type="submit">Salvar</button>
+    </div>
+  </form>
+</dialog>
+
+<script src="/js/janelas.js?v=1"></script>
+
+</body>
+</html>

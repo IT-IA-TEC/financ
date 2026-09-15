@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<body>
+<!-- O perfil da pessoa. Vem por pedaco, sem recarregar a tela de tras. -->
+<div class="janela-topo">
+  <div class="identidade">
+    <span class="bolinha grande" th:text="${pessoa.iniciais}">AB</span>
+    <div>
+      <span class="olho"><i></i>Perfil do cliente</span>
+      <h2 th:text="${pessoa.nome}">Nome</h2>
+      <span class="mono sub" th:text="${pessoa.cpf} ?: 'sem CPF'"></span>
+    </div>
+  </div>
+  <button type="button" class="fechar" data-fecha aria-label="Fechar">&#10005;</button>
+</div>
+
+<nav class="abas-janela">
+  <button type="button" th:classappend="${aba == 'resumo'} ? 'ativa'"
+          th:data-perfil="@{'/clientes/' + ${pessoa.id} + '/perfil?aba=resumo'}">Resumo</button>
+  <button type="button" th:classappend="${aba == 'cadastro'} ? 'ativa'"
+          th:data-perfil="@{'/clientes/' + ${pessoa.id} + '/perfil?aba=cadastro'}">Cadastro</button>
+  <button type="button" th:classappend="${aba == 'contratos'} ? 'ativa'"
+          th:data-perfil="@{'/clientes/' + ${pessoa.id} + '/perfil?aba=contratos'}">Contratos</button>
+  <button type="button" th:classappend="${aba == 'financeiro'} ? 'ativa'"
+          th:data-perfil="@{'/clientes/' + ${pessoa.id} + '/perfil?aba=financeiro'}">Crédito e risco</button>
+  <button type="button" th:classappend="${aba == 'historico'} ? 'ativa'"
+          th:data-perfil="@{'/clientes/' + ${pessoa.id} + '/perfil?aba=historico'}">Histórico</button>
+  <button type="button" th:classappend="${aba == 'documentos'} ? 'ativa'"
+          th:data-perfil="@{'/clientes/' + ${pessoa.id} + '/perfil?aba=documentos'}">Documentos</button>
+  <button type="button" th:classappend="${aba == 'conformidade'} ? 'ativa'"
+          th:data-perfil="@{'/clientes/' + ${pessoa.id} + '/perfil?aba=conformidade'}">Conformidade</button>
+</nav>
+
+<div class="janela-corpo">
+
+  <!-- ------------------------------------------------------------- resumo -->
+  <th:block th:if="${aba == 'resumo'}">
+    <div class="quadros">
+      <div class="quadro forte">
+        <span class="rotulo">Em aberto</span>
+        <span class="numero" th:text="${'R$ ' + #numbers.formatDecimal(posicao.emAberto, 1, 'POINT', 2, 'COMMA')}">R$ 0,00</span>
+        <small th:text="${unidades.size()} + ' unidade(s) · ' + ${posicao.quantidadeDeTitulos} + ' título(s)'"></small>
+      </div>
+      <div class="quadro">
+        <span class="rotulo">Vencido</span>
+        <span class="numero vermelho" th:text="${'R$ ' + #numbers.formatDecimal(posicao.vencido, 1, 'POINT', 2, 'COMMA')}">R$ 0,00</span>
+        <small th:text="${posicao.maiorAtraso > 0} ? 'maior atraso de ' + ${posicao.maiorAtraso} + ' dias' : 'nada vencido'"></small>
+      </div>
+      <div class="quadro">
+        <span class="rotulo">A vencer</span>
+        <span class="numero" th:text="${'R$ ' + #numbers.formatDecimal(posicao.aVencer, 1, 'POINT', 2, 'COMMA')}">R$ 0,00</span>
+        <small th:text="${posicao.proximoVencimento != null}
+                        ? 'próximo em ' + ${#temporals.format(posicao.proximoVencimento, 'dd/MM/yyyy')}
+                        : 'nada a vencer'"></small>
+      </div>
+      <div class="quadro">
+        <span class="rotulo">Comportamento</span>
+        <span class="numero" style="font-size:17px" th:text="${posicao.comportamento}">paga em dia</span>
+        <small th:text="'atraso médio de ' + ${posicao.atrasoMedio} + ' dias'"></small>
+      </div>
+    </div>
+
+    <span class="rotulo-bloco">Aging do que está vencido</span>
+    <div class="aging">
+      <div>
+        <span class="faixa">Até 30 dias</span>
+        <b th:text="${#numbers.formatDecimal(posicao.ate30, 1, 'POINT', 2, 'COMMA')}">0,00</b>
+      </div>
+      <div>
+        <span class="faixa">31 a 60</span>
+        <b th:text="${#numbers.formatDecimal(posicao.de31a60, 1, 'POINT', 2, 'COMMA')}">0,00</b>
+      </div>
+      <div>
+        <span class="faixa">61 a 90</span>
+        <b th:text="${#numbers.formatDecimal(posicao.de61a90, 1, 'POINT', 2, 'COMMA')}">0,00</b>
+      </div>
+      <div class="critica">
+        <span class="faixa">Mais de 90</span>
+        <b th:text="${#numbers.formatDecimal(posicao.acimaDe90, 1, 'POINT', 2, 'COMMA')}">0,00</b>
+      </div>
+    </div>
+
+    <span class="rotulo-bloco">Empresas desta pessoa</span>
+    <p class="dica">Clique num card para entrar na empresa e ver os dados dela. Dá para voltar
+      daqui e entrar em outra.</p>
+    <div class="cards-unidade">
+      <button type="button" class="card-unidade" th:each="u : ${unidades}"
+              th:data-perfil="@{'/clientes/unidades/' + ${u.id}}">
+        <span class="topo-card">
+          <b th:text="${u.razaoSocial}">Unidade</b>
+          <span class="mono" th:text="${u.cnpjCpf} ?: 'sem CNPJ'"></span>
+        </span>
+        <span class="pe-card">
+          <span th:text="${u.codigoExterno} ?: ''"></span>
+          <span class="entrar">Entrar →</span>
+        </span>
+      </button>
+    </div>
+
+    <span class="rotulo-bloco" th:if="${!contratos.isEmpty()}">Contratos</span>
+    <div class="tabela-caixa" th:if="${!contratos.isEmpty()}">
+      <table>
+        <thead>
+        <tr><th class="centro">Número</th><th>Descrição</th><th class="centro">Unidade</th>
+          <th class="centro">Valor</th><th class="centro">Situação</th></tr>
+        </thead>
+        <tbody>
+        <tr th:each="c : ${contratos}">
+          <td class="mono centro" th:text="${c.numero}">C0001</td>
+          <td th:text="${c.descricao}"></td>
+          <td class="centro" th:text="${c.nomeDaUnidade} ?: 'todas'"></td>
+          <td class="centro mono" th:text="${c.valor != null}
+                    ? ${#numbers.formatDecimal(c.valor, 1, 'POINT', 2, 'COMMA')} : ''"></td>
+          <td class="centro">
+            <span class="marca-situacao" th:classappend="${c.estaVigente(hoje)} ? 's-pago' : 's-cancelado'"
+                  th:text="${c.estaVigente(hoje)} ? 'vigente' : ${c.situacao}"></span>
+          </td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <span class="rotulo-bloco">Ações rápidas</span>
+    <div class="acoes-rapidas">
+      <button type="button" class="botao pequeno vazado"
+              th:data-perfil="@{'/clientes/' + ${pessoa.id} + '/perfil?aba=historico'}">Registrar promessa</button>
+      <button type="button" class="botao pequeno vazado"
+              th:data-perfil="@{'/clientes/' + ${pessoa.id} + '/perfil?aba=historico'}">Registrar ligação</button>
+      <button type="button" class="botao pequeno vazado"
+              th:data-perfil="@{'/clientes/' + ${pessoa.id} + '/perfil?aba=documentos'}">Anexar documento</button>
+      <button type="button" class="botao pequeno vazado"
+              th:data-perfil="@{'/clientes/' + ${pessoa.id} + '/perfil?aba=financeiro'}">Analisar crédito</button>
+      <a class="botao pequeno" href="/titulos/novo">Lançar título</a>
+    </div>
+  </th:block>
+
+  <!-- ----------------------------------------------------------- cadastro -->
+  <th:block th:if="${aba == 'cadastro'}">
+    <form method="post" th:action="@{'/clientes/' + ${pessoa.id} + '/identificacao'}">
+      <span class="rotulo-bloco" style="margin-top:0">Identificação</span>
+      <div class="campos">
+        <div>
+          <label th:for="'p-nome-' + ${pessoa.id}">Nome completo</label>
+          <input th:id="'p-nome-' + ${pessoa.id}" name="nome" th:value="${pessoa.nome}" required>
+        </div>
+        <div>
+          <label th:for="'p-social-' + ${pessoa.id}">Nome social ou apelido</label>
+          <input th:id="'p-social-' + ${pessoa.id}" name="nomeSocial" th:value="${pessoa.nomeSocial}">
+        </div>
+        <div>
+          <label th:for="'p-cpf-' + ${pessoa.id}">CPF</label>
+          <input th:id="'p-cpf-' + ${pessoa.id}" name="cpf" th:value="${pessoa.cpf}">
+        </div>
+        <div>
+          <label th:for="'p-nasc-' + ${pessoa.id}">Data de nascimento</label>
+          <input th:id="'p-nasc-' + ${pessoa.id}" name="dataNascimento" type="date"
+                 th:value="${pessoa.dataNascimento != null} ? ${#temporals.format(pessoa.dataNascimento, 'yyyy-MM-dd')} : ''">
+        </div>
+        <div>
+          <label th:for="'p-desde-' + ${pessoa.id}">Cliente desde</label>
+          <input th:id="'p-desde-' + ${pessoa.id}" name="clienteDesde" type="date"
+                 th:value="${pessoa.clienteDesde != null} ? ${#temporals.format(pessoa.clienteDesde, 'yyyy-MM-dd')} : ''">
+        </div>
+        <div>
+          <label th:for="'p-sit-' + ${pessoa.id}">Situação</label>
+          <select th:id="'p-sit-' + ${pessoa.id}" name="situacao">
+            <option value="ATIVO" th:selected="${pessoa.situacao == 'ATIVO'}">ativo</option>
+            <option value="INATIVO" th:selected="${pessoa.situacao == 'INATIVO'}">inativo</option>
+            <option value="EM_DISPUTA" th:selected="${pessoa.situacao == 'EM_DISPUTA'}">em disputa</option>
+            <option value="ENCERRADO" th:selected="${pessoa.situacao == 'ENCERRADO'}">encerrado</option>
+          </select>
+        </div>
+        <div>
+          <label th:for="'p-zap-' + ${pessoa.id}">WhatsApp</label>
+          <input th:id="'p-zap-' + ${pessoa.id}" name="whatsapp" th:value="${pessoa.whatsapp}">
+        </div>
+        <div>
+          <label th:for="'p-tel-' + ${pessoa.id}">Telefone</label>
+          <input th:id="'p-tel-' + ${pessoa.id}" name="telefone" th:value="${pessoa.telefone}">
+        </div>
+        <div>
+          <label th:for="'p-mail-' + ${pessoa.id}">E-mail</label>
+          <input th:id="'p-mail-' + ${pessoa.id}" name="email" type="email" th:value="${pessoa.email}">
+        </div>
+      </div>
+      <div class="campos" style="margin-top:16px">
+        <div style="grid-column:1/-1">
+          <label th:for="'p-obs-' + ${pessoa.id}">Observação</label>
+          <input th:id="'p-obs-' + ${pessoa.id}" name="observacao" th:value="${pessoa.observacao}">
+        </div>
+      </div>
+      <div class="linha-botoes">
+        <button class="botao pequeno" type="submit">Salvar identificação</button>
+      </div>
+    </form>
+
+    <span class="rotulo-bloco">Contatos e papéis</span>
+    <p class="dica">O papel de cada um vem por tag. Para criar ou mudar as tags,
+      use <a href="/etiquetas">o gerenciador de tags</a>.</p>
+
+    <div class="tabela-caixa" th:if="${!contatos.isEmpty()}">
+      <table>
+        <thead>
+        <tr><th class="centro">Ordem</th><th>Contato</th><th class="centro">Telefone</th>
+          <th class="centro">WhatsApp</th><th>Papéis</th><th class="centro">Aceita cobrança</th></tr>
+        </thead>
+        <tbody>
+        <tr th:each="c : ${contatos}">
+          <td class="centro mono" th:text="${c.prioridade}">1</td>
+          <td>
+            <b th:text="${c.nome}">Nome</b>
+            <small th:text="${c.email}"></small>
+          </td>
+          <td class="centro mono" th:text="${c.telefone}"></td>
+          <td class="centro mono" th:text="${c.whatsapp}"></td>
+          <td>
+            <span class="marca-situacao s-aberto" th:each="p : ${c.papeis}" th:text="${p.nome}"></span>
+          </td>
+          <td class="centro">
+            <span class="marca-situacao" th:classappend="${c.aceitaCobranca} ? 's-pago' : 's-vencido'"
+                  th:text="${c.aceitaCobranca} ? 'sim' : 'não'"></span>
+          </td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <form method="post" th:action="@{'/clientes/' + ${pessoa.id} + '/contatos'}">
+      <span class="rotulo-bloco">Novo contato</span>
+      <div class="campos">
+        <div>
+          <label th:for="'c-nome-' + ${pessoa.id}">Nome</label>
+          <input th:id="'c-nome-' + ${pessoa.id}" name="nome" required>
+        </div>
+        <div>
+          <label th:for="'c-tel-' + ${pessoa.id}">Telefone</label>
+          <input th:id="'c-tel-' + ${pessoa.id}" name="telefone">
+        </div>
+        <div>
+          <label th:for="'c-zap-' + ${pessoa.id}">WhatsApp</label>
+          <input th:id="'c-zap-' + ${pessoa.id}" name="whatsapp">
+        </div>
+        <div>
+          <label th:for="'c-mail-' + ${pessoa.id}">E-mail</label>
+          <input th:id="'c-mail-' + ${pessoa.id}" name="email" type="email">
+        </div>
+        <div>
+          <label th:for="'c-ordem-' + ${pessoa.id}">Ordem de procura</label>
+          <input th:id="'c-ordem-' + ${pessoa.id}" name="prioridade" type="number" min="1" value="1">
+        </div>
+        <div>
+          <label th:for="'c-hora-' + ${pessoa.id}">Melhor horário</label>
+          <input th:id="'c-hora-' + ${pessoa.id}" name="melhorHorario" placeholder="manhã, após as 18h">
+        </div>
+        <div>
+          <label th:for="'c-aceita-' + ${pessoa.id}">Aceita receber cobrança</label>
+          <select th:id="'c-aceita-' + ${pessoa.id}" name="aceitaCobranca">
+            <option value="true">sim</option>
+            <option value="false">não</option>
+          </select>
+        </div>
+      </div>
+
+      <span class="rotulo-bloco">Papéis deste contato</span>
+      <div class="lista-colunas">
+        <label th:each="p : ${papeis}" class="escolha">
+          <input type="checkbox" name="papel" th:value="${p.id}">
+          <span th:text="${p.nome}">Papel</span>
+          <small th:text="${p.descricao}"></small>
+        </label>
+      </div>
+      <div class="vazio" th:if="${papeis.isEmpty()}" style="margin-top:12px">
+        Nenhuma etiqueta de papel cadastrada. <a href="/etiquetas">Crie as primeiras</a>.
+      </div>
+
+      <div class="linha-botoes">
+        <button class="botao pequeno" type="submit">Adicionar contato</button>
+      </div>
+    </form>
+  </th:block>
+
+  <!-- ---------------------------------------------------------- contratos -->
+  <th:block th:if="${aba == 'contratos'}">
+    <p class="dica">Os contratos ficam na pessoa, não dentro de cada empresa. Um contrato pode
+      cobrir uma unidade específica ou todas as unidades dela.</p>
+
+    <div th:each="c : ${contratos}" class="ficha-contrato">
+      <div class="barra">
+        <b th:text="${c.numero}">C0001</b>
+        <span th:text="${c.descricao}"></span>
+        <span class="tag" th:text="${c.nomeDaUnidade} ?: 'todas as unidades'"></span>
+        <span class="tag viva" th:if="${c.estaVigente(hoje)}">vigente</span>
+        <span class="tag" th:unless="${c.estaVigente(hoje)}" th:text="${c.situacao}"></span>
+      </div>
+      <div class="corpo">
+        <div class="linha-dado"><span>Vigência</span><span
+              th:text="(${c.inicio != null} ? ${#temporals.format(c.inicio, 'dd/MM/yyyy')} : 'sem início')
+                       + ' até ' + (${c.fim != null} ? ${#temporals.format(c.fim, 'dd/MM/yyyy')} : 'sem fim')"></span></div>
+        <div class="linha-dado"><span>Valor</span><span th:text="${c.valor != null}
+              ? 'R$ ' + ${#numbers.formatDecimal(c.valor, 1, 'POINT', 2, 'COMMA')} : 'não definido'"></span></div>
+        <div class="linha-dado"><span>Reajuste</span><span
+              th:text="(${c.indiceReajuste} ?: 'sem índice') + (${c.mesReajuste != null} ? ' no mês ' + ${c.mesReajuste} : '')"></span></div>
+        <div class="linha-dado"><span>Vencimento</span><span
+              th:text="(${c.diaVencimento != null} ? 'dia ' + ${c.diaVencimento} : 'sem dia fixo')
+                       + ' · ' + (${c.periodicidade} ?: 'sem periodicidade')"></span></div>
+        <div class="linha-dado"><span>Responsável comercial</span><span th:text="${c.responsavelComercial}"></span></div>
+
+        <span class="rotulo-bloco" th:if="${!c.servicos.isEmpty()}">Serviços deste contrato</span>
+        <div class="tabela-caixa" th:if="${!c.servicos.isEmpty()}">
+          <table>
+            <thead><tr><th>Serviço</th><th class="centro">Quantidade</th><th class="centro">Valor</th></tr></thead>
+            <tbody>
+            <tr th:each="s : ${c.servicos}">
+              <td th:text="${s.nomeDoServico} ?: ${s.descricao}"></td>
+              <td class="centro mono" th:text="${#numbers.formatDecimal(s.quantidade, 1, 'POINT', 2, 'COMMA')}"></td>
+              <td class="centro mono" th:text="${s.valor != null}
+                    ? ${#numbers.formatDecimal(s.valor, 1, 'POINT', 2, 'COMMA')} : ''"></td>
+            </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <form method="post" th:action="@{'/clientes/contratos/' + ${c.id} + '/servicos'}">
+          <span class="rotulo-bloco">Incluir serviço do catálogo</span>
+          <div class="campos">
+            <div>
+              <label th:for="'cs-serv-' + ${c.id}">Serviço</label>
+              <select th:id="'cs-serv-' + ${c.id}" name="servicoId">
+                <option value="">escolher do catálogo</option>
+                <option th:each="s : ${servicos}" th:value="${s.id}"
+                        th:text="${s.codigo} + ' · ' + ${s.nome}"></option>
+              </select>
+            </div>
+            <div>
+              <label th:for="'cs-qtd-' + ${c.id}">Quantidade</label>
+              <input th:id="'cs-qtd-' + ${c.id}" name="quantidade" type="number" step="0.01" value="1">
+            </div>
+            <div>
+              <label th:for="'cs-val-' + ${c.id}">Valor no contrato</label>
+              <input th:id="'cs-val-' + ${c.id}" name="valor" type="number" step="0.01">
+            </div>
+          </div>
+          <div class="linha-botoes">
+            <button class="botao pequeno vazado" type="submit">Incluir</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="vazio" th:if="${contratos.isEmpty()}">
+      Nenhum contrato cadastrado para esta pessoa.
+    </div>
+
+    <form method="post" th:action="@{'/clientes/' + ${pessoa.id} + '/contratos'}">
+      <span class="rotulo-bloco">Novo contrato</span>
+      <div class="campos">
+        <div>
+          <label th:for="'ct-num-' + ${pessoa.id}">Número</label>
+          <input th:id="'ct-num-' + ${pessoa.id}" name="numero" placeholder="deixe vazio para gerar">
+        </div>
+        <div>
+          <label th:for="'ct-uni-' + ${pessoa.id}">Cobre qual unidade</label>
+          <select th:id="'ct-uni-' + ${pessoa.id}" name="unidadeId">
+            <option value="">todas as unidades</option>
+            <option th:each="u : ${unidades}" th:value="${u.id}" th:text="${u.razaoSocial}"></option>
+          </select>
+        </div>
+        <div>
+          <label th:for="'ct-val-' + ${pessoa.id}">Valor</label>
+          <input th:id="'ct-val-' + ${pessoa.id}" name="valor" type="number" step="0.01">
+        </div>
+        <div>
+          <label th:for="'ct-ini-' + ${pessoa.id}">Início</label>
+          <input th:id="'ct-ini-' + ${pessoa.id}" name="inicio" type="date">
+        </div>
+        <div>
+          <label th:for="'ct-fim-' + ${pessoa.id}">Fim</label>
+          <input th:id="'ct-fim-' + ${pessoa.id}" name="fim" type="date">
+        </div>
+        <div>
+          <label th:for="'ct-ind-' + ${pessoa.id}">Índice de reajuste</label>
+          <input th:id="'ct-ind-' + ${pessoa.id}" name="indiceReajuste" placeholder="IPCA, IGPM">
+        </div>
+        <div>
+          <label th:for="'ct-mes-' + ${pessoa.id}">Mês do reajuste</label>
+          <input th:id="'ct-mes-' + ${pessoa.id}" name="mesReajuste" type="number" min="1" max="12">
+        </div>
+        <div>
+          <label th:for="'ct-dia-' + ${pessoa.id}">Dia de vencimento</label>
+          <input th:id="'ct-dia-' + ${pessoa.id}" name="diaVencimento" type="number" min="1" max="31">
+        </div>
+        <div>
+          <label th:for="'ct-per-' + ${pessoa.id}">Periodicidade</label>
+          <select th:id="'ct-per-' + ${pessoa.id}" name="periodicidade">
+            <option value="MENSAL">mensal</option>
+            <option value="TRIMESTRAL">trimestral</option>
+            <option value="SEMESTRAL">semestral</option>
+            <option value="ANUAL">anual</option>
+            <option value="AVULSO">avulso</option>
+          </select>
+        </div>
+        <div>
+          <label th:for="'ct-resp-' + ${pessoa.id}">Responsável comercial</label>
+          <input th:id="'ct-resp-' + ${pessoa.id}" name="responsavel">
+        </div>
+      </div>
+      <div class="campos" style="margin-top:16px">
+        <div style="grid-column:1/-1">
+          <label th:for="'ct-desc-' + ${pessoa.id}">Descrição</label>
+          <input th:id="'ct-desc-' + ${pessoa.id}" name="descricao">
+        </div>
+      </div>
+      <div class="linha-botoes">
+        <button class="botao pequeno" type="submit">Cadastrar contrato</button>
+      </div>
+    </form>
+  </th:block>
+
+  <!-- -------------------------------------------------------- credito/risco -->
+  <th:block th:if="${aba == 'financeiro'}">
+    <div class="quadros">
+      <div class="quadro forte">
+        <span class="rotulo">Classificação</span>
+        <span class="numero" style="font-size:20px"
+              th:text="${credito.classificacao} ?: 'sem análise'">sem análise</span>
+        <small th:text="${credito.ultimaAnaliseEm != null}
+                        ? 'analisado em ' + ${#temporals.format(credito.ultimaAnaliseEm, 'dd/MM/yyyy')}
+                        : 'nunca analisado'"></small>
+      </div>
+      <div class="quadro">
+        <span class="rotulo">Limite de crédito</span>
+        <span class="numero" th:text="${credito.limiteCredito != null}
+              ? 'R$ ' + ${#numbers.formatDecimal(credito.limiteCredito, 1, 'POINT', 2, 'COMMA')}
+              : 'não definido'"></span>
+        <small th:text="${disponivel != null}
+                        ? 'disponível R$ ' + ${#numbers.formatDecimal(disponivel, 1, 'POINT', 2, 'COMMA')}
+                        : 'sem limite definido'"></small>
+      </div>
+      <div class="quadro">
+        <span class="rotulo">Situação</span>
+        <span class="numero" style="font-size:20px"
+              th:text="${credito.bloqueado} ? 'Bloqueado' : 'Liberado'"></span>
+        <small th:text="${credito.motivoBloqueio}"></small>
+      </div>
+      <div class="quadro">
+        <span class="rotulo">Comportamento</span>
+        <span class="numero" style="font-size:17px" th:text="${posicao.comportamento}"></span>
+        <small th:text="${posicao.titulosPagos} + ' título(s) já pagos'"></small>
+      </div>
+    </div>
+
+    <form method="post" th:action="@{'/clientes/' + ${pessoa.id} + '/credito'}">
+      <span class="rotulo-bloco">Análise</span>
+      <div class="campos">
+        <div>
+          <label th:for="'cr-cla-' + ${pessoa.id}">Classificação</label>
+          <select th:id="'cr-cla-' + ${pessoa.id}" name="classificacao">
+            <option value="">sem classificação</option>
+            <option value="A" th:selected="${credito.classificacao == 'A'}">A, risco baixo</option>
+            <option value="B" th:selected="${credito.classificacao == 'B'}">B, risco médio</option>
+            <option value="C" th:selected="${credito.classificacao == 'C'}">C, risco alto</option>
+            <option value="D" th:selected="${credito.classificacao == 'D'}">D, só à vista</option>
+          </select>
+        </div>
+        <div>
+          <label th:for="'cr-lim-' + ${pessoa.id}">Limite de crédito</label>
+          <input th:id="'cr-lim-' + ${pessoa.id}" name="limite" type="number" step="0.01"
+                 th:value="${credito.limiteCredito}">
+        </div>
+        <div>
+          <label th:for="'cr-blo-' + ${pessoa.id}">Bloqueado</label>
+          <select th:id="'cr-blo-' + ${pessoa.id}" name="bloqueado">
+            <option value="false" th:selected="${!credito.bloqueado}">não</option>
+            <option value="true" th:selected="${credito.bloqueado}">sim</option>
+          </select>
+        </div>
+        <div>
+          <label th:for="'cr-mot-' + ${pessoa.id}">Motivo do bloqueio</label>
+          <input th:id="'cr-mot-' + ${pessoa.id}" name="motivo" th:value="${credito.motivoBloqueio}">
+        </div>
+      </div>
+      <div class="campos" style="margin-top:16px">
+        <div style="grid-column:1/-1">
+          <label th:for="'cr-obs-' + ${pessoa.id}">Observação da análise</label>
+          <input th:id="'cr-obs-' + ${pessoa.id}" name="observacao" th:value="${credito.observacao}">
+        </div>
+      </div>
+      <div class="linha-botoes">
+        <button class="botao pequeno" type="submit">Salvar análise</button>
+      </div>
+    </form>
+
+    <span class="rotulo-bloco">Restrições</span>
+    <div class="tabela-caixa" th:if="${!restricoes.isEmpty()}">
+      <table>
+        <thead><tr><th class="centro">Tipo</th><th>Origem</th><th class="centro">Valor</th>
+          <th class="centro">Data</th><th class="centro">Situação</th></tr></thead>
+        <tbody>
+        <tr th:each="r : ${restricoes}">
+          <td class="centro" th:text="${r.tipo}"></td>
+          <td th:text="${r.origem}"></td>
+          <td class="centro mono" th:text="${r.valor != null}
+                ? ${#numbers.formatDecimal(r.valor, 1, 'POINT', 2, 'COMMA')} : ''"></td>
+          <td class="centro mono" th:text="${r.data != null} ? ${#temporals.format(r.data, 'dd/MM/yyyy')} : ''"></td>
+          <td class="centro"><span class="marca-situacao"
+                th:classappend="${r.situacao == 'ATIVA'} ? 's-vencido' : 's-cancelado'"
+                th:text="${r.situacao}"></span></td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="vazio" th:if="${restricoes.isEmpty()}">Nenhuma restrição registrada.</div>
+
+    <form method="post" th:action="@{'/clientes/' + ${pessoa.id} + '/restricoes'}">
+      <span class="rotulo-bloco">Registrar restrição</span>
+      <div class="campos">
+        <div>
+          <label th:for="'re-tipo-' + ${pessoa.id}">Tipo</label>
+          <select th:id="'re-tipo-' + ${pessoa.id}" name="tipo">
+            <option value="PROTESTO">protesto</option>
+            <option value="NEGATIVACAO">negativação</option>
+            <option value="ACAO JUDICIAL">ação judicial</option>
+            <option value="OUTRA">outra</option>
+          </select>
+        </div>
+        <div>
+          <label th:for="'re-org-' + ${pessoa.id}">Origem</label>
+          <input th:id="'re-org-' + ${pessoa.id}" name="origem" placeholder="cartório, Serasa, banco">
+        </div>
+        <div>
+          <label th:for="'re-val-' + ${pessoa.id}">Valor</label>
+          <input th:id="'re-val-' + ${pessoa.id}" name="valor" type="number" step="0.01">
+        </div>
+        <div>
+          <label th:for="'re-dat-' + ${pessoa.id}">Data</label>
+          <input th:id="'re-dat-' + ${pessoa.id}" name="data" type="date">
+        </div>
+      </div>
+      <div class="linha-botoes">
+        <button class="botao pequeno vazado" type="submit">Registrar</button>
+      </div>
+    </form>
+  </th:block>
+
+  <!-- ---------------------------------------------------------- historico -->
+  <th:block th:if="${aba == 'historico'}">
+    <form method="post" th:action="@{'/clientes/' + ${pessoa.id} + '/interacoes'}">
+      <span class="rotulo-bloco" style="margin-top:0">Registrar no histórico</span>
+      <div class="campos">
+        <div>
+          <label th:for="'h-tipo-' + ${pessoa.id}">O que aconteceu</label>
+          <select th:id="'h-tipo-' + ${pessoa.id}" name="tipo">
+            <option th:each="t : ${tipos}" th:value="${t}" th:text="${t}"></option>
+          </select>
+        </div>
+        <div>
+          <label th:for="'h-uni-' + ${pessoa.id}">Unidade</label>
+          <select th:id="'h-uni-' + ${pessoa.id}" name="unidadeId">
+            <option value="">sem unidade específica</option>
+            <option th:each="u : ${unidades}" th:value="${u.id}" th:text="${u.razaoSocial}"></option>
+          </select>
+        </div>
+        <div>
+          <label th:for="'h-val-' + ${pessoa.id}">Valor</label>
+          <input th:id="'h-val-' + ${pessoa.id}" name="valor" type="number" step="0.01">
+        </div>
+        <div>
+          <label th:for="'h-dat-' + ${pessoa.id}">Data prometida</label>
+          <input th:id="'h-dat-' + ${pessoa.id}" name="dataPrometida" type="date">
+        </div>
+        <div>
+          <label th:for="'h-can-' + ${pessoa.id}">Canal</label>
+          <select th:id="'h-can-' + ${pessoa.id}" name="canal">
+            <option value="WHATSAPP">WhatsApp</option>
+            <option value="TELEFONE">telefone</option>
+            <option value="E-MAIL">e-mail</option>
+            <option value="PRESENCIAL">presencial</option>
+          </select>
+        </div>
+      </div>
+      <div class="campos" style="margin-top:16px">
+        <div style="grid-column:1/-1">
+          <label th:for="'h-desc-' + ${pessoa.id}">O que foi combinado</label>
+          <input th:id="'h-desc-' + ${pessoa.id}" name="descricao">
+        </div>
+      </div>
+      <div class="linha-botoes">
+        <button class="botao pequeno" type="submit">Registrar</button>
+      </div>
+    </form>
+
+    <span class="rotulo-bloco">Linha do tempo</span>
+    <div class="linha-tempo" th:if="${!historico.isEmpty()}">
+      <div class="momento" th:each="h : ${historico}"
+           th:classappend="${h.promessaVencida(hoje)} ? 'atrasado'">
+        <span class="quando mono" th:text="${#temporals.format(h.ocorridoEm, 'dd/MM/yyyy HH:mm')}"></span>
+        <div class="conteudo">
+          <b th:text="${h.tipoLegivel}">Tipo</b>
+          <span th:if="${h.valor != null}" class="mono"
+                th:text="' · R$ ' + ${#numbers.formatDecimal(h.valor, 1, 'POINT', 2, 'COMMA')}"></span>
+          <span th:if="${h.dataPrometida != null}"
+                th:text="' · para ' + ${#temporals.format(h.dataPrometida, 'dd/MM/yyyy')}"></span>
+          <span class="marca-situacao" th:if="${h.situacao != null}"
+                th:classappend="${h.situacao == 'CUMPRIDA'} ? 's-pago' : (${h.situacao == 'QUEBRADA'} ? 's-vencido' : 's-aberto')"
+                th:text="${h.situacao}"></span>
+          <p th:text="${h.descricao}"></p>
+          <small th:text="${h.autor} + (${h.canal != null} ? ' · ' + ${h.canal} : '')"></small>
+
+          <span class="linha-botoes" th:if="${h.situacao == 'EM_ABERTO'}" style="margin-top:8px">
+            <form method="post" th:action="@{'/clientes/interacoes/' + ${h.id} + '/baixar'}">
+              <input type="hidden" name="cumprida" value="true">
+              <button class="botao pequeno vazado" type="submit">Cumpriu</button>
+            </form>
+            <form method="post" th:action="@{'/clientes/interacoes/' + ${h.id} + '/baixar'}">
+              <input type="hidden" name="cumprida" value="false">
+              <button class="botao pequeno perigo" type="submit">Quebrou</button>
+            </form>
+          </span>
+        </div>
+      </div>
+    </div>
+    <div class="vazio" th:if="${historico.isEmpty()}">Nada registrado ainda.</div>
+  </th:block>
+
+  <!-- --------------------------------------------------------- documentos -->
+  <th:block th:if="${aba == 'documentos'}">
+    <form method="post" enctype="multipart/form-data"
+          th:action="@{'/clientes/' + ${pessoa.id} + '/documentos'}">
+      <span class="rotulo-bloco" style="margin-top:0">Anexar documento</span>
+      <div class="campos">
+        <div>
+          <label th:for="'d-arq-' + ${pessoa.id}">Arquivo</label>
+          <input th:id="'d-arq-' + ${pessoa.id}" name="arquivo" type="file" required>
+        </div>
+        <div>
+          <label th:for="'d-tipo-' + ${pessoa.id}">Tipo</label>
+          <select th:id="'d-tipo-' + ${pessoa.id}" name="tipo">
+            <option th:each="t : ${tiposDocumento}" th:value="${t}" th:text="${t}"></option>
+          </select>
+        </div>
+        <div>
+          <label th:for="'d-uni-' + ${pessoa.id}">Unidade</label>
+          <select th:id="'d-uni-' + ${pessoa.id}" name="unidadeId">
+            <option value="">da pessoa</option>
+            <option th:each="u : ${unidades}" th:value="${u.id}" th:text="${u.razaoSocial}"></option>
+          </select>
+        </div>
+        <div>
+          <label th:for="'d-val-' + ${pessoa.id}">Validade</label>
+          <input th:id="'d-val-' + ${pessoa.id}" name="validade" type="date">
+        </div>
+      </div>
+      <div class="linha-botoes">
+        <button class="botao pequeno" type="submit">Anexar</button>
+      </div>
+    </form>
+
+    <span class="rotulo-bloco">Documentos</span>
+    <div class="tabela-caixa" th:if="${!documentos.isEmpty()}">
+      <table>
+        <thead><tr><th class="centro">Tipo</th><th>Arquivo</th><th class="centro">Tamanho</th>
+          <th class="centro">Validade</th><th class="centro">Anexado em</th><th></th></tr></thead>
+        <tbody>
+        <tr th:each="d : ${documentos}">
+          <td class="centro" th:text="${d.tipo}"></td>
+          <td th:text="${d.nomeArquivo}"></td>
+          <td class="centro mono" th:text="${d.tamanhoLegivel}"></td>
+          <td class="centro mono">
+            <span th:if="${d.validade != null}" th:text="${#temporals.format(d.validade, 'dd/MM/yyyy')}"></span>
+            <span class="marca-situacao s-vencido" th:if="${d.venceu(hoje)}">vencido</span>
+          </td>
+          <td class="centro mono" th:text="${#temporals.format(d.anexadoEm, 'dd/MM/yyyy')}"></td>
+          <td style="text-align:right">
+            <a class="botao pequeno vazado" th:href="@{'/clientes/documentos/' + ${d.id}}">Baixar</a>
+          </td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="vazio" th:if="${documentos.isEmpty()}">Nenhum documento anexado.</div>
+  </th:block>
+
+  <!-- -------------------------------------------------------- conformidade -->
+  <th:block th:if="${aba == 'conformidade'}">
+    <p class="dica">O registro de que se pode falar com a pessoa por aquele canal, e com que base.
+      Guarda também a recusa e a revogação: provar que alguém pediu para não ser procurado é tão
+      importante quanto provar que aceitou.</p>
+
+    <form method="post" th:action="@{'/clientes/' + ${pessoa.id} + '/consentimentos'}">
+      <span class="rotulo-bloco">Registrar</span>
+      <div class="campos">
+        <div>
+          <label th:for="'k-can-' + ${pessoa.id}">Canal</label>
+          <select th:id="'k-can-' + ${pessoa.id}" name="canal">
+            <option th:each="c : ${canais}" th:value="${c}" th:text="${c}"></option>
+          </select>
+        </div>
+        <div>
+          <label th:for="'k-base-' + ${pessoa.id}">Base legal</label>
+          <select th:id="'k-base-' + ${pessoa.id}" name="baseLegal">
+            <option th:each="b : ${bases}" th:value="${b}" th:text="${b}"></option>
+          </select>
+        </div>
+        <div>
+          <label th:for="'k-sit-' + ${pessoa.id}">Situação</label>
+          <select th:id="'k-sit-' + ${pessoa.id}" name="situacao">
+            <option value="ACEITO">aceito</option>
+            <option value="RECUSADO">recusado</option>
+            <option value="REVOGADO">revogado</option>
+          </select>
+        </div>
+        <div>
+          <label th:for="'k-cont-' + ${pessoa.id}">Contato</label>
+          <select th:id="'k-cont-' + ${pessoa.id}" name="contatoId">
+            <option value="">a pessoa toda</option>
+            <option th:each="c : ${contatos}" th:value="${c.id}" th:text="${c.nome}"></option>
+          </select>
+        </div>
+        <div>
+          <label th:for="'k-org-' + ${pessoa.id}">Onde isso foi dito</label>
+          <input th:id="'k-org-' + ${pessoa.id}" name="origem" placeholder="contrato, conversa, e-mail">
+        </div>
+      </div>
+      <div class="linha-botoes">
+        <button class="botao pequeno" type="submit">Registrar</button>
+      </div>
+    </form>
+
+    <span class="rotulo-bloco">Registros</span>
+    <div class="tabela-caixa" th:if="${!consentimentos.isEmpty()}">
+      <table>
+        <thead><tr><th class="centro">Canal</th><th class="centro">Situação</th><th>Base legal</th>
+          <th>Onde</th><th class="centro">Quando</th><th>Quem</th></tr></thead>
+        <tbody>
+        <tr th:each="k : ${consentimentos}">
+          <td class="centro" th:text="${k.canal}"></td>
+          <td class="centro"><span class="marca-situacao"
+                th:classappend="${k.permite()} ? 's-pago' : 's-vencido'"
+                th:text="${k.situacao}"></span></td>
+          <td th:text="${k.baseLegal}"></td>
+          <td th:text="${k.origem}"></td>
+          <td class="centro mono" th:text="${#temporals.format(k.registradoEm, 'dd/MM/yyyy')}"></td>
+          <td th:text="${k.registradoPor}"></td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="vazio" th:if="${consentimentos.isEmpty()}">Nenhum registro ainda.</div>
+  </th:block>
+
+</div>
+</body>
+</html>

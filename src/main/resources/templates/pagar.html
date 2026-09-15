@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head th:replace="~{layout :: cabeca('Contas a pagar')}"></head>
+<body>
+<header th:replace="~{layout :: topo('pagar')}"></header>
+
+<main class="largo">
+  <div th:replace="~{layout :: recados}"></div>
+
+  <div class="cabecalho-pagina com-resumo">
+    <div>
+      <span class="olho"><i></i>Contas a pagar</span>
+      <h1>Contas a pagar</h1>
+    </div>
+
+    <div class="cartoes-topo">
+      <div class="cartao-topo inverso">
+        <span class="rotulo">Em aberto</span>
+        <b th:text="'R$ ' + ${#numbers.formatDecimal(resumo.aberto, 1, 'POINT', 2, 'COMMA')}">R$ 0,00</b>
+        <small>falta pagar</small>
+      </div>
+      <div class="cartao-topo" th:classappend="${resumo.vencido.signum() > 0} ? 'alerta'">
+        <span class="rotulo">Vencido</span>
+        <b th:text="'R$ ' + ${#numbers.formatDecimal(resumo.vencido, 1, 'POINT', 2, 'COMMA')}">R$ 0,00</b>
+        <small>passou do vencimento</small>
+      </div>
+      <div class="cartao-topo">
+        <span class="rotulo">Vence em 7 dias</span>
+        <b th:text="'R$ ' + ${#numbers.formatDecimal(resumo.aVencer7, 1, 'POINT', 2, 'COMMA')}">R$ 0,00</b>
+        <small>próxima semana</small>
+      </div>
+      <div class="cartao-topo listrado" th:classappend="${resumo.pendentes > 0} ? 'alerta'">
+        <span class="rotulo">Qualidade</span>
+        <b th:text="${resumo.pendentes} + ' com pendência'">0 com pendência</b>
+        <small th:text="'R$ ' + ${#numbers.formatDecimal(resumo.semClassificacao, 1, 'POINT', 2, 'COMMA')}
+                        + ' sem classificação'"></small>
+      </div>
+    </div>
+
+    <div class="acoes" style="margin:0">
+      <button class="botao vazado" type="button" data-abre="janela-cadastros">Cadastros</button>
+      <button class="botao vazado" type="button" data-abre="janela-parcelar">Parcelar</button>
+      <button class="botao vazado" type="button" data-abre="janela-recorrencia">Recorrências</button>
+      <button class="botao" type="button" data-abre="janela-nova-conta"
+              th:disabled="${favorecidos.isEmpty()}">+ Nova conta</button>
+    </div>
+  </div>
+
+  <div class="alerta-box atencao" th:if="${favorecidos.isEmpty()}" style="margin-bottom:18px">
+    Antes de lançar a primeira conta, cadastre um favorecido em Cadastros.
+  </div>
+
+  <nav class="abas-inversas visoes">
+    <a th:href="@{/pagar(visao='todas')}" th:classappend="${visao == 'todas'} ? 'ativa'">Todas</a>
+    <a th:href="@{/pagar(visao='proximos7')}" th:classappend="${visao == 'proximos7'} ? 'ativa'"
+       th:text="'Hoje e 7 dias (' + ${contagem.get('proximos7')} + ')'">Hoje e 7 dias</a>
+    <a th:href="@{/pagar(visao='vencidas')}" th:classappend="${visao == 'vencidas'} ? 'ativa'"
+       th:text="'Vencidas (' + ${contagem.get('vencidas')} + ')'">Vencidas</a>
+    <a th:href="@{/pagar(visao='aprovacao')}" th:classappend="${visao == 'aprovacao'} ? 'ativa'"
+       th:text="'Aguardando aprovação (' + ${contagem.get('aprovacao')} + ')'">Aguardando aprovação</a>
+    <a th:href="@{/pagar(visao='prontas')}" th:classappend="${visao == 'prontas'} ? 'ativa'"
+       th:text="'Prontas para pagamento (' + ${contagem.get('prontas')} + ')'">Prontas</a>
+    <a th:href="@{/pagar(visao='encaminhadas')}" th:classappend="${visao == 'encaminhadas'} ? 'ativa'"
+       th:text="'Encaminhadas sem confirmação (' + ${contagem.get('encaminhadas')} + ')'">Encaminhadas</a>
+    <a th:href="@{/pagar(visao='reembolsos')}" th:classappend="${visao == 'reembolsos'} ? 'ativa'"
+       th:text="'Reembolsos (' + ${contagem.get('reembolsos')} + ')'">Reembolsos</a>
+    <a th:href="@{/pagar(visao='parciais')}" th:classappend="${visao == 'parciais'} ? 'ativa'"
+       th:text="'Pagamentos parciais (' + ${contagem.get('parciais')} + ')'">Parciais</a>
+    <a th:href="@{/pagar(visao='incompletas')}" th:classappend="${visao == 'incompletas'} ? 'ativa'"
+       th:text="'Registros incompletos (' + ${contagem.get('incompletas')} + ')'">Incompletos</a>
+    <a th:href="@{/pagar(visao='naoconciliadas')}" th:classappend="${visao == 'naoconciliadas'} ? 'ativa'"
+       th:text="'Liquidadas sem conciliar (' + ${contagem.get('naoconciliadas')} + ')'">Sem conciliar</a>
+  </nav>
+
+  <form method="get" action="/pagar" id="filtros-pagar">
+    <input type="hidden" name="visao" th:value="${visao}">
+  </form>
+
+  <div class="barra-filtros" th:if="${!filtro.vazio()}">
+    <span th:text="${filtro.quantos()} + ' filtro(s) ligado(s) nas colunas'"></span>
+    <a class="botao pequeno vazado" th:href="@{/pagar(visao=${visao})}">Limpar filtros</a>
+  </div>
+
+  <div class="tabela-caixa" th:if="${!obrigacoes.isEmpty()}">
+    <table>
+      <thead>
+      <tr>
+        <th class="centro" th:classappend="${filtro.filtrando('vencimento')} ? 'filtrada'">
+          <div class="cabeca-coluna">
+            <span class="titulo-coluna">Vencimento</span>
+            <details class="filtro">
+              <summary th:title="'Filtrar por vencimento'"><svg th:replace="~{layout :: funil}"></svg></summary>
+              <div class="gaveta-filtro">
+                <label for="f-vencimento-de">De</label>
+                <input id="f-vencimento-de" type="date" name="f_vencimento_de" form="filtros-pagar"
+                       th:value="${filtro.valor('f_vencimento_de')}" placeholder="">
+                <label for="f-vencimento-ate">Até</label>
+                <input id="f-vencimento-ate" type="date" name="f_vencimento_ate" form="filtros-pagar"
+                       th:value="${filtro.valor('f_vencimento_ate')}" placeholder="">
+                <div class="pe-filtro">
+                  <button class="botao pequeno" type="submit" form="filtros-pagar">Aplicar</button>
+                </div>
+              </div>
+            </details>
+          </div>
+        </th>
+        <th class="centro" th:classappend="${filtro.filtrando('numero')} ? 'filtrada'">
+          <div class="cabeca-coluna">
+            <span class="titulo-coluna">Nº</span>
+            <details class="filtro">
+              <summary th:title="'Filtrar por nº'"><svg th:replace="~{layout :: funil}"></svg></summary>
+              <div class="gaveta-filtro">
+                <label for="f-numero">Número da conta</label>
+                <input id="f-numero" name="f_numero" form="filtros-pagar" inputmode="numeric"
+                       th:value="${filtro.valor('f_numero')}" placeholder="12">
+                <div class="pe-filtro">
+                  <button class="botao pequeno" type="submit" form="filtros-pagar">Aplicar</button>
+                </div>
+              </div>
+            </details>
+          </div>
+        </th>
+        <th th:classappend="${filtro.filtrando('favorecido')} ? 'filtrada'">
+          <div class="cabeca-coluna">
+            <span class="titulo-coluna">Favorecido</span>
+            <details class="filtro">
+              <summary th:title="'Filtrar por favorecido'"><svg th:replace="~{layout :: funil}"></svg></summary>
+              <div class="gaveta-filtro">
+                <label for="f-favorecido">Quem recebe</label>
+                <select id="f-favorecido" name="f_favorecido" form="filtros-pagar">
+                  <option value="">todos</option>
+                  <option th:each="x : ${favorecidos}" th:value="${x.id}" th:text="${x.nome}"
+                          th:selected="${filtro.valor('f_favorecido') == x.id.toString()}"></option>
+                </select>
+                <div class="pe-filtro">
+                  <button class="botao pequeno" type="submit" form="filtros-pagar">Aplicar</button>
+                </div>
+              </div>
+            </details>
+          </div>
+        </th>
+        <th th:classappend="${filtro.filtrando('descricao')} ? 'filtrada'">
+          <div class="cabeca-coluna">
+            <span class="titulo-coluna">Descrição</span>
+            <details class="filtro">
+              <summary th:title="'Filtrar por descrição'"><svg th:replace="~{layout :: funil}"></svg></summary>
+              <div class="gaveta-filtro">
+                <label for="f-descricao">Contém</label>
+                <input id="f-descricao" name="f_descricao" form="filtros-pagar"
+                       th:value="${filtro.valor('f_descricao')}" placeholder="parte do texto">
+                <div class="pe-filtro">
+                  <button class="botao pequeno" type="submit" form="filtros-pagar">Aplicar</button>
+                </div>
+              </div>
+            </details>
+          </div>
+        </th>
+        <th th:classappend="${filtro.filtrando('natureza')} ? 'filtrada'">
+          <div class="cabeca-coluna">
+            <span class="titulo-coluna">Natureza</span>
+            <details class="filtro">
+              <summary th:title="'Filtrar por natureza'"><svg th:replace="~{layout :: funil}"></svg></summary>
+              <div class="gaveta-filtro">
+                <label for="f-natureza">O que está sendo pago</label>
+                <select id="f-natureza" name="f_natureza" form="filtros-pagar">
+                  <option value="">todas</option>
+                  <option th:each="x : ${naturezas}" th:value="${x.id}" th:text="${x.caminho}"
+                          th:selected="${filtro.valor('f_natureza') == x.id.toString()}"></option>
+                </select>
+                <div class="pe-filtro">
+                  <button class="botao pequeno" type="submit" form="filtros-pagar">Aplicar</button>
+                </div>
+              </div>
+            </details>
+          </div>
+        </th>
+        <th th:classappend="${filtro.filtrando('centro')} ? 'filtrada'">
+          <div class="cabeca-coluna">
+            <span class="titulo-coluna">Centro de custo</span>
+            <details class="filtro">
+              <summary th:title="'Filtrar por centro de custo'"><svg th:replace="~{layout :: funil}"></svg></summary>
+              <div class="gaveta-filtro">
+                <label for="f-centro">Área que absorve</label>
+                <select id="f-centro" name="f_centro" form="filtros-pagar">
+                  <option value="">todos</option>
+                  <option th:each="x : ${centros}" th:value="${x.id}" th:text="${x.nome}"
+                          th:selected="${filtro.valor('f_centro') == x.id.toString()}"></option>
+                </select>
+                <div class="pe-filtro">
+                  <button class="botao pequeno" type="submit" form="filtros-pagar">Aplicar</button>
+                </div>
+              </div>
+            </details>
+          </div>
+        </th>
+        <th class="centro" th:classappend="${filtro.filtrando('valor')} ? 'filtrada'">
+          <div class="cabeca-coluna">
+            <span class="titulo-coluna">Valor devido</span>
+            <details class="filtro">
+              <summary th:title="'Filtrar por valor devido'"><svg th:replace="~{layout :: funil}"></svg></summary>
+              <div class="gaveta-filtro">
+                <label for="f-valor-de">De</label>
+                <input id="f-valor-de" inputmode="decimal" name="f_valor_de" form="filtros-pagar"
+                       th:value="${filtro.valor('f_valor_de')}" placeholder="mínimo">
+                <label for="f-valor-ate">Até</label>
+                <input id="f-valor-ate" inputmode="decimal" name="f_valor_ate" form="filtros-pagar"
+                       th:value="${filtro.valor('f_valor_ate')}" placeholder="máximo">
+                <div class="pe-filtro">
+                  <button class="botao pequeno" type="submit" form="filtros-pagar">Aplicar</button>
+                </div>
+              </div>
+            </details>
+          </div>
+        </th>
+        <th class="centro" th:classappend="${filtro.filtrando('pago')} ? 'filtrada'">
+          <div class="cabeca-coluna">
+            <span class="titulo-coluna">Pago</span>
+            <details class="filtro">
+              <summary th:title="'Filtrar por pago'"><svg th:replace="~{layout :: funil}"></svg></summary>
+              <div class="gaveta-filtro">
+                <label for="f-pago-de">De</label>
+                <input id="f-pago-de" inputmode="decimal" name="f_pago_de" form="filtros-pagar"
+                       th:value="${filtro.valor('f_pago_de')}" placeholder="mínimo">
+                <label for="f-pago-ate">Até</label>
+                <input id="f-pago-ate" inputmode="decimal" name="f_pago_ate" form="filtros-pagar"
+                       th:value="${filtro.valor('f_pago_ate')}" placeholder="máximo">
+                <div class="pe-filtro">
+                  <button class="botao pequeno" type="submit" form="filtros-pagar">Aplicar</button>
+                </div>
+              </div>
+            </details>
+          </div>
+        </th>
+        <th class="centro" th:classappend="${filtro.filtrando('saldo')} ? 'filtrada'">
+          <div class="cabeca-coluna">
+            <span class="titulo-coluna">Saldo</span>
+            <details class="filtro">
+              <summary th:title="'Filtrar por saldo'"><svg th:replace="~{layout :: funil}"></svg></summary>
+              <div class="gaveta-filtro">
+                <label for="f-saldo-de">De</label>
+                <input id="f-saldo-de" inputmode="decimal" name="f_saldo_de" form="filtros-pagar"
+                       th:value="${filtro.valor('f_saldo_de')}" placeholder="mínimo">
+                <label for="f-saldo-ate">Até</label>
+                <input id="f-saldo-ate" inputmode="decimal" name="f_saldo_ate" form="filtros-pagar"
+                       th:value="${filtro.valor('f_saldo_ate')}" placeholder="máximo">
+                <div class="pe-filtro">
+                  <button class="botao pequeno" type="submit" form="filtros-pagar">Aplicar</button>
+                </div>
+              </div>
+            </details>
+          </div>
+        </th>
+        <th class="centro" th:classappend="${filtro.filtrando('situacao')} ? 'filtrada'">
+          <div class="cabeca-coluna">
+            <span class="titulo-coluna">Situação</span>
+            <details class="filtro">
+              <summary th:title="'Filtrar por situação'"><svg th:replace="~{layout :: funil}"></svg></summary>
+              <div class="gaveta-filtro">
+                <label>Mostrar</label>
+                <div class="escolhas-situacao">
+                  <label th:each="s : ${situacoesDaColuna}" class="escolha">
+                    <input type="checkbox" name="f_situacao" th:value="${s}" form="filtros-pagar"
+                           th:checked="${filtro.marcado(s)}">
+                    <span th:text="${s}">em aberto</span>
+                  </label>
+                </div>
+                <div class="pe-filtro">
+                  <button class="botao pequeno" type="submit" form="filtros-pagar">Aplicar</button>
+                </div>
+              </div>
+            </details>
+          </div>
+        </th>
+        <th th:classappend="${filtro.filtrando('pendencias')} ? 'filtrada'">
+          <div class="cabeca-coluna">
+            <span class="titulo-coluna">Pendências</span>
+            <details class="filtro">
+              <summary th:title="'Filtrar por pendências'"><svg th:replace="~{layout :: funil}"></svg></summary>
+              <div class="gaveta-filtro">
+                <label for="f-pendencias">Mostrar</label>
+                <select id="f-pendencias" name="f_pendencias" form="filtros-pagar">
+                  <option value="">todas as contas</option>
+                  <option value="com" th:selected="${filtro.valor('f_pendencias') == 'com'}">só com pendência</option>
+                  <option value="sem" th:selected="${filtro.valor('f_pendencias') == 'sem'}">só sem pendência</option>
+                </select>
+                <div class="pe-filtro">
+                  <button class="botao pequeno" type="submit" form="filtros-pagar">Aplicar</button>
+                </div>
+              </div>
+            </details>
+          </div>
+        </th>
+        <th></th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr th:each="o : ${obrigacoes}">
+        <td class="centro mono">
+          <span th:text="${#temporals.format(o.vencimento, 'dd/MM/yyyy')}">01/01/2026</span>
+          <small th:if="${o.estaVencida(hoje)}" style="color:var(--accent)"
+                 th:text="${o.diasDeAtraso(hoje)} + ' dias de atraso'"></small>
+        </td>
+        <td class="centro mono">
+          <span th:text="${o.numero}">1</span>
+          <small th:if="${o.etiquetaParcela != null}" th:text="${o.etiquetaParcela}"></small>
+        </td>
+        <td>
+          <b th:text="${o.favorecido.nome}">Favorecido</b>
+          <small th:if="${o.pagaPorOutraEmpresa()}"
+                 th:text="'pago por ' + ${o.empresaPagadora.apelido}"></small>
+        </td>
+        <td>
+          <span th:text="${o.descricao}">Descrição</span>
+          <small th:text="${o.tipoOperacao.rotulo}">Despesa comum</small>
+        </td>
+        <td>
+          <span th:if="${o.itens.isEmpty()}" class="marca-situacao s-parcial">sem classificação</span>
+          <span th:if="${!o.itens.isEmpty()}"
+                th:text="${o.itens.size() == 1}
+                         ? (${o.itens[0].natureza != null} ? ${o.itens[0].natureza.nome} : 'sem natureza')
+                         : ${o.itens.size()} + ' naturezas'"></span>
+        </td>
+        <td>
+          <span th:if="${!o.itens.isEmpty()}"
+                th:text="${o.itens.size() == 1}
+                         ? (${o.itens[0].centroDeCusto != null} ? ${o.itens[0].centroDeCusto.nome} : 'sem centro')
+                         : 'rateado'"></span>
+        </td>
+        <td class="centro mono"
+            th:text="'R$ ' + ${#numbers.formatDecimal(o.valor, 1, 'POINT', 2, 'COMMA')}">R$ 0,00</td>
+        <td class="centro mono"
+            th:text="'R$ ' + ${#numbers.formatDecimal(o.totalPago, 1, 'POINT', 2, 'COMMA')}">R$ 0,00</td>
+        <td class="centro mono"
+            th:text="'R$ ' + ${#numbers.formatDecimal(o.saldo, 1, 'POINT', 2, 'COMMA')}">R$ 0,00</td>
+        <td class="centro">
+          <span class="marca-situacao"
+                th:classappend="${o.cancelada} ? 's-cancelado'
+                                : (${o.estaVencida(hoje)} ? 's-vencido'
+                                : (${o.liquidacao.name() == 'LIQUIDADA'} ? 's-pago'
+                                : (${o.liquidacao.name() == 'PARCIAL'} ? 's-parcial' : 's-aberto')))"
+                th:text="${o.cancelada} ? 'cancelada'
+                         : (${o.estaVencida(hoje)} ? 'vencida' : ${o.liquidacao.rotulo})">em aberto</span>
+        </td>
+        <td>
+          <small th:each="p : ${o.pendencias()}" th:text="${p}" style="display:block"></small>
+        </td>
+        <td style="text-align:right">
+          <a class="botao pequeno vazado" th:href="@{'/pagar/' + ${o.id}}">Abrir</a>
+        </td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="vazio" th:if="${obrigacoes.isEmpty()}">
+    Nenhuma conta nesta visão.
+  </div>
+
+  <!-- ------------------------------------------------- custo por área -->
+  <span class="rotulo-bloco" th:if="${!custoPorCentro.isEmpty()}">Custo por área, nesta lista</span>
+  <div class="tabela-caixa" th:if="${!custoPorCentro.isEmpty()}">
+    <table>
+      <thead>
+      <tr>
+        <th>Centro de custo</th>
+        <th class="centro">Custo direto</th>
+        <th class="centro">Custo rateado</th>
+        <th class="centro">Total</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr th:each="l : ${custoPorCentro}">
+        <td th:text="${l.area}">Fiscal</td>
+        <td class="centro mono"
+            th:text="'R$ ' + ${#numbers.formatDecimal(l.direto, 1, 'POINT', 2, 'COMMA')}">R$ 0,00</td>
+        <td class="centro mono"
+            th:text="'R$ ' + ${#numbers.formatDecimal(l.rateado, 1, 'POINT', 2, 'COMMA')}">R$ 0,00</td>
+        <td class="centro mono"
+            th:text="'R$ ' + ${#numbers.formatDecimal(l.total(), 1, 'POINT', 2, 'COMMA')}">R$ 0,00</td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="dica" th:if="${!custoPorCentro.isEmpty()}">Custo direto é o que nasceu na área.
+    Custo rateado veio de uma divisão, e o critério fica escrito em cada linha da composição.</p>
+</main>
+
+<script th:replace="~{layout :: scripts}"></script>
+
+<!-- --------------------------------------------------- janela: nova conta -->
+<dialog id="janela-nova-conta" class="janela">
+  <form method="post" action="/pagar">
+    <div class="janela-topo">
+      <div>
+        <span class="olho"><i></i>Contas a pagar</span>
+        <h2>Nova conta</h2>
+      </div>
+      <button type="button" class="fechar" data-fecha aria-label="Fechar">&#10005;</button>
+    </div>
+    <div class="janela-corpo">
+      <p class="dica">Preencha o essencial. O que falta pode entrar depois, e a conta fica
+        visível como pendente até ficar completa.</p>
+      <div class="campos">
+        <div>
+          <label for="nc-favorecido">Favorecido</label>
+          <select id="nc-favorecido" name="favorecidoId" required>
+            <option th:each="f : ${favorecidos}" th:value="${f.id}" th:text="${f.nome}"></option>
+          </select>
+        </div>
+        <div>
+          <label for="nc-descricao">Descrição</label>
+          <input id="nc-descricao" name="descricao" required placeholder="o que é esta conta">
+        </div>
+        <div>
+          <label for="nc-tipo">Tipo de operação</label>
+          <select id="nc-tipo" name="tipo">
+            <option th:each="t : ${tipos}" th:value="${t}" th:text="${t.rotulo}"></option>
+          </select>
+        </div>
+        <div>
+          <label for="nc-vencimento">Vencimento</label>
+          <input id="nc-vencimento" name="vencimento" type="date" th:value="${hoje}" required>
+        </div>
+        <div>
+          <label for="nc-valor">Valor devido (R$)</label>
+          <input id="nc-valor" name="valor" type="number" step="0.01" min="0" required>
+        </div>
+        <div>
+          <label for="nc-competencia">Competência</label>
+          <input id="nc-competencia" name="competencia" type="date">
+        </div>
+      </div>
+
+      <span class="rotulo-bloco">Classificação</span>
+      <div class="campos">
+        <div>
+          <label for="nc-natureza">Natureza</label>
+          <select id="nc-natureza" name="naturezaId">
+            <option value="">deixar para depois</option>
+            <option th:each="n : ${naturezas}" th:value="${n.id}" th:text="${n.caminho}"></option>
+          </select>
+        </div>
+        <div>
+          <label for="nc-centro">Centro de custo</label>
+          <select id="nc-centro" name="centroId">
+            <option value="">deixar para depois</option>
+            <option th:each="c : ${centros}" th:value="${c.id}" th:text="${c.nome}"></option>
+          </select>
+        </div>
+        <div>
+          <label for="nc-bem">Bem relacionado</label>
+          <select id="nc-bem" name="bemId">
+            <option value="">nenhum</option>
+            <option th:each="b : ${bens}" th:value="${b.id}" th:text="${b.etiqueta}"></option>
+          </select>
+        </div>
+        <div>
+          <label for="nc-pessoa">Pessoa relacionada</label>
+          <input id="nc-pessoa" name="pessoaRelacionada" placeholder="a quem o gasto se refere">
+        </div>
+      </div>
+
+      <span class="rotulo-bloco">Pagamento e origem</span>
+      <div class="campos">
+        <div>
+          <label for="nc-conta">Conta financeira</label>
+          <select id="nc-conta" name="contaId">
+            <option value="">definir na hora de pagar</option>
+            <option th:each="c : ${contasFinanceiras}" th:value="${c.id}" th:text="${c.resumo}"></option>
+          </select>
+        </div>
+        <div>
+          <label for="nc-pagadora">Quem paga</label>
+          <select id="nc-pagadora" name="empresaPagadoraId">
+            <option value="">a própria empresa</option>
+            <option th:each="e : ${empresasDoGrupo}" th:value="${e.id}" th:text="${e.nome}"></option>
+          </select>
+        </div>
+        <div>
+          <label for="nc-solicitante">Solicitante</label>
+          <input id="nc-solicitante" name="solicitante" placeholder="quem pediu">
+        </div>
+        <div>
+          <label for="nc-rascunho">Situação do cadastro</label>
+          <select id="nc-rascunho" name="rascunho">
+            <option value="false">completo</option>
+            <option value="true">rascunho, falta informação</option>
+          </select>
+        </div>
+      </div>
+      <div class="campos" style="margin-top:16px">
+        <div style="grid-column:1/-1">
+          <label for="nc-obs">Observação</label>
+          <input id="nc-obs" name="observacao">
+        </div>
+      </div>
+    </div>
+    <div class="janela-pe">
+      <button type="button" class="botao vazado" data-fecha>Cancelar</button>
+      <button class="botao" type="submit">Lançar conta</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- ---------------------------------------------------- janela: parcelar -->
+<dialog id="janela-parcelar" class="janela estreita">
+  <form method="post" action="/pagar/parcelar">
+    <div class="janela-topo">
+      <div>
+        <span class="olho"><i></i>Parcelamento</span>
+        <h2>Dividir uma contratação em parcelas</h2>
+      </div>
+      <button type="button" class="fechar" data-fecha aria-label="Fechar">&#10005;</button>
+    </div>
+    <div class="janela-corpo">
+      <p class="dica">A soma das parcelas fecha com o total. A sobra dos centavos vai para a
+        primeira parcela, e não se perde.</p>
+      <div class="campos">
+        <div>
+          <label for="pc-favorecido">Favorecido</label>
+          <select id="pc-favorecido" name="favorecidoId" required>
+            <option th:each="f : ${favorecidos}" th:value="${f.id}" th:text="${f.nome}"></option>
+          </select>
+        </div>
+        <div>
+          <label for="pc-descricao">Descrição</label>
+          <input id="pc-descricao" name="descricao" required>
+        </div>
+        <div>
+          <label for="pc-total">Valor total (R$)</label>
+          <input id="pc-total" name="total" type="number" step="0.01" min="0" required>
+        </div>
+        <div>
+          <label for="pc-vezes">Em quantas vezes</label>
+          <input id="pc-vezes" name="vezes" type="number" min="2" max="120" value="2" required>
+        </div>
+        <div>
+          <label for="pc-vencimento">Primeiro vencimento</label>
+          <input id="pc-vencimento" name="primeiroVencimento" type="date" th:value="${hoje}" required>
+        </div>
+        <div>
+          <label for="pc-natureza">Natureza</label>
+          <select id="pc-natureza" name="naturezaId">
+            <option value="">deixar para depois</option>
+            <option th:each="n : ${naturezas}" th:value="${n.id}" th:text="${n.caminho}"></option>
+          </select>
+        </div>
+        <div>
+          <label for="pc-centro">Centro de custo</label>
+          <select id="pc-centro" name="centroId">
+            <option value="">deixar para depois</option>
+            <option th:each="c : ${centros}" th:value="${c.id}" th:text="${c.nome}"></option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="janela-pe">
+      <button type="button" class="botao vazado" data-fecha>Cancelar</button>
+      <button class="botao" type="submit">Lançar parcelas</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- ------------------------------------------------- janela: recorrências -->
+<dialog id="janela-recorrencia" class="janela">
+  <div>
+    <div class="janela-topo">
+      <div>
+        <span class="olho"><i></i>Recorrências</span>
+        <h2>Contas que se repetem</h2>
+      </div>
+      <button type="button" class="fechar" data-fecha aria-label="Fechar">&#10005;</button>
+    </div>
+    <div class="janela-corpo">
+      <p class="dica">Recorrência não tem fim previsto, ao contrário do parcelamento. Quando o
+        valor muda todo mês, a conta nasce como rascunho e pede conferência, para ninguém
+        confundir previsão com conta confirmada.</p>
+
+      <form method="post" action="/pagar/gerar-recorrentes">
+        <div class="campos">
+          <div>
+            <label for="rc-competencia">Gerar as contas do mês</label>
+            <input id="rc-competencia" name="competencia" type="month" th:value="${competencia}" required>
+          </div>
+        </div>
+        <div class="linha-botoes">
+          <button class="botao pequeno" type="submit">Gerar contas do mês</button>
+        </div>
+      </form>
+
+      <span class="rotulo-bloco">Nova recorrência</span>
+      <form method="post" action="/pagar/recorrencias">
+        <div class="campos">
+          <div>
+            <label for="rc-descricao">Descrição</label>
+            <input id="rc-descricao" name="descricao" required placeholder="Aluguel da sala">
+          </div>
+          <div>
+            <label for="rc-favorecido">Favorecido</label>
+            <select id="rc-favorecido" name="favorecidoId" required>
+              <option th:each="f : ${favorecidos}" th:value="${f.id}" th:text="${f.nome}"></option>
+            </select>
+          </div>
+          <div>
+            <label for="rc-valor">Valor previsto (R$)</label>
+            <input id="rc-valor" name="valorPrevisto" type="number" step="0.01" min="0">
+          </div>
+          <div>
+            <label for="rc-variavel">O valor muda todo período</label>
+            <select id="rc-variavel" name="valorVariavel">
+              <option value="false">não, é sempre igual</option>
+              <option value="true">sim, precisa conferir todo mês</option>
+            </select>
+          </div>
+          <div>
+            <label for="rc-dia">Dia do vencimento</label>
+            <input id="rc-dia" name="diaVencimento" type="number" min="1" max="31" value="10">
+          </div>
+          <div>
+            <label for="rc-natureza">Natureza</label>
+            <select id="rc-natureza" name="naturezaId">
+              <option value="">nenhuma</option>
+              <option th:each="n : ${naturezas}" th:value="${n.id}" th:text="${n.caminho}"></option>
+            </select>
+          </div>
+          <div>
+            <label for="rc-centro">Centro de custo</label>
+            <select id="rc-centro" name="centroId">
+              <option value="">nenhum</option>
+              <option th:each="c : ${centros}" th:value="${c.id}" th:text="${c.nome}"></option>
+            </select>
+          </div>
+          <div>
+            <label for="rc-inicio">Início</label>
+            <input id="rc-inicio" name="inicio" type="date" th:value="${hoje}">
+          </div>
+        </div>
+        <div class="linha-botoes">
+          <button class="botao pequeno" type="submit">Cadastrar recorrência</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</dialog>
+
+<!-- --------------------------------------------------- janela: cadastros -->
+<dialog id="janela-cadastros" class="janela">
+  <div>
+    <div class="janela-topo">
+      <div>
+        <span class="olho"><i></i>Cadastros desta empresa</span>
+        <h2>Favorecidos, áreas, naturezas, contas e bens</h2>
+      </div>
+      <button type="button" class="fechar" data-fecha aria-label="Fechar">&#10005;</button>
+    </div>
+    <div class="janela-corpo">
+      <p class="dica">Tudo aqui pertence só a esta empresa. Outra empresa do sistema tem os
+        próprios cadastros, com os próprios números.</p>
+
+      <span class="rotulo-bloco">Novo favorecido</span>
+      <form method="post" action="/pagar/favorecidos">
+        <div class="campos">
+          <div>
+            <label for="fv-nome">Nome</label>
+            <input id="fv-nome" name="nome" required>
+          </div>
+          <div>
+            <label for="fv-doc">CPF ou CNPJ</label>
+            <input id="fv-doc" name="documento">
+          </div>
+          <div>
+            <label for="fv-tipo">Tipo</label>
+            <select id="fv-tipo" name="tipo">
+              <option value="EMPRESA">empresa</option>
+              <option value="PESSOA">pessoa</option>
+              <option value="FUNCIONARIO">funcionário</option>
+              <option value="SOCIO">sócio</option>
+              <option value="ORGAO_PUBLICO">órgão público</option>
+            </select>
+          </div>
+          <div>
+            <label for="fv-pix">Chave PIX</label>
+            <input id="fv-pix" name="chavePix">
+          </div>
+        </div>
+        <div class="linha-botoes"><button class="botao pequeno" type="submit">Cadastrar favorecido</button></div>
+      </form>
+
+      <span class="rotulo-bloco">Novo centro de custo</span>
+      <form method="post" action="/pagar/centros">
+        <div class="campos">
+          <div>
+            <label for="cc-nome">Nome</label>
+            <input id="cc-nome" name="nome" required>
+          </div>
+          <div>
+            <label for="cc-desc">Descrição</label>
+            <input id="cc-desc" name="descricao">
+          </div>
+        </div>
+        <div class="linha-botoes"><button class="botao pequeno" type="submit">Cadastrar centro</button></div>
+      </form>
+
+      <span class="rotulo-bloco">Nova natureza</span>
+      <form method="post" action="/pagar/naturezas">
+        <div class="campos">
+          <div>
+            <label for="nt-codigo">Código</label>
+            <input id="nt-codigo" name="codigo" required placeholder="10.01">
+          </div>
+          <div>
+            <label for="nt-nome">Nome</label>
+            <input id="nt-nome" name="nome" required>
+          </div>
+          <div>
+            <label for="nt-grupo">Grupo</label>
+            <select id="nt-grupo" name="grupo">
+              <option value="DESPESA">Despesa</option>
+              <option value="AQUISICAO">Aquisição patrimonial</option>
+              <option value="FINANCIAMENTO">Financiamento</option>
+              <option value="TRANSFERENCIA">Transferência</option>
+              <option value="SOCIOS">Movimentação com sócios</option>
+              <option value="TRIBUTO">Tributo</option>
+              <option value="RECEITA">Receita</option>
+            </select>
+          </div>
+          <div>
+            <label for="nt-pai">Fica dentro de</label>
+            <select id="nt-pai" name="paiId">
+              <option value="">nenhum grupo</option>
+              <option th:each="n : ${naturezas}" th:value="${n.id}" th:text="${n.caminho}"></option>
+            </select>
+          </div>
+        </div>
+        <div class="linha-botoes"><button class="botao pequeno" type="submit">Cadastrar natureza</button></div>
+      </form>
+
+      <span class="rotulo-bloco">Nova conta financeira</span>
+      <form method="post" action="/pagar/contas-financeiras">
+        <div class="campos">
+          <div>
+            <label for="cf-nome">Nome</label>
+            <input id="cf-nome" name="nome" required placeholder="Conta principal">
+          </div>
+          <div>
+            <label for="cf-titular">Titular</label>
+            <input id="cf-titular" name="titular" required>
+          </div>
+          <div>
+            <label for="cf-banco">Banco</label>
+            <input id="cf-banco" name="banco">
+          </div>
+          <div>
+            <label for="cf-agencia">Agência</label>
+            <input id="cf-agencia" name="agencia">
+          </div>
+          <div>
+            <label for="cf-numero">Conta</label>
+            <input id="cf-numero" name="numero">
+          </div>
+          <div>
+            <label for="cf-saldo">Saldo inicial (R$)</label>
+            <input id="cf-saldo" name="saldoInicial" type="number" step="0.01">
+          </div>
+        </div>
+        <div class="linha-botoes"><button class="botao pequeno" type="submit">Cadastrar conta</button></div>
+      </form>
+
+      <span class="rotulo-bloco">Novo bem</span>
+      <form method="post" action="/pagar/bens">
+        <div class="campos">
+          <div>
+            <label for="bm-numero">Número patrimonial</label>
+            <input id="bm-numero" name="numeroPatrimonial" required placeholder="FIS-001">
+          </div>
+          <div>
+            <label for="bm-desc">Descrição</label>
+            <input id="bm-desc" name="descricao" required placeholder="Computador do Fiscal">
+          </div>
+          <div>
+            <label for="bm-tipo">Tipo</label>
+            <input id="bm-tipo" name="tipo" placeholder="computador, móvel, veículo">
+          </div>
+          <div>
+            <label for="bm-centro">Centro de custo</label>
+            <select id="bm-centro" name="centroId">
+              <option value="">nenhum</option>
+              <option th:each="c : ${centros}" th:value="${c.id}" th:text="${c.nome}"></option>
+            </select>
+          </div>
+          <div>
+            <label for="bm-resp">Responsável pela guarda</label>
+            <input id="bm-resp" name="responsavel">
+          </div>
+          <div>
+            <label for="bm-aquisicao">Data da aquisição</label>
+            <input id="bm-aquisicao" name="aquisicao" type="date">
+          </div>
+          <div>
+            <label for="bm-valor">Valor da aquisição (R$)</label>
+            <input id="bm-valor" name="valor" type="number" step="0.01" min="0">
+          </div>
+        </div>
+        <div class="linha-botoes"><button class="botao pequeno" type="submit">Cadastrar bem</button></div>
+      </form>
+    </div>
+  </div>
+</dialog>
+
+<script src="/js/janelas.js?v=1"></script>
+
+</body>
+</html>

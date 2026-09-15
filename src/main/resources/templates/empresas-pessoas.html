@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head th:replace="~{layout :: cabeca('Quem cuida desta empresa')}"></head>
+<body>
+<header th:replace="~{layout :: topo('')}"></header>
+
+<main>
+  <div th:replace="~{layout :: recados}"></div>
+
+  <div class="cabecalho-pagina">
+    <div>
+      <span class="olho"><i></i>Alçada</span>
+      <h1>Quem cuida desta empresa</h1>
+    </div>
+    <div class="acoes" style="margin:0">
+      <a class="botao vazado" href="/empresas/configurar">Configurações</a>
+    </div>
+  </div>
+
+  <div class="alerta-box" style="margin-bottom:22px">
+    A pessoa é a mesma em todas as empresas, mas a alçada é de cada empresa.
+    Operador lança e recebe. Gestor também cancela título e aprova cobrança e conta a pagar.
+    Diretor também fecha e reabre o mês e mexe na configuração da empresa.
+  </div>
+
+  <div class="tabela-caixa">
+    <table>
+      <thead>
+      <tr>
+        <th>Pessoa</th>
+        <th>E-mail</th>
+        <th class="centro">Alçada</th>
+        <th></th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr th:each="c : ${crachas}">
+        <td><b th:text="${pessoas.get(c.usuarioId) != null} ? ${pessoas.get(c.usuarioId).nome} : 'pessoa'">Pessoa</b></td>
+        <td class="mono" style="font-size:12.5px"
+            th:text="${pessoas.get(c.usuarioId) != null} ? ${pessoas.get(c.usuarioId).email} : ''"></td>
+        <td class="centro">
+          <span class="marca-situacao"
+                th:classappend="${c.papel.name() == 'DIRETOR'} ? 's-pago'
+                                : (${c.papel.name() == 'GESTOR'} ? 's-parcial' : 's-aberto')"
+                th:text="${c.papel.name().toLowerCase()}">operador</span>
+        </td>
+        <td style="text-align:right">
+          <form method="post" th:action="@{'/empresas/pessoas/' + ${c.usuarioId}}"
+                style="display:flex; gap:8px; justify-content:flex-end">
+            <select name="papel" style="width:auto">
+              <option th:each="p : ${papeis}" th:value="${p}" th:text="${p.name().toLowerCase()}"
+                      th:selected="${p == c.papel}"></option>
+            </select>
+            <button class="botao pequeno" type="submit">Mudar</button>
+          </form>
+        </td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p class="dica">Quem abre uma empresa pela primeira vez entra como diretor dela. Quem chega
+    depois entra como operador, e um diretor sobe a alçada de quem precisar. Ninguém tira a
+    própria alçada, para a empresa nunca ficar sem diretor.</p>
+</main>
+
+<script th:replace="~{layout :: scripts}"></script>
+
+</body>
+</html>

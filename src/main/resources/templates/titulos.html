@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head th:replace="~{layout :: cabeca('Contas a receber')}"></head>
+<body>
+<header th:replace="~{layout :: topo('titulos')}"></header>
+
+<main>
+  <div th:replace="~{layout :: recados}"></div>
+
+  <div class="cabecalho-pagina com-resumo">
+    <div>
+      <span class="olho"><i></i>Recebíveis</span>
+      <h1>Contas a receber</h1>
+      <nav th:replace="~{layout :: abas-receber('lancamentos')}"></nav>
+    </div>
+
+    <div class="cartoes-topo">
+      <div class="cartao-topo inverso">
+        <span class="rotulo">A receber</span>
+        <b th:text="'R$ ' + ${#numbers.formatDecimal(resumo.emAberto, 1, 'POINT', 2, 'COMMA')}">R$ 0,00</b>
+        <small>saldo em aberto</small>
+      </div>
+      <div class="cartao-topo" th:classappend="${resumo.vencido.signum() > 0} ? 'alerta'">
+        <span class="rotulo">Vencido</span>
+        <b th:text="'R$ ' + ${#numbers.formatDecimal(resumo.vencido, 1, 'POINT', 2, 'COMMA')}">R$ 0,00</b>
+        <small>passou do vencimento</small>
+      </div>
+      <div class="cartao-topo">
+        <span class="rotulo">Vence em 7 dias</span>
+        <b th:text="'R$ ' + ${#numbers.formatDecimal(aVencer7, 1, 'POINT', 2, 'COMMA')}">R$ 0,00</b>
+        <small>próxima semana</small>
+      </div>
+      <div class="cartao-topo listrado positivo">
+        <span class="rotulo">Recebido no mês</span>
+        <b th:text="'R$ ' + ${#numbers.formatDecimal(resumo.recebidoNoMes, 1, 'POINT', 2, 'COMMA')}">R$ 0,00</b>
+        <small th:text="${resumo.titulosEmAberto} + ' em aberto'">0 em aberto</small>
+      </div>
+    </div>
+    <div class="acoes" style="margin:0">
+      <a class="botao" href="/titulos/novo">Lançar título</a>
+    </div>
+  </div>
+
+  <div id="paineis" class="paineis-analiticos">
+    <p class="carregando">montando os painéis</p>
+  </div>
+
+  <span class="rotulo-bloco">Lançamentos do contas a receber</span>
+  <div class="tabela-caixa" th:if="${!titulos.isEmpty()}">
+    <table>
+      <thead>
+      <tr>
+        <th class="centro">Nº</th>
+        <th>Cliente</th>
+        <th class="centro">Competência</th>
+        <th class="centro">Descrição</th>
+        <th class="centro">Vencimento</th>
+        <th class="centro">Valor</th>
+        <th class="centro">Pago</th>
+        <th class="centro">Saldo</th>
+        <th class="centro">Situação</th>
+        <th class="centro">Código PIX</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr th:each="t : ${titulos}">
+        <td class="mono centro"><a th:href="@{'/titulos/' + ${t.id}}" th:text="${t.numero}">1</a></td>
+        <td th:text="${t.cliente.razaoSocial}">Cliente</td>
+        <td class="mono centro" th:text="${#temporals.format(t.competencia, 'MM/yyyy')}"></td>
+        <td class="centro" th:text="${t.descricao}"></td>
+        <td class="mono centro" th:text="${#temporals.format(t.vencimento, 'dd/MM/yyyy')}"></td>
+        <td class="valor centro" th:text="${#numbers.formatDecimal(t.valor, 1, 'POINT', 2, 'COMMA')}">0,00</td>
+        <td class="valor centro" th:text="${#numbers.formatDecimal(t.totalPago, 1, 'POINT', 2, 'COMMA')}">0,00</td>
+        <td class="valor centro" th:text="${#numbers.formatDecimal(t.saldo, 1, 'POINT', 2, 'COMMA')}">0,00</td>
+        <td class="centro">
+          <span th:if="${t.estaVencido(hoje)}" class="marca-situacao s-vencido"
+                th:text="${t.diasDeAtraso(hoje)} + ' dias'">vencido</span>
+          <span th:unless="${t.estaVencido(hoje)}" class="marca-situacao"
+                th:classappend="${'s-' + t.situacao.name().toLowerCase()}"
+                th:text="${t.situacao}">ABERTO</span>
+        </td>
+        <td class="mono centro" th:text="${t.identificadorPix}"></td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="vazio" th:if="${titulos.isEmpty()}">
+    Nenhum título lançado nesta empresa ainda.
+  </div>
+</main>
+
+<script th:replace="~{layout :: scripts}"></script>
+<script src="/js/graficos.js?v=3"></script>
+
+</body>
+</html>

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="format-detection" content="telephone=no">
+  <title>IT.FC · Entrar</title>
+  <link rel="stylesheet" href="/css/itia.css?v=45">
+</head>
+<body>
+
+<div class="portao">
+  <div class="lado-escuro itia-grid-texture">
+    <span class="marca">IT<span>.</span>FC</span>
+
+    <div class="tese">
+      <span class="olho-claro"><i></i>Gestão financeira</span>
+      <h1>Contas a receber com segregação total por empresa.</h1>
+      <p>Carteira, faturamento e conciliação operados em bases isoladas, sob a
+        mesma plataforma. Escala de uma empresa a um grupo inteiro sem duplicar
+        estrutura.</p>
+    </div>
+
+    <div class="pilares">
+      <div>
+        <span class="num">01</span>
+        <b>Faturamento</b>
+        <p>Emissão com numeração sequencial e identificador de cobrança por título.</p>
+      </div>
+      <div>
+        <span class="num">02</span>
+        <b>Conciliação</b>
+        <p>Baixa por identificador de transação, com bloqueio de duplicidade e tolerância parametrizada.</p>
+      </div>
+      <div>
+        <span class="num">03</span>
+        <b>Auditoria</b>
+        <p>Trilha completa de lançamentos, com autor, data e valor de cada movimentação.</p>
+      </div>
+    </div>
+
+    <span class="rodape">IT.IA · IT.FC</span>
+  </div>
+
+  <div class="lado-claro">
+    <form method="post" action="/entrar">
+      <input type="hidden" id="voltarPara" name="voltarPara">
+      <span class="olho"><i></i>Acesso</span>
+      <h1>Entrar</h1>
+      <p class="chamada">Identificação do operador. O nome informado assina cada lançamento.</p>
+
+      <div class="campo-linha">
+        <label for="nome">Nome do operador</label>
+        <input id="nome" name="nome" placeholder="Nome completo" autofocus>
+      </div>
+      <div class="campo-linha">
+        <label for="email">E-mail</label>
+        <input id="email" name="email" type="email" placeholder="nome@empresa.com.br">
+      </div>
+
+      <button class="botao" type="submit">Entrar</button>
+
+      <p class="aviso-sem-trava">
+        Acesso ainda sem senha. A conferência de credenciais entra na próxima etapa.
+      </p>
+    </form>
+  </div>
+</div>
+
+<script src="/js/vivo.js?v=1"></script>
+
+</body>
+</html>

@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head th:replace="~{layout :: cabeca('Fechamento do mês')}"></head>
+<body>
+<header th:replace="~{layout :: topo('servicos')}"></header>
+
+<main class="largo">
+  <div th:replace="~{layout :: recados}"></div>
+
+  <div class="cabecalho-pagina com-resumo">
+    <div>
+      <span class="olho"><i></i>Fechamento do mês</span>
+      <h1 th:text="'Leva de ' + ${previa.referencia}">Leva</h1>
+      <nav th:replace="~{layout :: abas-catalogo('cobrancas')}"></nav>
+    </div>
+
+    <div class="cartoes-topo">
+      <div class="cartao-topo inverso">
+        <span class="rotulo">Total da leva</span>
+        <b th:text="'R$ ' + ${#numbers.formatDecimal(previa.total(), 1, 'POINT', 2, 'COMMA')}">R$ 0,00</b>
+        <small th:text="${previa.quantasEntram()} + ' cobranças'">0 cobranças</small>
+      </div>
+      <div class="cartao-topo" th:classappend="${previa.quantasFicamDeFora() > 0} ? 'alerta'">
+        <span class="rotulo">Fica de fora</span>
+        <b th:text="${previa.quantasFicamDeFora()}">0</b>
+        <small>com o motivo escrito</small>
+      </div>
+      <div class="cartao-topo" th:classappend="${!previa.semDono.isEmpty()} ? 'alerta'">
+        <span class="rotulo">Arquivo sem dono</span>
+        <b th:text="${previa.semDono.size()}">0</b>
+        <small>linhas que não acharam cliente</small>
+      </div>
+      <div class="cartao-topo listrado">
+        <span class="rotulo">Situação do mês</span>
+        <b th:text="${previa.fechada()} ? 'fechado' : 'aberto'">aberto</b>
+        <small th:text="${previa.fechada()}
+                        ? 'não gera nem recalcula' : 'aceita geração'"></small>
+      </div>
+    </div>
+
+    <div class="acoes" style="margin:0">
+      <a class="botao vazado" href="/cobrancas">Ver as cobranças</a>
+      <button class="botao vazado" type="button" data-abre="janela-faturado">Importar faturado</button>
+      <button class="botao" type="button" data-abre="janela-gerar"
+              th:disabled="${previa.fechada() or previa.quantasEntram() == 0}">Gerar a leva</button>
+    </div>
+  </div>
+
+  <div class="barra-busca">
+    <form method="get" action="/cobrancas/fechamento" style="display:flex; gap:10px">
+      <input type="month" name="competencia" th:value="${competencia}">
+      <button class="botao pequeno" type="submit">Ver este mês</button>
+    </form>
+    <form method="post" action="/cobrancas/fechamento/fechar" th:if="${!previa.fechada()}">
+      <input type="hidden" name="competencia" th:value="${competencia}">
+      <button class="botao pequeno vazado" type="submit">Fechar o mês</button>
+    </form>
+  </div>
+
+  <div class="alerta-box atencao" th:if="${previa.fechada()}" style="margin-bottom:18px">
+    Mês fechado
+    <span th:if="${previa.competencia.isPresent()}"
+          th:text="'por ' + ${previa.competencia.get().fechadaPor}"></span>.
+    Nada é gerado nem recalculado enquanto ele estiver assim.
+    <form method="post" action="/cobrancas/fechamento/reabrir"
+          style="display:flex; gap:8px; margin-top:10px; max-width:520px">
+      <input type="hidden" name="competencia" th:value="${competencia}">
+      <input name="motivo" placeholder="motivo para reabrir" required>
+      <button class="botao pequeno perigo" type="submit">Reabrir</button>
+    </form>
+  </div>
+
+  <!-- ------------------------------------------------------ o que entra -->
+  <span class="rotulo-bloco">O que vai ser cobrado</span>
+  <div class="tabela-caixa" th:if="${previa.quantasEntram() > 0}">
+    <table>
+      <thead>
+      <tr>
+        <th>Cliente</th>
+        <th>Pacote</th>
+        <th>Unidade</th>
+        <th class="centro">De onde vem o valor</th>
+        <th class="centro">Valor</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr th:each="l : ${previa.prontas()}">
+        <td><b th:text="${l.cliente}">Cliente</b></td>
+        <td th:text="${l.pacote}">Pacote</td>
+        <td th:text="${l.unidade}">Unidade</td>
+        <td class="centro">
+          <span class="marca-situacao" th:classappend="${l.valorVeioDeFora} ? 's-parcial' : 's-aberto'"
+                th:text="${l.valorVeioDeFora} ? 'arquivo importado' : 'valor da contratação'"></span>
+        </td>
+        <td class="centro mono"
+            th:text="'R$ ' + ${#numbers.formatDecimal(l.valor, 1, 'POINT', 2, 'COMMA')}">R$ 0,00</td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="vazio" th:if="${previa.quantasEntram() == 0}">
+    Nada a cobrar neste mês. A lista abaixo diz por quê.
+  </div>
+
+  <!-- ---------------------------------------------------- o que fica fora -->
+  <span class="rotulo-bloco">O que fica de fora, e por quê</span>
+  <div class="tabela-caixa" th:if="${previa.quantasFicamDeFora() > 0}">
+    <table>
+      <thead>
+      <tr>
+        <th>Cliente</th>
+        <th>Pacote</th>
+        <th>Unidade</th>
+        <th>Motivo</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr th:each="l : ${previa.foraDaLeva()}">
+        <td th:text="${l.cliente}">Cliente</td>
+        <td th:text="${l.pacote}">Pacote</td>
+        <td th:text="${l.unidade}">Unidade</td>
+        <td><span class="marca-situacao s-cancelado" th:text="${l.motivoDeFicarDeFora}">motivo</span></td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="vazio" th:if="${previa.quantasFicamDeFora() == 0}">
+    Nenhuma contratação ficou de fora.
+  </div>
+
+  <!-- ------------------------------------------------- faturado importado -->
+  <span class="rotulo-bloco">Faturado importado deste mês</span>
+  <div class="tabela-caixa" th:if="${!faturado.isEmpty()}">
+    <table>
+      <thead>
+      <tr>
+        <th>Documento</th>
+        <th>Cliente</th>
+        <th>Unidade</th>
+        <th class="centro">Valor</th>
+        <th>Arquivo</th>
+        <th class="centro">Situação</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr th:each="f : ${faturado}">
+        <td class="mono" th:text="${f.documento}">000</td>
+        <td th:text="${f.pagador != null} ? ${f.pagador.nome} : ''"></td>
+        <td th:text="${f.unidade != null} ? ${f.unidade.razaoSocial} : ''"></td>
+        <td class="centro mono"
+            th:text="'R$ ' + ${#numbers.formatDecimal(f.valor, 1, 'POINT', 2, 'COMMA')}">R$ 0,00</td>
+        <td style="font-size:12px" th:text="${f.origem}"></td>
+        <td class="centro">
+          <span class="marca-situacao" th:classappend="${f.semDono()} ? 's-vencido' : 's-pago'"
+                th:text="${f.semDono()} ? 'sem dono' : 'amarrado'"></span>
+        </td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="vazio" th:if="${faturado.isEmpty()}">
+    Nenhum arquivo de faturado importado para este mês. Sem ele, cada contratação usa o valor
+    que foi acordado com o cliente.
+  </div>
+
+  <!-- ---------------------------------------------------- meses fechados -->
+  <span class="rotulo-bloco">Meses já fechados</span>
+  <div class="tabela-caixa" th:if="${!competencias.isEmpty()}">
+    <table>
+      <thead>
+      <tr>
+        <th class="centro">Mês</th>
+        <th class="centro">Situação</th>
+        <th>Fechado por</th>
+        <th>Reaberto por</th>
+        <th>Motivo da reabertura</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr th:each="c : ${competencias}">
+        <td class="centro mono" th:text="${c.referencia}">09/2026</td>
+        <td class="centro">
+          <span class="marca-situacao" th:classappend="${c.estaFechada()} ? 's-pago' : 's-aberto'"
+                th:text="${c.estaFechada()} ? 'fechado' : 'aberto'"></span>
+        </td>
+        <td th:text="${c.fechadaPor}"></td>
+        <td th:text="${c.reabertaPor}"></td>
+        <td th:text="${c.motivo}"></td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="vazio" th:if="${competencias.isEmpty()}">
+    Nenhum mês foi fechado ainda.
+  </div>
+</main>
+
+<script th:replace="~{layout :: scripts}"></script>
+
+<dialog id="janela-gerar" class="janela estreita">
+  <form method="post" action="/cobrancas/gerar">
+    <div class="janela-topo">
+      <div>
+        <span class="olho"><i></i>Fechamento do mês</span>
+        <h2>Gerar a leva</h2>
+      </div>
+      <button type="button" class="fechar" data-fecha aria-label="Fechar">&#10005;</button>
+    </div>
+    <div class="janela-corpo">
+      <p class="dica">Vão ser criadas
+        <b th:text="${previa.quantasEntram()}">0</b> cobranças, somando
+        <b th:text="'R$ ' + ${#numbers.formatDecimal(previa.total(), 1, 'POINT', 2, 'COMMA')}">R$ 0,00</b>.
+        Elas nascem pendentes de conferência: nada vai para o cliente sem alguém aprovar.</p>
+      <div class="campos">
+        <div>
+          <label for="gr-competencia">Mês</label>
+          <input id="gr-competencia" name="competencia" type="month" th:value="${competencia}" required readonly>
+        </div>
+        <div>
+          <label for="gr-dia">Dia do vencimento</label>
+          <input id="gr-dia" name="diaDoVencimento" type="number" min="1" max="31" value="10">
+        </div>
+      </div>
+    </div>
+    <div class="janela-pe">
+      <button type="button" class="botao vazado" data-fecha>Cancelar</button>
+      <button class="botao" type="submit">Gerar</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="janela-faturado" class="janela estreita">
+  <form method="post" action="/cobrancas/fechamento/importar" enctype="multipart/form-data">
+    <div class="janela-topo">
+      <div>
+        <span class="olho"><i></i>Entrada do faturado</span>
+        <h2>Importar o faturado do mês</h2>
+      </div>
+      <button type="button" class="fechar" data-fecha aria-label="Fechar">&#10005;</button>
+    </div>
+    <div class="janela-corpo">
+      <p class="dica">Arquivo de texto com duas colunas: documento e valor, separados por ponto
+        e vírgula. Uma linha por cliente ou por unidade. Exemplo:</p>
+      <div class="mono" style="border:1px solid var(--border-default); padding:12px; font-size:12.5px">
+        12.345.678/0001-99;1450,00<br>
+        987.654.321-00;450,00
+      </div>
+      <div class="campos" style="margin-top:16px">
+        <div>
+          <label for="fa-competencia">Mês</label>
+          <input id="fa-competencia" name="competencia" type="month" th:value="${competencia}" required readonly>
+        </div>
+        <div>
+          <label for="fa-arquivo">Arquivo</label>
+          <input id="fa-arquivo" name="arquivo" type="file" accept=".csv,.txt" required>
+        </div>
+        <div>
+          <label for="fa-substituir">O que fazer com o que já foi importado</label>
+          <select id="fa-substituir" name="substituir">
+            <option value="true">trocar tudo por este arquivo</option>
+            <option value="false">somar a este arquivo</option>
+          </select>
+        </div>
+      </div>
+      <p class="dica">Linha que não achar cliente pelo documento fica visível como sem dono, e
+        não vira cobrança de ninguém.</p>
+    </div>
+    <div class="janela-pe">
+      <button type="button" class="botao vazado" data-fecha>Cancelar</button>
+      <button class="botao" type="submit">Importar</button>
+    </div>
+  </form>
+</dialog>
+
+<script src="/js/janelas.js?v=1"></script>
+
+</body>
+</html>

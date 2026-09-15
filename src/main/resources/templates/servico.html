@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head th:replace="~{layout :: cabeca('Serviço')}"></head>
+<body>
+<header th:replace="~{layout :: topo('servicos')}"></header>
+
+<main class="largo">
+  <div th:replace="~{layout :: recados}"></div>
+
+  <div class="cabecalho-pagina">
+    <div>
+      <span class="olho"><i></i><span class="mono" th:text="${servico.codigo}">S0001</span></span>
+      <h1 th:text="${servico.nome}">Serviço</h1>
+      <p th:text="${servico.descricao}"></p>
+    </div>
+    <div class="acoes" style="margin:0">
+      <a class="botao vazado" href="/servicos">Voltar</a>
+      <form method="post" th:action="@{'/servicos/' + ${servico.id} + '/duplicar'}">
+        <button class="botao vazado" type="submit">Duplicar</button>
+      </form>
+      <form method="post" th:action="@{'/servicos/' + ${servico.id} + '/inativar'}"
+            th:if="${servico.ativo}">
+        <button class="botao perigo" type="submit">Inativar</button>
+      </form>
+      <form method="post" th:action="@{'/servicos/' + ${servico.id} + '/reativar'}"
+            th:unless="${servico.ativo}">
+        <button class="botao" type="submit">Reativar</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="quadros">
+    <div class="quadro forte">
+      <span class="rotulo">Preço padrão</span>
+      <span class="numero" style="font-size:22px" th:text="${servico.precoResumido}">R$ 0,00</span>
+      <small th:text="${servico.formaPreco.rotulo}">Valor único</small>
+    </div>
+    <div class="quadro">
+      <span class="rotulo">Itens</span>
+      <span class="numero" th:text="${servico.itensAtivos.size()}">0</span>
+      <small>partes que compõem o serviço</small>
+    </div>
+    <div class="quadro">
+      <span class="rotulo">Departamento</span>
+      <span class="numero" style="font-size:17px"
+            th:text="${servico.departamento != null} ? ${servico.departamento.nome} : 'sem departamento'"></span>
+      <small th:text="${servico.responsavelPadrao} ?: 'sem responsável padrão'"></small>
+    </div>
+    <div class="quadro">
+      <span class="rotulo">Situação</span>
+      <span class="numero" style="font-size:17px" th:text="${servico.ativo} ? 'Ativo' : 'Inativo'">Ativo</span>
+      <small th:text="${servico.vigenciaInicio != null}
+                      ? 'preço vale desde ' + ${#temporals.format(servico.vigenciaInicio, 'dd/MM/yyyy')}
+                      : 'preço sem data de início'"></small>
+    </div>
+  </div>
+
+  <nav class="abas-tela">
+    <a th:href="@{'/servicos/' + ${servico.id}}"
+       th:classappend="${aba == 'gerais'} ? 'ativa'">Dados gerais</a>
+    <a th:href="@{'/servicos/' + ${servico.id} + '?aba=itens'}"
+       th:classappend="${aba == 'itens'} ? 'ativa'">Itens do serviço</a>
+    <a th:href="@{'/servicos/' + ${servico.id} + '?aba=precos'}"
+       th:classappend="${aba == 'precos'} ? 'ativa'">Preços</a>
+    <a th:href="@{'/servicos/' + ${servico.id} + '?aba=historico'}"
+       th:classappend="${aba == 'historico'} ? 'ativa'">Histórico</a>
+  </nav>
+
+  <!-- ------------------------------------------------------- dados gerais -->
+  <section th:if="${aba == 'gerais'}">
+    <form class="bloco" method="post" th:action="@{'/servicos/' + ${servico.id} + '/gerais'}">
+      <div class="campos">
+        <div>
+          <label for="codigo">Código</label>
+          <input id="codigo" th:value="${servico.codigo}" disabled>
+        </div>
+        <div>
+          <label for="nome">Nome do serviço</label>
+          <input id="nome" name="nome" th:value="${servico.nome}" required>
+        </div>
+        <div>
+          <label for="departamentoId">Departamento</label>
+          <select id="departamentoId" name="departamentoId">
+            <option value="">sem departamento</option>
+            <option th:each="d : ${departamentosAtivos}" th:value="${d.id}" th:text="${d.nome}"
+                    th:selected="${servico.departamento != null and servico.departamento.id == d.id}"></option>
+          </select>
+        </div>
+        <div>
+          <label for="responsavelPadrao">Responsável padrão</label>
+          <input id="responsavelPadrao" name="responsavelPadrao"
+                 th:value="${servico.responsavelPadrao}" placeholder="opcional">
+        </div>
+        <div>
+          <label for="ativo">Situação</label>
+          <select id="ativo" name="ativo">
+            <option value="true" th:selected="${servico.ativo}">ativo, disponível para novos registros</option>
+            <option value="false" th:selected="${!servico.ativo}">inativo</option>
+          </select>
+        </div>
+      </div>
+      <div class="campos" style="margin-top:16px">
+        <div style="grid-column:1/-1">
+          <label for="descricao">Descrição</label>
+          <input id="descricao" name="descricao" th:value="${servico.descricao}"
+                 placeholder="Explique o serviço e o que está incluído">
+        </div>
+      </div>
+      <div class="acoes">
+        <button class="botao" type="submit">Salvar</button>
+        <button class="botao vazado" type="button" data-abre="janela-departamentos">Gerenciar departamentos</button>
+      </div>
+    </form>
+  </section>
+
+  <!-- ------------------------------------------------------------- itens -->
+  <section th:if="${aba == 'itens'}">
+    <p class="dica" style="margin-bottom:16px">
+      As partes que compõem o serviço. Serviço simples pode ficar sem item nenhum.
+      Item incluído no preço do serviço não é somado de novo.
+    </p>
+
+    <div class="tabela-caixa" th:if="${!servico.itens.isEmpty()}">
+      <table>
+        <thead>
+        <tr>
+          <th>Ordem</th>
+          <th>Item</th>
+          <th>Obrigatório</th>
+          <th>Quantidade padrão</th>
+          <th>Tratamento do preço</th>
+          <th>Valor</th>
+          <th>Situação</th>
+          <th></th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="i : ${servico.itens}">
+          <td class="valor" th:text="${i.ordem}">1</td>
+          <td>
+            <b th:text="${i.nome}">Item</b>
+            <small th:text="${i.descricao}"></small>
+          </td>
+          <td th:text="${i.obrigatorio} ? 'obrigatório' : 'opcional'"></td>
+          <td class="valor" th:text="${#numbers.formatDecimal(i.quantidadePadrao, 1, 'POINT', 2, 'COMMA')}">1,00</td>
+          <td th:text="${i.tratamentoPreco.rotulo}">Incluído</td>
+          <td class="valor">
+            <span th:if="${i.tratamentoPreco.cobraSeparado() and i.valor != null}"
+                  th:text="${#numbers.formatDecimal(i.valor, 1, 'POINT', 2, 'COMMA')}">0,00</span>
+            <span th:if="${i.tratamentoPreco.cobraSeparado() and i.valor == null}"
+                  class="marca-situacao s-parcial">não definido</span>
+            <span th:unless="${i.tratamentoPreco.cobraSeparado()}">no preço do serviço</span>
+          </td>
+          <td>
+            <span class="marca-situacao" th:classappend="${i.ativo} ? 's-pago' : 's-cancelado'"
+                  th:text="${i.ativo} ? 'ativo' : 'inativo'"></span>
+          </td>
+          <td style="text-align:right">
+            <button class="botao pequeno vazado" type="button"
+                    th:attr="data-abre='item-' + ${i.id}">Editar</button>
+          </td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="vazio" th:if="${servico.itens.isEmpty()}">
+      Este serviço ainda não tem itens. Se ele for simples, pode ficar assim mesmo.
+    </div>
+
+    <form class="bloco" method="post" style="margin-top:18px"
+          th:action="@{'/servicos/' + ${servico.id} + '/itens'}">
+      <span class="rotulo-bloco" style="margin-top:0">Novo item</span>
+      <div class="campos">
+        <div>
+          <label for="item-nome">Nome</label>
+          <input id="item-nome" name="nome" required placeholder="Diagnóstico">
+        </div>
+        <div>
+          <label for="item-obrigatorio">Faz parte de toda execução?</label>
+          <select id="item-obrigatorio" name="obrigatorio">
+            <option value="true">obrigatório</option>
+            <option value="false">opcional</option>
+          </select>
+        </div>
+        <div>
+          <label for="item-qtd">Quantidade padrão</label>
+          <input id="item-qtd" name="quantidadePadrao" type="number" step="0.01" min="0" value="1">
+        </div>
+        <div>
+          <label for="item-tratamento">Tratamento do preço</label>
+          <select id="item-tratamento" name="tratamento">
+            <option th:each="t : ${tratamentos}" th:value="${t.name()}" th:text="${t.rotulo}"></option>
+          </select>
+        </div>
+        <div>
+          <label for="item-valor">Valor, se tiver cobrança própria</label>
+          <input id="item-valor" name="valor" type="number" step="0.01" min="0"
+                 placeholder="deixe vazio se não definido">
+        </div>
+        <div>
+          <label for="item-unidade">Unidade</label>
+          <select id="item-unidade" name="unidadeId">
+            <option value="">sem unidade</option>
+            <option th:each="u : ${unidadesAtivas}" th:value="${u.id}" th:text="${u.nome}"></option>
+          </select>
+        </div>
+      </div>
+      <div class="campos" style="margin-top:16px">
+        <div style="grid-column:1/-1">
+          <label for="item-desc">Descrição</label>
+          <input id="item-desc" name="descricao" placeholder="Explique o que será feito">
+        </div>
+      </div>
+      <div class="acoes">
+        <button class="botao" type="submit">Adicionar item</button>
+      </div>
+    </form>
+  </section>
+
+  <!-- ------------------------------------------------------------- precos -->
+  <section th:if="${aba == 'precos'}">
+    <div class="grade-formas">
+      <div th:each="f : ${formas}" class="forma"
+           th:classappend="${f == servico.formaPreco} ? 'escolhida'">
+        <b th:text="${f.rotulo}">Forma</b>
+        <p th:text="${f.comoFunciona}"></p>
+      </div>
+    </div>
+
+    <form class="bloco" method="post" style="margin-top:18px"
+          th:action="@{'/servicos/' + ${servico.id} + '/precos'}">
+      <div class="campos">
+        <div>
+          <label for="forma">Como o preço é calculado</label>
+          <select id="forma" name="forma">
+            <option th:each="f : ${formas}" th:value="${f.name()}" th:text="${f.rotulo}"
+                    th:selected="${f == servico.formaPreco}"></option>
+          </select>
+        </div>
+        <div>
+          <label for="valor">Valor do serviço</label>
+          <input id="valor" name="valor" type="number" step="0.01" min="0"
+                 th:value="${servico.valor}" placeholder="vazio quer dizer não definido">
+        </div>
+        <div>
+          <label for="unidadeId">Unidade de cobrança</label>
+          <select id="unidadeId" name="unidadeId">
+            <option value="">sem unidade</option>
+            <option th:each="u : ${unidadesAtivas}" th:value="${u.id}" th:text="${u.nome}"
+                    th:selected="${servico.unidade != null and servico.unidade.id == u.id}"></option>
+          </select>
+        </div>
+        <div>
+          <label for="vigenciaInicio">Vale a partir de</label>
+          <input id="vigenciaInicio" name="vigenciaInicio" type="date"
+                 th:value="${servico.vigenciaInicio != null}
+                           ? ${#temporals.format(servico.vigenciaInicio, 'yyyy-MM-dd')}
+                           : ${#temporals.format(hoje, 'yyyy-MM-dd')}">
+        </div>
+      </div>
+      <div class="campos" style="margin-top:16px">
+        <div style="grid-column:1/-1">
+          <label for="justificativa">Justificativa da alteração</label>
+          <input id="justificativa" name="justificativa"
+                 placeholder="por que o preço mudou, quando houver mudança">
+        </div>
+      </div>
+      <div class="acoes">
+        <button class="botao" type="submit">Salvar preço</button>
+        <button class="botao vazado" type="button" data-abre="janela-unidades">Gerenciar unidades</button>
+      </div>
+    </form>
+
+    <div class="alerta-box" style="margin-top:18px">
+      Alterar o preço aqui não mexe no que já foi registrado antes. Deixar o valor em branco quer
+      dizer preço não definido, que é diferente de preço zero.
+    </div>
+
+    <div class="secao" th:if="${!servico.itensAtivos.isEmpty()}">
+      <h2>Como o total fica</h2>
+      <div class="tabela-caixa">
+        <table>
+          <thead>
+          <tr><th>Parte</th><th>Tratamento</th><th class="valor">Entra no total</th></tr>
+          </thead>
+          <tbody>
+          <tr>
+            <td><b th:text="${servico.nome}">Serviço</b></td>
+            <td th:text="${servico.formaPreco.rotulo}"></td>
+            <td class="valor"
+                th:text="${servico.formaPreco.temValorDoServico() and servico.valor != null}
+                         ? ${#numbers.formatDecimal(servico.valor, 1, 'POINT', 2, 'COMMA')} : ''"></td>
+          </tr>
+          <tr th:each="i : ${servico.itensAtivos}">
+            <td th:text="${i.nome}">Item</td>
+            <td th:text="${i.tratamentoPreco.rotulo} + (${i.obrigatorio} ? ' · obrigatório' : ' · opcional')"></td>
+            <td class="valor"
+                th:text="${i.tratamentoPreco.cobraSeparado() and i.obrigatorio}
+                         ? ${#numbers.formatDecimal(i.valorTotalPadrao, 1, 'POINT', 2, 'COMMA')}
+                         : (${i.tratamentoPreco.cobraSeparado()} ? 'só se escolhido' : 'já incluído')"></td>
+          </tr>
+          <tr>
+            <td><b>Total padrão</b></td>
+            <td></td>
+            <td class="valor"><b th:text="${servico.precoResumido}">R$ 0,00</b></td>
+          </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ---------------------------------------------------------- historico -->
+  <section th:if="${aba == 'historico'}">
+    <div class="tabela-caixa" th:if="${!historico.isEmpty()}">
+      <table>
+        <thead>
+        <tr>
+          <th>Quando</th>
+          <th>O que mudou</th>
+          <th class="valor">De</th>
+          <th class="valor">Para</th>
+          <th>Vale desde</th>
+          <th>Justificativa</th>
+          <th>Quem</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="h : ${historico}">
+          <td class="mono" th:text="${#temporals.format(h.quando, 'dd/MM/yyyy HH:mm')}"></td>
+          <td th:text="${h.OQueMudou}">alteração</td>
+          <td class="valor" th:text="${h.valorAnterior != null}
+                    ? ${#numbers.formatDecimal(h.valorAnterior, 1, 'POINT', 2, 'COMMA')}
+                    : 'não definido'"></td>
+          <td class="valor" th:text="${h.valorNovo != null}
+                    ? ${#numbers.formatDecimal(h.valorNovo, 1, 'POINT', 2, 'COMMA')}
+                    : 'não definido'"></td>
+          <td class="mono" th:text="${h.vigenciaInicio != null}
+                    ? ${#temporals.format(h.vigenciaInicio, 'dd/MM/yyyy')} : ''"></td>
+          <td th:text="${h.justificativa}"></td>
+          <td th:text="${h.quem}"></td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="vazio" th:if="${historico.isEmpty()}">
+      Nenhuma mudança de preço registrada ainda.
+    </div>
+  </section>
+</main>
+
+<script th:replace="~{layout :: scripts}"></script>
+
+<!-- janelas de edição de cada item -->
+<dialog th:each="i : ${servico.itens}" th:id="'item-' + ${i.id}" class="janela">
+  <form method="post" th:action="@{'/servicos/' + ${servico.id} + '/itens/' + ${i.id}}">
+    <div class="janela-topo">
+      <div>
+        <span class="olho"><i></i>Item do serviço</span>
+        <h2 th:text="${i.nome}">Item</h2>
+      </div>
+      <button type="button" class="fechar" data-fecha aria-label="Fechar">&#10005;</button>
+    </div>
+    <div class="janela-corpo">
+      <div class="campos">
+        <div>
+          <label th:for="'e-nome-' + ${i.id}">Nome</label>
+          <input th:id="'e-nome-' + ${i.id}" name="nome" th:value="${i.nome}" required>
+        </div>
+        <div>
+          <label th:for="'e-obr-' + ${i.id}">Faz parte de toda execução?</label>
+          <select th:id="'e-obr-' + ${i.id}" name="obrigatorio">
+            <option value="true" th:selected="${i.obrigatorio}">obrigatório</option>
+            <option value="false" th:selected="${!i.obrigatorio}">opcional</option>
+          </select>
+        </div>
+        <div>
+          <label th:for="'e-qtd-' + ${i.id}">Quantidade padrão</label>
+          <input th:id="'e-qtd-' + ${i.id}" name="quantidadePadrao" type="number" step="0.01"
+                 min="0" th:value="${i.quantidadePadrao}">
+        </div>
+        <div>
+          <label th:for="'e-trat-' + ${i.id}">Tratamento do preço</label>
+          <select th:id="'e-trat-' + ${i.id}" name="tratamento">
+            <option th:each="t : ${tratamentos}" th:value="${t.name()}" th:text="${t.rotulo}"
+                    th:selected="${t == i.tratamentoPreco}"></option>
+          </select>
+        </div>
+        <div>
+          <label th:for="'e-valor-' + ${i.id}">Valor, se tiver cobrança própria</label>
+          <input th:id="'e-valor-' + ${i.id}" name="valor" type="number" step="0.01" min="0"
+                 th:value="${i.valor}" placeholder="vazio quer dizer não definido">
+        </div>
+        <div>
+          <label th:for="'e-uni-' + ${i.id}">Unidade</label>
+          <select th:id="'e-uni-' + ${i.id}" name="unidadeId">
+            <option value="">sem unidade</option>
+            <option th:each="u : ${unidadesAtivas}" th:value="${u.id}" th:text="${u.nome}"
+                    th:selected="${i.unidade != null and i.unidade.id == u.id}"></option>
+          </select>
+        </div>
+        <div>
+          <label th:for="'e-ordem-' + ${i.id}">Ordem</label>
+          <input th:id="'e-ordem-' + ${i.id}" name="ordem" type="number" min="1" th:value="${i.ordem}">
+        </div>
+        <div>
+          <label th:for="'e-ativo-' + ${i.id}">Situação</label>
+          <select th:id="'e-ativo-' + ${i.id}" name="ativo">
+            <option value="true" th:selected="${i.ativo}">ativo</option>
+            <option value="false" th:selected="${!i.ativo}">inativo</option>
+          </select>
+        </div>
+      </div>
+      <div class="campos" style="margin-top:16px">
+        <div style="grid-column:1/-1">
+          <label th:for="'e-desc-' + ${i.id}">Descrição</label>
+          <input th:id="'e-desc-' + ${i.id}" name="descricao" th:value="${i.descricao}">
+        </div>
+        <div style="grid-column:1/-1">
+          <label th:for="'e-just-' + ${i.id}">Justificativa, se mudar o valor</label>
+          <input th:id="'e-just-' + ${i.id}" name="justificativa">
+        </div>
+      </div>
+    </div>
+    <div class="janela-pe">
+      <button type="button" class="botao vazado" data-fecha>Cancelar</button>
+      <button class="botao" type="submit">Salvar item</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="janela-departamentos" class="janela estreita">
+  <div>
+    <div class="janela-topo">
+      <div>
+        <span class="olho"><i></i>Cadastro de apoio</span>
+        <h2>Departamentos</h2>
+      </div>
+      <button type="button" class="fechar" data-fecha aria-label="Fechar">&#10005;</button>
+    </div>
+    <div class="janela-corpo">
+      <div th:each="d : ${departamentos}" class="linha-cadastro">
+        <form method="post" th:action="@{'/servicos/departamentos/' + ${d.id}}">
+          <input type="hidden" name="voltarPara" th:value="'/servicos/' + ${servico.id}">
+          <div class="campos">
+            <div>
+              <label th:for="'sd-nome-' + ${d.id}">Nome</label>
+              <input th:id="'sd-nome-' + ${d.id}" name="nome" th:value="${d.nome}" required>
+            </div>
+            <div>
+              <label th:for="'sd-desc-' + ${d.id}">Descrição</label>
+              <input th:id="'sd-desc-' + ${d.id}" name="descricao" th:value="${d.descricao}">
+            </div>
+            <div>
+              <label th:for="'sd-ativo-' + ${d.id}">Situação</label>
+              <select th:id="'sd-ativo-' + ${d.id}" name="ativo">
+                <option value="true" th:selected="${d.ativo}">ativo</option>
+                <option value="false" th:selected="${!d.ativo}">inativo</option>
+              </select>
+            </div>
+          </div>
+          <div class="linha-botoes"><button class="botao pequeno" type="submit">Salvar</button></div>
+        </form>
+      </div>
+      <span class="rotulo-bloco">Novo departamento</span>
+      <form method="post" action="/servicos/departamentos">
+        <input type="hidden" name="voltarPara" th:value="'/servicos/' + ${servico.id}">
+        <div class="campos">
+          <div>
+            <label for="sd-novo-nome">Nome</label>
+            <input id="sd-novo-nome" name="nome" required>
+          </div>
+          <div>
+            <label for="sd-novo-desc">Descrição</label>
+            <input id="sd-novo-desc" name="descricao">
+          </div>
+        </div>
+        <div class="linha-botoes"><button class="botao pequeno" type="submit">Cadastrar</button></div>
+      </form>
+    </div>
+  </div>
+</dialog>
+
+<dialog id="janela-unidades" class="janela estreita">
+  <div>
+    <div class="janela-topo">
+      <div>
+        <span class="olho"><i></i>Cadastro de apoio</span>
+        <h2>Unidades de cobrança</h2>
+      </div>
+      <button type="button" class="fechar" data-fecha aria-label="Fechar">&#10005;</button>
+    </div>
+    <div class="janela-corpo">
+      <div th:each="u : ${unidades}" class="linha-cadastro">
+        <form method="post" th:action="@{'/servicos/unidades/' + ${u.id}}">
+          <input type="hidden" name="voltarPara" th:value="'/servicos/' + ${servico.id} + '?aba=precos'">
+          <div class="campos">
+            <div>
+              <label th:for="'su-nome-' + ${u.id}">Nome</label>
+              <input th:id="'su-nome-' + ${u.id}" name="nome" th:value="${u.nome}" required>
+            </div>
+            <div>
+              <label th:for="'su-ativo-' + ${u.id}">Situação</label>
+              <select th:id="'su-ativo-' + ${u.id}" name="ativo">
+                <option value="true" th:selected="${u.ativo}">ativa</option>
+                <option value="false" th:selected="${!u.ativo}">inativa</option>
+              </select>
+            </div>
+          </div>
+          <div class="linha-botoes"><button class="botao pequeno" type="submit">Salvar</button></div>
+        </form>
+      </div>
+      <span class="rotulo-bloco">Nova unidade</span>
+      <form method="post" action="/servicos/unidades">
+        <input type="hidden" name="voltarPara" th:value="'/servicos/' + ${servico.id} + '?aba=precos'">
+        <div class="campos">
+          <div>
+            <label for="su-nova-nome">Nome</label>
+            <input id="su-nova-nome" name="nome" required placeholder="hora, atendimento, documento">
+          </div>
+        </div>
+        <div class="linha-botoes"><button class="botao pequeno" type="submit">Cadastrar</button></div>
+      </form>
+    </div>
+  </div>
+</dialog>
+
+<script src="/js/janelas.js?v=1"></script>
+
+</body>
+</html>

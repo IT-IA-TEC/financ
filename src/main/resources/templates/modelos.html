@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head th:replace="~{layout :: cabeca('Modelos de mensagem')}"></head>
+<body>
+<header th:replace="~{layout :: topo('cobranca')}"></header>
+
+<main class="largo">
+  <div th:replace="~{layout :: recados}"></div>
+
+  <div class="cabecalho-pagina com-resumo">
+    <div>
+      <span class="olho"><i></i>O que a empresa diz</span>
+      <h1>Modelos de mensagem</h1>
+    </div>
+
+    <div class="cartoes-topo">
+      <div class="cartao-topo inverso">
+        <span class="rotulo">Modelos</span>
+        <b th:text="${modelos.size()}">0</b>
+        <small>textos cadastrados</small>
+      </div>
+      <div class="cartao-topo">
+        <span class="rotulo">Antes de vencer</span>
+        <b th:text="${#lists.size(modelos.?[momento == 'ANTES_VENCER'])}">0</b>
+        <small>aviso amigável</small>
+      </div>
+      <div class="cartao-topo">
+        <span class="rotulo">Depois de vencer</span>
+        <b th:text="${#lists.size(modelos.?[momento == 'APOS_VENCER'])}">0</b>
+        <small>cobrança em atraso</small>
+      </div>
+      <div class="cartao-topo listrado">
+        <span class="rotulo">Espaços</span>
+        <b th:text="${espacos.size()}">0</b>
+        <small>trechos que o sistema preenche</small>
+      </div>
+    </div>
+
+    <div class="acoes" style="margin:0">
+      <button class="botao" type="button" data-abre="janela-modelo">+ Novo modelo</button>
+    </div>
+  </div>
+
+  <nav th:replace="~{layout :: abas-cobranca('modelos')}" class="modulo"></nav>
+
+  <div class="alerta-box" style="margin-bottom:18px">
+    O texto pode ter espaços entre chaves, e o sistema preenche na hora do envio:
+    <span th:each="e,i : ${espacos}">
+      <code th:text="'{' + ${e.key} + '}'"></code><span th:if="${!i.last}">, </span></span>.
+  </div>
+
+  <div class="tabela-caixa" th:if="${!modelos.isEmpty()}">
+    <table>
+      <thead>
+      <tr>
+        <th>Nome</th>
+        <th class="centro">Canal</th>
+        <th class="centro">Tom</th>
+        <th class="centro">Momento</th>
+        <th>Texto</th>
+        <th class="centro">Situação</th>
+        <th>O que fazer</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr th:each="m : ${modelos}">
+        <td th:text="${m.nome}">nome</td>
+        <td class="centro" th:text="${m.canal.toLowerCase()}"></td>
+        <td class="centro" th:text="${m.tomLegivel}"></td>
+        <td class="centro" th:text="${m.momentoLegivel}"></td>
+        <td style="max-width:460px">
+          <small style="white-space:pre-wrap" th:text="${m.corpo}"></small>
+        </td>
+        <td class="centro">
+          <span class="marca-situacao" th:classappend="${m.ativo} ? 's-pago' : 's-cancelado'"
+                th:text="${m.ativo} ? 'ativo' : 'desativado'">ativo</span>
+        </td>
+        <td>
+          <form method="post" th:if="${m.ativo}"
+                th:action="@{'/modelos/' + ${m.id} + '/desativar'}">
+            <button class="botao pequeno vazado" type="submit">Desativar</button>
+          </form>
+        </td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="vazio" th:if="${modelos.isEmpty()}">
+    Nenhum modelo cadastrado ainda.
+  </div>
+</main>
+
+<script th:replace="~{layout :: scripts}"></script>
+
+<dialog id="janela-modelo" class="janela">
+  <form method="post" action="/modelos">
+    <div class="janela-topo">
+      <div>
+        <span class="olho"><i></i>O que a empresa diz</span>
+        <h2>Novo modelo</h2>
+      </div>
+      <button type="button" class="fechar" data-fecha aria-label="Fechar">&#10005;</button>
+    </div>
+    <div class="janela-corpo">
+      <div class="campos">
+        <div>
+          <label for="md-nome">Nome</label>
+          <input id="md-nome" name="nome" required placeholder="Cobrança em atraso">
+        </div>
+        <div>
+          <label for="md-canal">Canal</label>
+          <select id="md-canal" name="canal">
+            <option value="WHATSAPP">WhatsApp</option>
+            <option value="EMAIL">E-mail</option>
+          </select>
+        </div>
+        <div>
+          <label for="md-tom">Tom</label>
+          <select id="md-tom" name="tom">
+            <option value="AMIGAVEL">amigável</option>
+            <option value="FIRME">firme</option>
+            <option value="FORMAL">formal</option>
+          </select>
+        </div>
+        <div>
+          <label for="md-momento">Quando usar</label>
+          <select id="md-momento" name="momento">
+            <option value="ANTES_VENCER">antes de vencer</option>
+            <option value="NO_DIA">no dia</option>
+            <option value="APOS_VENCER">depois de vencer</option>
+            <option value="LIVRE">qualquer momento</option>
+          </select>
+        </div>
+      </div>
+      <div class="campos" style="margin-top:16px">
+        <div style="grid-column:1/-1">
+          <label for="md-assunto">Assunto (só para e-mail)</label>
+          <input id="md-assunto" name="assunto" placeholder="Cobrança do {descricao}">
+        </div>
+        <div style="grid-column:1/-1">
+          <label for="md-corpo">Texto</label>
+          <textarea id="md-corpo" name="corpo" rows="10" required
+                    placeholder="Oi {contato}, o {descricao} de {valor} vence em {vencimento}."></textarea>
+        </div>
+      </div>
+      <p class="dica">Espaços que o sistema preenche:
+        <span th:each="e,i : ${espacos}">
+          <code th:text="'{' + ${e.key} + '}'"></code> <span th:text="${e.value}"></span><span
+            th:if="${!i.last}"> · </span></span>
+      </p>
+    </div>
+    <div class="janela-pe">
+      <button type="button" class="botao vazado" data-fecha>Cancelar</button>
+      <button class="botao" type="submit">Guardar o modelo</button>
+    </div>
+  </form>
+</dialog>
+
+<script src="/js/janelas.js?v=1"></script>
+
+</body>
+</html>

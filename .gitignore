@@ -1,0 +1,18 @@
+# O que nao vai para o repositorio.
+
+# O que o build gera
+target/
+
+# O banco de arquivo da maquina: dado de teste nao e codigo, e nunca sobe
+dados/
+
+# O Maven que mora dentro do projeto: ferramenta de terceiro, pesada e
+# reinstalavel. Quem clonar usa o Maven da propria maquina.
+ferramentas/
+
+# Lixo de editor e de sistema
+.idea/
+*.iml
+.vscode/
+.DS_Store
+Thumbs.db

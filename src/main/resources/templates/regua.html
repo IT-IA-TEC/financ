@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head th:replace="~{layout :: cabeca('Régua de cobrança')}"></head>
+<body>
+<header th:replace="~{layout :: topo('cobranca')}"></header>
+
+<main class="largo">
+  <div th:replace="~{layout :: recados}"></div>
+
+  <div class="cabecalho-pagina com-resumo">
+    <div>
+      <span class="olho"><i></i>Falar na hora certa</span>
+      <h1>Régua de cobrança</h1>
+    </div>
+
+    <div class="cartoes-topo">
+      <div class="cartao-topo inverso">
+        <span class="rotulo">Passos ativos</span>
+        <b th:text="${#lists.size(passos.?[ativo])}">0</b>
+        <small>falam sozinhos todo dia</small>
+      </div>
+      <div class="cartao-topo">
+        <span class="rotulo">Antes de vencer</span>
+        <b th:text="${#lists.size(passos.?[gatilho == 'ANTES_DE_VENCER' and ativo])}">0</b>
+        <small>aviso amigável</small>
+      </div>
+      <div class="cartao-topo">
+        <span class="rotulo">Depois de vencer</span>
+        <b th:text="${#lists.size(passos.?[gatilho == 'DEPOIS_DE_VENCER' and ativo])}">0</b>
+        <small>cobrança em atraso</small>
+      </div>
+      <div class="cartao-topo listrado">
+        <span class="rotulo">Rodada</span>
+        <b>08h05</b>
+        <small>todo dia, empresa por empresa</small>
+      </div>
+    </div>
+
+    <div class="acoes" style="margin:0">
+      <button class="botao" type="button" data-abre="janela-passo">+ Novo passo</button>
+      <form method="post" action="/regua/rodar" style="display:inline">
+        <button class="botao vazado" type="submit">Rodar a régua de hoje</button>
+      </form>
+    </div>
+  </div>
+
+  <nav th:replace="~{layout :: abas-cobranca('regua')}" class="modulo"></nav>
+
+  <div class="alerta-box" style="margin-bottom:18px">
+    Cada passo conta a partir do vencimento do documento, então a régua serve para todos os
+    clientes sem ninguém marcar agenda. Passo marcado como "olhar antes" deixa o lote do dia
+    na prévia, esperando confirmação.
+  </div>
+
+  <div class="tabela-caixa" th:if="${!passos.isEmpty()}">
+    <table>
+      <thead>
+      <tr>
+        <th class="centro">Ordem</th>
+        <th>Passo</th>
+        <th>Quando fala</th>
+        <th class="centro">Canal</th>
+        <th class="centro">Antes de sair</th>
+        <th class="centro">Última rodada</th>
+        <th class="centro">Situação</th>
+        <th>O que fazer</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr th:each="p : ${passos}">
+        <td class="centro mono" th:text="${p.ordem}">1</td>
+        <td th:text="${p.nome}">passo</td>
+        <td th:text="${p.quandoLegivel}">quando</td>
+        <td class="centro" th:text="${p.canal.toLowerCase()}"></td>
+        <td class="centro" th:text="${p.exigeConfirmacao} ? 'olhar antes' : 'sai sozinho'"></td>
+        <td class="centro mono"
+            th:text="${p.ultimaRodada != null}
+                     ? ${#temporals.format(p.ultimaRodada, 'dd/MM/yyyy')} : '-'"></td>
+        <td class="centro">
+          <span class="marca-situacao" th:classappend="${p.ativo} ? 's-pago' : 's-cancelado'"
+                th:text="${p.ativo} ? 'ativo' : 'desativado'">ativo</span>
+        </td>
+        <td>
+          <form method="post" th:if="${p.ativo}" th:action="@{'/regua/' + ${p.id} + '/desativar'}">
+            <button class="botao pequeno vazado" type="submit">Desativar</button>
+          </form>
+        </td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="vazio" th:if="${passos.isEmpty()}">
+    Nenhum passo na régua ainda.
+  </div>
+</main>
+
+<script th:replace="~{layout :: scripts}"></script>
+
+<dialog id="janela-passo" class="janela">
+  <form method="post" action="/regua">
+    <div class="janela-topo">
+      <div>
+        <span class="olho"><i></i>Falar na hora certa</span>
+        <h2>Novo passo</h2>
+      </div>
+      <button type="button" class="fechar" data-fecha aria-label="Fechar">&#10005;</button>
+    </div>
+    <div class="janela-corpo">
+      <div class="campos">
+        <div>
+          <label for="pr-nome">Nome</label>
+          <input id="pr-nome" name="nome" required placeholder="Aviso três dias antes">
+        </div>
+        <div>
+          <label for="pr-gatilho">Quando fala</label>
+          <select id="pr-gatilho" name="gatilho">
+            <option value="ANTES_DE_VENCER">antes de vencer</option>
+            <option value="NO_VENCIMENTO">no dia do vencimento</option>
+            <option value="DEPOIS_DE_VENCER">depois de vencer</option>
+          </select>
+        </div>
+        <div>
+          <label for="pr-dias">Dias</label>
+          <input id="pr-dias" name="dias" inputmode="numeric" value="3">
+        </div>
+      </div>
+      <div class="campos" style="margin-top:16px">
+        <div>
+          <label for="pr-modelo">Texto que sai</label>
+          <select id="pr-modelo" name="modeloId" required>
+            <option th:each="m : ${modelos}" th:value="${m.id}"
+                    th:text="${m.nome} + ' · ' + ${m.momentoLegivel}"></option>
+          </select>
+        </div>
+        <div>
+          <label for="pr-canal">Canal</label>
+          <select id="pr-canal" name="canal">
+            <option value="WHATSAPP">WhatsApp</option>
+            <option value="EMAIL">E-mail</option>
+          </select>
+        </div>
+        <div>
+          <label for="pr-ordem">Ordem</label>
+          <input id="pr-ordem" name="ordem" inputmode="numeric" value="1">
+        </div>
+      </div>
+      <p class="dica" style="margin-top:16px">
+        <label style="display:flex;align-items:center;gap:8px">
+          <input type="checkbox" name="exigeConfirmacao" value="true" checked>
+          olhar antes de mandar
+        </label>
+        Sem essa marca, as mensagens deste passo saem sozinhas na rodada da manhã.
+      </p>
+    </div>
+    <div class="janela-pe">
+      <button type="button" class="botao vazado" data-fecha>Cancelar</button>
+      <button class="botao" type="submit">Guardar o passo</button>
+    </div>
+  </form>
+</dialog>
+
+<script src="/js/janelas.js?v=1"></script>
+
+</body>
+</html>

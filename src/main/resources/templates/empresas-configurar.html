@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head th:replace="~{layout :: cabeca('Configurar empresas')}"></head>
+<body>
+<header th:replace="~{layout :: topo('')}"></header>
+
+<main>
+  <div th:replace="~{layout :: recados}"></div>
+
+  <div class="cabecalho-pagina">
+    <div>
+      <span class="olho"><i></i>engrenagem</span>
+      <h1>Configurar empresas</h1>
+      <p>Ajuste os dados de cada empresa, cadastre uma nova, desative ou exclua.</p>
+    </div>
+    <a class="botao vazado" href="/empresas">Voltar para a escolha</a>
+  </div>
+
+  <div th:each="e : ${empresas}" class="ficha-empresa"
+       th:classappend="${!e.ativa} ? 'desativada'">
+    <div class="barra">
+      <b th:text="${e.nome}">Empresa</b>
+      <span class="tag viva" th:if="${e.ativa}">ativa</span>
+      <span class="tag" th:unless="${e.ativa}">desativada</span>
+      <span class="tag" th:text="${movimento.get(e.id)[0]} + ' clientes'">0 clientes</span>
+      <span class="tag" th:text="${movimento.get(e.id)[1]} + ' títulos'">0 títulos</span>
+    </div>
+
+    <div class="corpo">
+      <form th:action="@{'/empresas/' + ${e.id}}" method="post">
+        <div class="campos">
+          <div>
+            <label th:for="'nome-' + ${e.id}">Nome da empresa</label>
+            <input th:id="'nome-' + ${e.id}" name="nome" th:value="${e.nome}" required>
+          </div>
+          <div>
+            <label th:for="'apelido-' + ${e.id}">Apelido curto</label>
+            <input th:id="'apelido-' + ${e.id}" name="apelido" th:value="${e.apelido}" required>
+          </div>
+          <div>
+            <label th:for="'cnpj-' + ${e.id}">CNPJ</label>
+            <input th:id="'cnpj-' + ${e.id}" name="cnpj" th:value="${e.cnpj}">
+          </div>
+          <div>
+            <label th:for="'pix-' + ${e.id}">Chave PIX que recebe</label>
+            <input th:id="'pix-' + ${e.id}" name="chavePix" th:value="${e.chavePix}">
+          </div>
+        </div>
+        <div class="linha-botoes">
+          <button class="botao pequeno" type="submit">Salvar alterações</button>
+        </div>
+      </form>
+
+      <div class="linha-botoes" style="margin-top:14px">
+        <form th:action="@{'/empresas/' + ${e.id} + '/desativar'}" method="post" th:if="${e.ativa}">
+          <button class="botao pequeno vazado" type="submit">Desativar</button>
+        </form>
+        <form th:action="@{'/empresas/' + ${e.id} + '/reativar'}" method="post" th:unless="${e.ativa}">
+          <button class="botao pequeno vazado" type="submit">Reativar</button>
+        </form>
+
+        <form th:action="@{'/empresas/' + ${e.id} + '/excluir'}" method="post"
+              th:if="${movimento.get(e.id)[0] == 0 and movimento.get(e.id)[1] == 0}"
+              onsubmit="return confirm('Excluir esta empresa de vez? Não tem volta.');">
+          <button class="botao pequeno perigo" type="submit">Excluir</button>
+        </form>
+        <span class="aviso-linha"
+              th:if="${movimento.get(e.id)[0] > 0 or movimento.get(e.id)[1] > 0}">
+          Tem movimento: não dá para excluir, só desativar. Histórico de dinheiro não se apaga.
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <div class="secao">
+    <h2>Cadastrar nova empresa</h2>
+    <form class="bloco" method="post" action="/empresas">
+      <div class="campos">
+        <div>
+          <label for="nome-novo">Nome da empresa</label>
+          <input id="nome-novo" name="nome" required placeholder="YOU Contabilidade">
+        </div>
+        <div>
+          <label for="apelido-novo">Apelido curto</label>
+          <input id="apelido-novo" name="apelido" required placeholder="you">
+        </div>
+        <div>
+          <label for="cnpj-novo">CNPJ</label>
+          <input id="cnpj-novo" name="cnpj" placeholder="00.000.000/0001-00">
+        </div>
+        <div>
+          <label for="pix-novo">Chave PIX que recebe</label>
+          <input id="pix-novo" name="chavePix" placeholder="CNPJ, e-mail ou telefone">
+        </div>
+      </div>
+      <div class="acoes">
+        <button class="botao" type="submit">Cadastrar empresa</button>
+      </div>
+    </form>
+  </div>
+</main>
+
+<script th:replace="~{layout :: scripts}"></script>
+
+</body>
+</html>

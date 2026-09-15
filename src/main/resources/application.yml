@@ -1,0 +1,54 @@
+spring:
+  application:
+    name: financeiro
+
+  # Banco de arquivo, para rodar na maquina sem instalar servidor nenhum.
+  # O arquivo fica em FINANCEIRO-JAVA/dados/. Comeca zerado.
+  datasource:
+    url: jdbc:h2:file:./dados/financeiro;DB_CLOSE_DELAY=-1;MODE=PostgreSQL
+    driver-class-name: org.h2.Driver
+    username: financeiro
+    password: financeiro
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: true
+    properties:
+      hibernate:
+        format_sql: false
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration/h2
+
+  thymeleaf:
+    cache: false
+
+server:
+  port: 8090
+
+---
+# Perfil do banco de verdade. Ligar com: --spring.profiles.active=postgres
+spring:
+  config:
+    activate:
+      on-profile: postgres
+
+  datasource:
+    url: ${FINANCEIRO_DB_URL}
+    username: ${FINANCEIRO_DB_USUARIO}
+    password: ${FINANCEIRO_DB_SENHA}
+
+  flyway:
+    locations: classpath:db/migration/postgresql
+
+  thymeleaf:
+    cache: true
+
+# Ponte com o ERP: por enquanto so a configuracao, o envio entra na proxima etapa.
+ponte:
+  erp:
+    url: ${ERP_URL:}
+    chave: ${ERP_CHAVE:}
+    ligada: false

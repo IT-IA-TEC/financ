@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head th:replace="~{layout :: cabeca('Pacotes e serviços')}"></head>
+<body>
+<header th:replace="~{layout :: topo('servicos')}"></header>
+
+<main class="largo">
+  <div th:replace="~{layout :: recados}"></div>
+
+  <div class="cabecalho-pagina">
+    <div>
+      <span class="olho"><i></i>Catálogo</span>
+      <h1>Pacotes &amp; serviços</h1>
+      <nav th:replace="~{layout :: abas-catalogo('servicos')}"></nav>
+    </div>
+    <div class="acoes" style="margin:0">
+      <button class="botao vazado" type="button" data-abre="janela-departamentos">Gerenciar departamentos</button>
+      <button class="botao vazado" type="button" data-abre="janela-unidades">Gerenciar unidades</button>
+      <button class="botao" type="button" data-abre="janela-novo-servico">+ Novo serviço</button>
+    </div>
+  </div>
+
+  <form class="barra-busca" method="get" action="/servicos">
+    <input type="search" name="busca" th:value="${busca}" placeholder="Buscar por nome ou código">
+    <select name="departamento">
+      <option value="">Todos os departamentos</option>
+      <option th:each="d : ${departamentos}" th:value="${d.id}" th:text="${d.nome}"
+              th:selected="${departamentoEscolhido != null and departamentoEscolhido.toString() == d.id.toString()}"></option>
+    </select>
+    <select name="situacao">
+      <option value="">Ativos e inativos</option>
+      <option value="ativo" th:selected="${situacaoEscolhida == 'ativo'}">Só ativos</option>
+      <option value="inativo" th:selected="${situacaoEscolhida == 'inativo'}">Só inativos</option>
+    </select>
+    <button class="botao pequeno" type="submit">Buscar</button>
+    <a class="botao pequeno vazado" href="/servicos">Limpar</a>
+  </form>
+
+  <div class="tabela-caixa" th:if="${!servicos.isEmpty()}">
+    <table>
+      <thead>
+      <tr>
+        <th class="centro">Código</th>
+        <th>Serviço</th>
+        <th class="centro">Departamento</th>
+        <th class="centro">Itens</th>
+        <th class="centro">Forma de cobrança</th>
+        <th class="centro">Preço</th>
+        <th class="centro">Situação</th>
+        <th></th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr th:each="s : ${servicos}">
+        <td class="mono centro" th:text="${s.codigo}">S0001</td>
+        <td>
+          <b th:text="${s.nome}">Serviço</b>
+          <small th:if="${s.descricao != null}" th:text="${s.descricao}"></small>
+        </td>
+        <td class="centro" th:text="${s.departamento != null} ? ${s.departamento.nome} : ''"></td>
+        <td class="centro mono" th:text="${s.itensAtivos.size()}">0</td>
+        <td class="centro" th:text="${s.formaPreco.rotulo}">Valor único</td>
+        <td class="centro">
+          <span th:if="${s.precoDefinido}" class="mono" th:text="${s.precoResumido}">R$ 0,00</span>
+          <span th:unless="${s.precoDefinido}" class="marca-situacao s-parcial">preço não definido</span>
+        </td>
+        <td class="centro">
+          <span class="marca-situacao" th:classappend="${s.ativo} ? 's-pago' : 's-cancelado'"
+                th:text="${s.ativo} ? 'ativo' : 'inativo'">ativo</span>
+        </td>
+        <td style="text-align:right">
+          <a class="botao pequeno vazado" th:href="@{'/servicos/' + ${s.id}}">Abrir</a>
+        </td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="vazio" th:if="${servicos.isEmpty()}">
+    Nenhum serviço encontrado. Cadastre o primeiro, ou limpe a busca.
+  </div>
+</main>
+
+<script th:replace="~{layout :: scripts}"></script>
+
+<dialog id="janela-novo-servico" class="janela">
+  <form method="post" action="/servicos">
+    <div class="janela-topo">
+      <div>
+        <span class="olho"><i></i>Catálogo</span>
+        <h2>Novo serviço</h2>
+      </div>
+      <button type="button" class="fechar" data-fecha aria-label="Fechar">&#10005;</button>
+    </div>
+    <div class="janela-corpo">
+      <p class="dica">O código é gerado pelo sistema. Itens e preço são definidos depois,
+        dentro do serviço.</p>
+      <div class="campos">
+        <div>
+          <label for="nome-servico">Nome do serviço</label>
+          <input id="nome-servico" name="nome" required placeholder="O que a empresa oferece">
+        </div>
+        <div>
+          <label for="dep-servico">Departamento</label>
+          <select id="dep-servico" name="departamentoId">
+            <option value="">sem departamento</option>
+            <option th:each="d : ${departamentosAtivos}" th:value="${d.id}" th:text="${d.nome}"></option>
+          </select>
+        </div>
+        <div>
+          <label for="resp-servico">Responsável padrão</label>
+          <input id="resp-servico" name="responsavelPadrao" placeholder="opcional">
+        </div>
+      </div>
+      <div class="campos" style="margin-top:16px">
+        <div style="grid-column:1/-1">
+          <label for="desc-servico">Descrição</label>
+          <input id="desc-servico" name="descricao" placeholder="Explique o serviço e o que está incluído">
+        </div>
+      </div>
+    </div>
+    <div class="janela-pe">
+      <button type="button" class="botao vazado" data-fecha>Cancelar</button>
+      <button class="botao" type="submit">Cadastrar</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="janela-departamentos" class="janela estreita">
+  <div>
+    <div class="janela-topo">
+      <div>
+        <span class="olho"><i></i>Cadastro de apoio</span>
+        <h2>Departamentos</h2>
+      </div>
+      <button type="button" class="fechar" data-fecha aria-label="Fechar">&#10005;</button>
+    </div>
+    <div class="janela-corpo">
+      <div th:each="d : ${departamentos}" class="linha-cadastro">
+        <form method="post" th:action="@{'/servicos/departamentos/' + ${d.id}}">
+          <input type="hidden" name="voltarPara" value="/servicos">
+          <div class="campos">
+            <div>
+              <label th:for="'dep-nome-' + ${d.id}">Nome</label>
+              <input th:id="'dep-nome-' + ${d.id}" name="nome" th:value="${d.nome}" required>
+            </div>
+            <div>
+              <label th:for="'dep-desc-' + ${d.id}">Descrição</label>
+              <input th:id="'dep-desc-' + ${d.id}" name="descricao" th:value="${d.descricao}">
+            </div>
+            <div>
+              <label th:for="'dep-ativo-' + ${d.id}">Situação</label>
+              <select th:id="'dep-ativo-' + ${d.id}" name="ativo">
+                <option value="true" th:selected="${d.ativo}">ativo</option>
+                <option value="false" th:selected="${!d.ativo}">inativo</option>
+              </select>
+            </div>
+          </div>
+          <div class="linha-botoes"><button class="botao pequeno" type="submit">Salvar</button></div>
+        </form>
+      </div>
+
+      <span class="rotulo-bloco">Novo departamento</span>
+      <form method="post" action="/servicos/departamentos">
+        <input type="hidden" name="voltarPara" value="/servicos">
+        <div class="campos">
+          <div>
+            <label for="dep-novo-nome">Nome</label>
+            <input id="dep-novo-nome" name="nome" required>
+          </div>
+          <div>
+            <label for="dep-novo-desc">Descrição</label>
+            <input id="dep-novo-desc" name="descricao">
+          </div>
+        </div>
+        <div class="linha-botoes"><button class="botao pequeno" type="submit">Cadastrar</button></div>
+      </form>
+    </div>
+  </div>
+</dialog>
+
+<dialog id="janela-unidades" class="janela estreita">
+  <div>
+    <div class="janela-topo">
+      <div>
+        <span class="olho"><i></i>Cadastro de apoio</span>
+        <h2>Unidades de cobrança</h2>
+      </div>
+      <button type="button" class="fechar" data-fecha aria-label="Fechar">&#10005;</button>
+    </div>
+    <div class="janela-corpo">
+      <p class="dica">Por que unidade o serviço é cobrado: serviço, hora, atendimento,
+        documento ou o que a empresa usar.</p>
+
+      <div th:each="u : ${unidades}" class="linha-cadastro">
+        <form method="post" th:action="@{'/servicos/unidades/' + ${u.id}}">
+          <input type="hidden" name="voltarPara" value="/servicos">
+          <div class="campos">
+            <div>
+              <label th:for="'uni-nome-' + ${u.id}">Nome</label>
+              <input th:id="'uni-nome-' + ${u.id}" name="nome" th:value="${u.nome}" required>
+            </div>
+            <div>
+              <label th:for="'uni-ativo-' + ${u.id}">Situação</label>
+              <select th:id="'uni-ativo-' + ${u.id}" name="ativo">
+                <option value="true" th:selected="${u.ativo}">ativa</option>
+                <option value="false" th:selected="${!u.ativo}">inativa</option>
+              </select>
+            </div>
+          </div>
+          <div class="linha-botoes"><button class="botao pequeno" type="submit">Salvar</button></div>
+        </form>
+      </div>
+
+      <span class="rotulo-bloco">Nova unidade</span>
+      <form method="post" action="/servicos/unidades">
+        <input type="hidden" name="voltarPara" value="/servicos">
+        <div class="campos">
+          <div>
+            <label for="uni-nova-nome">Nome</label>
+            <input id="uni-nova-nome" name="nome" required placeholder="hora, atendimento, documento">
+          </div>
+        </div>
+        <div class="linha-botoes"><button class="botao pequeno" type="submit">Cadastrar</button></div>
+      </form>
+    </div>
+  </div>
+</dialog>
+
+<script src="/js/janelas.js?v=1"></script>
+
+</body>
+</html>

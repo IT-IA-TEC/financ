@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head th:replace="~{layout :: cabeca('Escolher empresa')}"></head>
+<body>
+<header th:replace="~{layout :: topo('')}"></header>
+
+<main class="palco">
+  <div th:replace="~{layout :: recados}"></div>
+
+  <div class="entrada">
+    <div class="entrada-cabeca">
+      <span class="olho"><i></i>Porta de entrada</span>
+      <h1>Em qual empresa você vai trabalhar?</h1>
+      <p>Cada empresa tem clientes, títulos e números próprios. Nada se mistura entre elas.</p>
+    </div>
+
+    <div class="cartoes" th:if="${!empresas.isEmpty()}">
+      <a class="cartao-empresa" th:each="e : ${empresas}"
+         th:href="@{'/empresas/' + ${e.id} + '/entrar'}">
+        <span class="apelido" th:text="${e.apelido}">apelido</span>
+        <span class="nome" th:text="${e.nome}">Empresa</span>
+        <span class="pe">
+          <span th:text="${movimento.get(e.id)[0]} + ' clientes · ' + ${movimento.get(e.id)[1]} + ' títulos'"></span>
+          <span class="entrar">Entrar →</span>
+        </span>
+      </a>
+    </div>
+
+    <div class="vazio" th:if="${empresas.isEmpty()}">
+      Nenhuma empresa cadastrada ainda.
+      <a href="/empresas/configurar">Cadastre a primeira em configurações</a>.
+    </div>
+  </div>
+</main>
+
+<script th:replace="~{layout :: scripts}"></script>
+
+</body>
+</html>

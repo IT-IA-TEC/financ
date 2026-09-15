@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head th:replace="~{layout :: cabeca('Integrações')}"></head>
+<body>
+<header th:replace="~{layout :: topo('integracoes')}"></header>
+
+<main>
+  <div th:replace="~{layout :: recados}"></div>
+
+  <div class="cabecalho-pagina">
+    <div>
+      <span class="olho"><i></i>Ligações com outros sistemas</span>
+      <h1>Integrações</h1>
+    </div>
+    <div class="acoes" style="margin:0">
+      <a class="botao vazado" href="/integracoes/ajuda">Tipos de integração</a>
+      <button class="botao" type="button" data-abre="janela-nova-integracao">+ Nova integração</button>
+    </div>
+  </div>
+
+  <div class="tabela-caixa" th:if="${!integracoes.isEmpty()}">
+    <table>
+      <thead>
+      <tr>
+        <th>Integração</th>
+        <th>Como funciona</th>
+        <th>Acesso</th>
+        <th>Ambiente</th>
+        <th>Situação</th>
+        <th>Última checagem</th>
+        <th></th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr th:each="i : ${integracoes}">
+        <td>
+          <b th:text="${i.nome}">Nome</b>
+          <small th:text="${i.provedor.rotulo}"></small>
+        </td>
+        <td th:text="${i.tipo.rotulo}">Chamada de API</td>
+        <td th:text="${i.autenticacao.rotulo}">Token</td>
+        <td class="mono" th:text="${i.ambiente}">PRODUCAO</td>
+        <td>
+          <span class="marca-situacao" th:classappend="${i.ativa} ? 's-pago' : 's-cancelado'"
+                th:text="${i.ativa} ? 'ligada' : 'desligada'">desligada</span>
+        </td>
+        <td class="mono">
+          <span th:if="${i.ultimaChecagemEm != null}"
+                th:text="${#temporals.format(i.ultimaChecagemEm, 'dd/MM HH:mm')} + (${i.ultimaChecagemOk} ? ' ok' : ' falhou')"></span>
+          <span th:if="${i.ultimaChecagemEm == null}">nunca testada</span>
+        </td>
+        <td style="text-align:right">
+          <a class="botao pequeno vazado" th:href="@{'/integracoes/' + ${i.id}}">Abrir</a>
+        </td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="vazio" th:if="${integracoes.isEmpty()}">
+    Nenhuma integração configurada nesta empresa.
+    <a href="/integracoes/ajuda">Veja os tipos possíveis</a> antes de criar a primeira.
+  </div>
+
+  <div class="secao" th:if="${!eventos.isEmpty()}">
+    <div class="cabecalho-pagina" style="margin-top:0">
+      <div>
+        <span class="olho"><i></i>Entradas e saídas</span>
+        <h2>Último movimento das integrações</h2>
+      </div>
+      <div class="acoes" style="margin:0">
+        <form method="post" action="/integracoes/reprocessar">
+          <button class="botao vazado" type="submit">Reprocessar avisos parados</button>
+        </form>
+      </div>
+    </div>
+    <div class="tabela-caixa">
+      <table>
+        <thead>
+        <tr>
+          <th>Quando</th>
+          <th>Direção</th>
+          <th>Operação</th>
+          <th>Referência</th>
+          <th>Situação</th>
+          <th>Conteúdo</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="e : ${eventos}">
+          <td class="mono" th:text="${#temporals.format(e.ocorridoEm, 'dd/MM HH:mm:ss')}"></td>
+          <td class="mono" th:text="${e.direcao}"></td>
+          <td th:text="${e.tipo}"></td>
+          <td class="mono" th:text="${e.referencia}"></td>
+          <td>
+            <span class="marca-situacao"
+                  th:classappend="${e.status == 'ERRO'} ? 's-vencido' : (${e.status == 'PROCESSADO'} ? 's-pago' : 's-aberto')"
+                  th:text="${e.status}"></span>
+          </td>
+          <td class="mono" style="font-size:11.5px">
+            <span th:text="${e.resumoDaCarga}"></span>
+            <small th:if="${e.erro != null}" style="color:var(--accent);display:block"
+                   th:text="${e.erro}"></small>
+          </td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</main>
+
+<script th:replace="~{layout :: scripts}"></script>
+
+<dialog id="janela-nova-integracao" class="janela">
+  <form method="post" action="/integracoes">
+    <div class="janela-topo">
+      <div>
+        <span class="olho"><i></i>Nova ligação</span>
+        <h2>Como esta integração vai funcionar</h2>
+      </div>
+      <button type="button" class="fechar" data-fecha aria-label="Fechar">&#10005;</button>
+    </div>
+
+    <div class="janela-corpo">
+      <span class="rotulo-bloco">Passo 1 · escolha um modelo de partida</span>
+      <p class="dica">O modelo preenche o tipo, a forma de acesso e as operações mais usadas.
+        Nada fica preso: tudo continua editável depois.</p>
+      <div class="lista-provedores">
+        <label th:each="c : ${conectores}" class="provedor">
+          <input type="radio" name="conector" th:value="${c.name()}" required
+                 th:checked="${c.name() == 'PERSONALIZADA'}">
+          <span>
+            <b th:text="${c.rotulo}">Modelo</b>
+            <small th:text="${c.resumo}"></small>
+            <span class="capacidades" th:if="${!c.operacoesSugeridas.isEmpty()}">
+              <span class="marca-situacao s-aberto" th:each="o : ${c.operacoesSugeridas}"
+                    th:text="${o.nome()}">operação</span>
+            </span>
+          </span>
+        </label>
+      </div>
+
+      <span class="rotulo-bloco">Passo 2 · confirme o desenho</span>
+      <div class="campos">
+        <div>
+          <label for="tipo">Tipo de ligação</label>
+          <select id="tipo" name="tipo">
+            <option value="">usar o do modelo</option>
+            <option th:each="t : ${tipos}" th:value="${t.name()}" th:text="${t.rotulo}"></option>
+          </select>
+        </div>
+        <div>
+          <label for="autenticacao">Forma de acesso</label>
+          <select id="autenticacao" name="autenticacao">
+            <option value="">usar a do modelo</option>
+            <option th:each="a : ${autenticacoes}" th:value="${a.name()}" th:text="${a.rotulo}"></option>
+          </select>
+        </div>
+        <div>
+          <label for="nome-integracao">Nome desta ligação</label>
+          <input id="nome-integracao" name="nome" required placeholder="Conta bancária da empresa">
+        </div>
+      </div>
+    </div>
+
+    <div class="janela-pe">
+      <button type="button" class="botao vazado" data-fecha>Cancelar</button>
+      <button class="botao" type="submit">Criar</button>
+    </div>
+  </form>
+</dialog>
+
+<script src="/js/janelas.js?v=1"></script>
+
+</body>
+</html>

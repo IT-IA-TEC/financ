@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head th:replace="~{layout :: cabeca('Disparo')}"></head>
+<body>
+<header th:replace="~{layout :: topo('cobranca')}"></header>
+
+<main class="largo">
+  <div th:replace="~{layout :: recados}"></div>
+
+  <div class="cabecalho-pagina com-resumo">
+    <div>
+      <span class="olho"><i></i><span th:text="${lote.filtro}">recorte</span></span>
+      <h1 th:text="${lote.nome}">Disparo</h1>
+    </div>
+
+    <div class="cartoes-topo">
+      <div class="cartao-topo inverso">
+        <span class="rotulo">Vão receber</span>
+        <b th:text="${lote.quantidade}">0</b>
+        <small th:text="'por ' + ${lote.canal.toLowerCase()}"></small>
+      </div>
+      <div class="cartao-topo">
+        <span class="rotulo">De fora</span>
+        <b th:text="${lote.fora}">0</b>
+        <small>com o motivo escrito</small>
+      </div>
+      <div class="cartao-topo">
+        <span class="rotulo">Valor em jogo</span>
+        <b th:text="'R$ ' + ${#numbers.formatDecimal(lote.valorTotal, 1, 'POINT', 2, 'COMMA')}">R$ 0,00</b>
+        <small>soma do que está sendo cobrado</small>
+      </div>
+      <div class="cartao-topo listrado">
+        <span class="rotulo">Situação</span>
+        <b th:text="${lote.situacaoLegivel}">prévia</b>
+        <small th:text="${lote.confirmadoPor} != null
+                        ? 'por ' + ${lote.confirmadoPor} : 'ainda não confirmado'"></small>
+      </div>
+    </div>
+
+    <div class="acoes" style="margin:0">
+      <a class="botao vazado pequeno" href="/disparos">Voltar</a>
+    </div>
+  </div>
+
+  <nav th:replace="~{layout :: abas-cobranca('disparos')}" class="modulo"></nav>
+
+  <div class="alerta-box atencao" th:if="${lote.naPrevia()}" style="margin-bottom:18px">
+    Esta é a prévia. Nenhuma mensagem saiu ainda. Confira a lista e confirme para colocar tudo
+    na fila.
+    <form method="post" th:action="@{'/disparos/' + ${lote.id} + '/confirmar'}"
+          class="acoes-movimento" style="margin-top:12px">
+      <label for="dp-dia" style="margin:0">Sair em</label>
+      <input id="dp-dia" name="dia" type="date" th:value="${hoje}">
+      <input name="hora" type="time" value="09:00">
+      <button class="botao pequeno" type="submit">Confirmar o disparo</button>
+    </form>
+    <form method="post" th:action="@{'/disparos/' + ${lote.id} + '/cancelar'}"
+          style="margin-top:8px">
+      <button class="botao pequeno perigo" type="submit">Cancelar este disparo</button>
+    </form>
+  </div>
+
+  <span class="rotulo-bloco">Quem vai receber</span>
+  <div class="tabela-caixa" th:if="${!mensagens.isEmpty()}">
+    <table>
+      <thead>
+      <tr>
+        <th>Cliente</th>
+        <th>Destino</th>
+        <th>Mensagem</th>
+        <th class="centro">Situação</th>
+        <th>O que fazer</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr th:each="m : ${mensagens}">
+        <td th:text="${nomes[m.tituloId]} ?: 'cliente'">cliente</td>
+        <td class="mono" style="font-size:12px" th:text="${m.destino}"></td>
+        <td style="max-width:420px">
+          <small style="white-space:pre-wrap" th:text="${m.corpo}"></small>
+        </td>
+        <td class="centro">
+          <span class="marca-situacao"
+                th:classappend="${m.saiu()} ? 's-pago'
+                                : (${m.situacao == 'CANCELADA'} ? 's-cancelado'
+                                : (${m.situacao == 'FALHOU'} ? 's-vencido' : 's-aberto'))"
+                th:text="${m.situacaoLegivel}">na fila</span>
+          <small th:if="${m.motivo != null}" th:text="${m.motivo}"></small>
+        </td>
+        <td>
+          <div th:if="${m.naFila()}" class="acoes-movimento">
+            <form method="post"
+                  th:action="@{'/disparos/' + ${lote.id} + '/mensagens/' + ${m.id} + '/enviada'}">
+              <button class="botao pequeno" type="submit">Marcar como enviada</button>
+            </form>
+            <form method="post"
+                  th:action="@{'/disparos/' + ${lote.id} + '/mensagens/' + ${m.id} + '/falhou'}">
+              <input name="motivo" placeholder="o que deu errado">
+              <button class="botao pequeno vazado" type="submit">Não entregue</button>
+            </form>
+            <form method="post" th:if="${lote.naPrevia()}"
+                  th:action="@{'/disparos/' + ${lote.id} + '/mensagens/' + ${m.id} + '/tirar'}">
+              <button class="botao pequeno perigo" type="submit">Tirar do disparo</button>
+            </form>
+          </div>
+        </td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="vazio" th:if="${mensagens.isEmpty()}">
+    Ninguém entrou neste recorte.
+  </div>
+
+  <span class="rotulo-bloco" th:if="${!foras.isEmpty()}">Quem ficou de fora, e por quê</span>
+  <div class="tabela-caixa" th:if="${!foras.isEmpty()}">
+    <table>
+      <thead>
+      <tr>
+        <th>Cliente</th>
+        <th>Motivo</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr th:each="f : ${foras}">
+        <td th:text="${f.quem}">cliente</td>
+        <td th:text="${f.motivo}">motivo</td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+</main>
+
+<script th:replace="~{layout :: scripts}"></script>
+</body>
+</html>

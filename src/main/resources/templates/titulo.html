@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head th:replace="~{layout :: cabeca('Título')}"></head>
+<body>
+<header th:replace="~{layout :: topo('titulos')}"></header>
+
+<main>
+  <div th:replace="~{layout :: recados}"></div>
+
+  <div class="cabecalho-pagina">
+    <div>
+      <span class="olho" th:text="'título nº ' + ${titulo.numero}">título</span>
+      <h1 th:text="${titulo.cliente.razaoSocial}">Cliente</h1>
+      <p th:text="${titulo.descricao} + ' · competência ' + ${#temporals.format(titulo.competencia, 'MM/yyyy')}"></p>
+    </div>
+    <div>
+      <span th:if="${titulo.estaVencido(hoje)}" class="marca-situacao s-vencido"
+            th:text="'vencido há ' + ${titulo.diasDeAtraso(hoje)} + ' dias'">vencido</span>
+      <span th:unless="${titulo.estaVencido(hoje)}" class="marca-situacao"
+            th:classappend="${'s-' + titulo.situacao.name().toLowerCase()}"
+            th:text="${titulo.situacao}">ABERTO</span>
+    </div>
+  </div>
+
+  <div class="quadros">
+    <div class="quadro forte">
+      <span class="rotulo">Valor</span>
+      <span class="numero" th:text="${'R$ ' + #numbers.formatDecimal(titulo.valor, 1, 'POINT', 2, 'COMMA')}">R$ 0,00</span>
+      <small th:text="'vence em ' + ${#temporals.format(titulo.vencimento, 'dd/MM/yyyy')}"></small>
+    </div>
+    <div class="quadro">
+      <span class="rotulo">Já pago</span>
+      <span class="numero" th:text="${'R$ ' + #numbers.formatDecimal(titulo.totalPago, 1, 'POINT', 2, 'COMMA')}">R$ 0,00</span>
+      <small th:text="${titulo.pagamentos.size()} + ' pagamento(s)'">0</small>
+    </div>
+    <div class="quadro">
+      <span class="rotulo">Saldo</span>
+      <span class="numero vermelho" th:text="${'R$ ' + #numbers.formatDecimal(titulo.saldo, 1, 'POINT', 2, 'COMMA')}">R$ 0,00</span>
+      <small>o que ainda falta</small>
+    </div>
+    <div class="quadro" th:if="${acrescimo.signum() > 0}">
+      <span class="rotulo">Atualizado hoje</span>
+      <span class="numero vermelho"
+            th:text="${'R$ ' + #numbers.formatDecimal(titulo.saldo.add(acrescimo), 1, 'POINT', 2, 'COMMA')}">R$ 0,00</span>
+      <small th:text="'com R$ ' + ${#numbers.formatDecimal(acrescimo, 1, 'POINT', 2, 'COMMA')}
+                      + ' de multa e juros'"></small>
+    </div>
+    <div class="quadro">
+      <span class="rotulo">Código do PIX</span>
+      <span class="numero mono" style="font-size:20px" th:text="${titulo.identificadorPix}"></span>
+      <small>é ele que faz a baixa automática</small>
+    </div>
+  </div>
+
+  <div class="secao">
+    <h2>Pagamentos</h2>
+
+    <div class="tabela-caixa" th:if="${!titulo.pagamentos.isEmpty()}">
+      <table>
+        <thead>
+        <tr>
+          <th>Pago em</th>
+          <th class="valor">Valor</th>
+          <th>Forma</th>
+          <th>Transação</th>
+          <th>Conferido por</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="p : ${titulo.pagamentos}">
+          <td class="mono" th:text="${#temporals.format(p.pagoEm, 'dd/MM/yyyy')}"></td>
+          <td class="valor" th:text="${#numbers.formatDecimal(p.valor, 1, 'POINT', 2, 'COMMA')}">0,00</td>
+          <td th:text="${p.forma}">PIX</td>
+          <td class="mono" th:text="${p.transacaoId} ?: ''"></td>
+          <td th:text="${p.conferidoPor} ?: ''"></td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="vazio" th:if="${titulo.pagamentos.isEmpty()}">
+      Nenhum pagamento recebido neste título.
+    </div>
+  </div>
+
+  <div class="secao" th:if="${titulo.situacao.name() != 'CANCELADO' and titulo.situacao.name() != 'PAGO'}">
+    <h2>Lançar pagamento</h2>
+    <form class="bloco" method="post" th:action="@{'/titulos/' + ${titulo.id} + '/pagamentos'}">
+      <div class="campos">
+        <div>
+          <label for="valor">Valor recebido (R$)</label>
+          <input id="valor" name="valor" type="number" step="0.01" min="0.01" required
+                 th:value="${titulo.saldo}">
+        </div>
+        <div>
+          <label for="pagoEm">Pago em</label>
+          <input id="pagoEm" name="pagoEm" type="date" required
+                 th:value="${#temporals.format(hoje, 'yyyy-MM-dd')}">
+        </div>
+        <div>
+          <label for="forma">Forma</label>
+          <select id="forma" name="forma">
+            <option value="PIX">PIX</option>
+            <option value="TRANSFERENCIA">Transferência</option>
+            <option value="BOLETO">Boleto</option>
+            <option value="DINHEIRO">Dinheiro</option>
+          </select>
+        </div>
+        <div>
+          <label for="transacaoId">Identificador da transação</label>
+          <input id="transacaoId" name="transacaoId" placeholder="opcional, barra pagamento repetido">
+        </div>
+      </div>
+      <div class="acoes">
+        <button class="botao" type="submit">Dar baixa</button>
+      </div>
+    </form>
+  </div>
+
+  <div class="secao" th:if="${titulo.totalPago.signum() == 0 and titulo.situacao.name() != 'CANCELADO'}">
+    <h2>Cancelar título</h2>
+    <form class="bloco" method="post" th:action="@{'/titulos/' + ${titulo.id} + '/cancelar'}">
+      <div class="campos">
+        <div>
+          <label for="motivo">Motivo do cancelamento</label>
+          <input id="motivo" name="motivo" required placeholder="lançado em duplicidade">
+        </div>
+      </div>
+      <div class="acoes">
+        <button class="botao perigo" type="submit">Cancelar título</button>
+      </div>
+    </form>
+  </div>
+</main>
+
+<script th:replace="~{layout :: scripts}"></script>
+
+</body>
+</html>

@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head th:replace="~{layout :: cabeca('Acordos')}"></head>
+<body>
+<header th:replace="~{layout :: topo('cobranca')}"></header>
+
+<main class="largo">
+  <div th:replace="~{layout :: recados}"></div>
+
+  <div class="cabecalho-pagina com-resumo">
+    <div>
+      <span class="olho"><i></i>Quando não dá para pagar de uma vez</span>
+      <h1>Acordos</h1>
+    </div>
+
+    <div class="cartoes-topo">
+      <div class="cartao-topo inverso">
+        <span class="rotulo">Ativos</span>
+        <b th:text="${#lists.size(acordos.?[situacao == 'ATIVO'])}">0</b>
+        <small>em andamento</small>
+      </div>
+      <div class="cartao-topo">
+        <span class="rotulo">Cumpridos</span>
+        <b th:text="${#lists.size(acordos.?[situacao == 'CUMPRIDO'])}">0</b>
+        <small>pagos até o fim</small>
+      </div>
+      <div class="cartao-topo">
+        <span class="rotulo">Quebrados</span>
+        <b th:text="${#lists.size(acordos.?[situacao == 'QUEBRADO'])}">0</b>
+        <small>voltaram para a cobrança</small>
+      </div>
+      <div class="cartao-topo listrado">
+        <span class="rotulo">Podem negociar</span>
+        <b th:text="${clientes.size()}">0</b>
+        <small>clientes com dívida em aberto</small>
+      </div>
+    </div>
+
+    <div class="acoes" style="margin:0">
+      <button class="botao" type="button" data-abre="janela-escolher">+ Novo acordo</button>
+    </div>
+  </div>
+
+  <nav th:replace="~{layout :: abas-cobranca('acordos')}" class="modulo"></nav>
+
+  <div class="alerta-box" style="margin-bottom:18px">
+    O acordo não apaga o que era devido: os documentos antigos ficam guardados e saem da
+    cobrança, porque quem passa a ser cobrado são as parcelas. Se o acordo quebrar, eles voltam
+    do jeito que estavam.
+  </div>
+
+  <div th:if="${escolhido != null}" class="tabela-caixa" style="margin-bottom:22px">
+    <form method="post" action="/acordos">
+      <input type="hidden" name="unidadeId" th:value="${escolhido}">
+      <table>
+        <thead>
+        <tr>
+          <th class="centro">Entra</th>
+          <th>Documento</th>
+          <th>Descrição</th>
+          <th class="centro">Vencimento</th>
+          <th class="centro">Atraso</th>
+          <th class="centro">Saldo</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="t : ${emAberto}">
+          <td class="centro">
+            <input type="checkbox" name="tituloIds" th:value="${t.id}" checked>
+          </td>
+          <td class="mono" th:text="${t.identificadorPix}"></td>
+          <td th:text="${t.descricao}"></td>
+          <td class="centro mono" th:text="${#temporals.format(t.vencimento, 'dd/MM/yyyy')}"></td>
+          <td class="centro mono" th:text="${t.diasDeAtraso(hoje)} + ' dias'"></td>
+          <td class="centro mono"
+              th:text="'R$ ' + ${#numbers.formatDecimal(t.saldo, 1, 'POINT', 2, 'COMMA')}"></td>
+        </tr>
+        </tbody>
+      </table>
+
+      <div class="janela-corpo" style="border-top:1px solid var(--border-default)">
+        <div class="campos">
+          <div>
+            <label for="ac-acrescimo">Juros e multa</label>
+            <input id="ac-acrescimo" name="acrescimo" inputmode="decimal" value="0">
+          </div>
+          <div>
+            <label for="ac-desconto">Desconto</label>
+            <input id="ac-desconto" name="desconto" inputmode="decimal" value="0">
+          </div>
+          <div>
+            <label for="ac-entrada">Entrada</label>
+            <input id="ac-entrada" name="entrada" inputmode="decimal" value="0">
+          </div>
+          <div>
+            <label for="ac-parcelas">Parcelas</label>
+            <input id="ac-parcelas" name="parcelas" inputmode="numeric" value="3">
+          </div>
+          <div>
+            <label for="ac-venc">Primeira vence em</label>
+            <input id="ac-venc" name="primeiroVencimento" type="date" required>
+          </div>
+        </div>
+        <div class="campos" style="margin-top:16px">
+          <div style="grid-column:1/-1">
+            <label for="ac-motivo">Motivo do desconto</label>
+            <input id="ac-motivo" name="motivoDesconto"
+                   placeholder="obrigatório quando houver desconto">
+          </div>
+          <div style="grid-column:1/-1">
+            <label for="ac-obs">Observação</label>
+            <textarea id="ac-obs" name="observacao" rows="2"
+                      placeholder="o que ficou combinado com o cliente"></textarea>
+          </div>
+        </div>
+        <div class="acoes" style="margin-top:16px">
+          <a class="botao vazado" href="/acordos">Cancelar</a>
+          <button class="botao" type="submit">Fechar o acordo</button>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <div class="tabela-caixa" th:if="${!acordos.isEmpty()}">
+    <table>
+      <thead>
+      <tr>
+        <th class="centro">Número</th>
+        <th class="centro">Quando</th>
+        <th class="centro">Devia</th>
+        <th class="centro">Desconto</th>
+        <th class="centro">Combinado</th>
+        <th class="centro">Parcelas</th>
+        <th class="centro">Situação</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr th:each="a : ${acordos}">
+        <td class="centro mono">
+          <a th:href="@{'/acordos/' + ${a.id}}" th:text="${a.numero}">1</a>
+        </td>
+        <td class="centro mono" th:text="${#temporals.format(a.criadoEm, 'dd/MM/yyyy')}"></td>
+        <td class="centro mono"
+            th:text="'R$ ' + ${#numbers.formatDecimal(a.valorOriginal, 1, 'POINT', 2, 'COMMA')}"></td>
+        <td class="centro mono"
+            th:text="'R$ ' + ${#numbers.formatDecimal(a.desconto, 1, 'POINT', 2, 'COMMA')}"></td>
+        <td class="centro mono"
+            th:text="'R$ ' + ${#numbers.formatDecimal(a.valorCombinado, 1, 'POINT', 2, 'COMMA')}"></td>
+        <td class="centro mono" th:text="${a.parcelas}">1</td>
+        <td class="centro">
+          <span class="marca-situacao"
+                th:classappend="${a.situacao == 'CUMPRIDO'} ? 's-pago'
+                                : (${a.situacao == 'ATIVO'} ? 's-parcial' : 's-cancelado')"
+                th:text="${a.situacaoLegivel}">ativo</span>
+        </td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="vazio" th:if="${acordos.isEmpty()}">
+    Nenhum acordo fechado ainda.
+  </div>
+</main>
+
+<script th:replace="~{layout :: scripts}"></script>
+
+<dialog id="janela-escolher" class="janela">
+  <form method="get" action="/acordos">
+    <div class="janela-topo">
+      <div>
+        <span class="olho"><i></i>Novo acordo</span>
+        <h2>Com quem é o acordo</h2>
+      </div>
+      <button type="button" class="fechar" data-fecha aria-label="Fechar">&#10005;</button>
+    </div>
+    <div class="janela-corpo">
+      <p class="dica">Escolha o cliente. Na tela seguinte aparecem os documentos em aberto dele,
+        e você marca quais entram.</p>
+      <div class="campos">
+        <div style="grid-column:1/-1">
+          <label for="ac-cliente">Cliente</label>
+          <select id="ac-cliente" name="cliente" required>
+            <option th:each="c : ${clientes}" th:value="${c.key}" th:text="${c.value}"></option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="janela-pe">
+      <button type="button" class="botao vazado" data-fecha>Cancelar</button>
+      <button class="botao" type="submit">Ver os documentos</button>
+    </div>
+  </form>
+</dialog>
+
+<script src="/js/janelas.js?v=1"></script>
+
+</body>
+</html>

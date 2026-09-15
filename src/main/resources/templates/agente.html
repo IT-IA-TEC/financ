@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head th:replace="~{layout :: cabeca('Agente')}"></head>
+<body>
+<header th:replace="~{layout :: topo('cobranca')}"></header>
+
+<main class="largo">
+  <div th:replace="~{layout :: recados}"></div>
+
+  <div class="cabecalho-pagina com-resumo">
+    <div>
+      <span class="olho"><i></i>Primeiro atendimento</span>
+      <h1>Agente</h1>
+    </div>
+
+    <div class="cartoes-topo">
+      <div class="cartao-topo inverso">
+        <span class="rotulo">Situação</span>
+        <b th:text="${agente.ativo} ? 'ligado' : 'desligado'">desligado</b>
+        <small th:text="${agente.ativo}
+                        ? 'responde das ' + ${agente.comecaAs} + 'h às ' + ${agente.terminaAs} + 'h'
+                        : 'tudo espera uma pessoa'"></small>
+      </div>
+      <div class="cartao-topo">
+        <span class="rotulo">Atendimentos</span>
+        <b th:text="${atendidos}">0</b>
+        <small>mensagens que ele leu</small>
+      </div>
+      <div class="cartao-topo">
+        <span class="rotulo">Passou adiante</span>
+        <b th:text="${escalados}">0</b>
+        <small>assuntos que foram para gente</small>
+      </div>
+      <div class="cartao-topo listrado">
+        <span class="rotulo">Diz que é robô</span>
+        <b th:text="${regra.agenteSeIdentifica} ? 'sim' : 'não'">sim</b>
+        <small><a href="/empresas/regras">muda nas regras</a></small>
+      </div>
+    </div>
+  </div>
+
+  <nav th:replace="~{layout :: abas-cobranca('agente')}" class="modulo"></nav>
+
+  <div class="alerta-box" style="margin-bottom:18px">
+    O agente só fala o que o sistema sabe: saldo, vencimento, chave PIX e o que já foi combinado.
+    Ele não inventa valor, não dá desconto e não fecha acordo. Pedido de parcelamento,
+    reclamação e qualquer coisa que ele não entenda vão direto para uma pessoa, e o cliente é
+    avisado disso.
+  </div>
+
+  <div class="escrever-conversa">
+    <form method="post" action="/agente">
+      <label>Como ele trabalha</label>
+      <div class="campos">
+        <div>
+          <label for="ag-comeca">Começa às</label>
+          <input id="ag-comeca" name="comecaAs" inputmode="numeric" th:value="${agente.comecaAs}">
+        </div>
+        <div>
+          <label for="ag-termina">Termina às</label>
+          <input id="ag-termina" name="terminaAs" inputmode="numeric"
+                 th:value="${agente.terminaAs}">
+        </div>
+        <div>
+          <label for="ag-assinatura">Assinatura</label>
+          <input id="ag-assinatura" name="assinatura" th:value="${agente.assinatura}"
+                 placeholder="Equipe financeira">
+        </div>
+      </div>
+      <div class="campos" style="margin-top:14px">
+        <div style="grid-column:1/-1">
+          <label for="ag-saudacao">Saudação</label>
+          <input id="ag-saudacao" name="saudacao" th:value="${agente.saudacao}"
+                 placeholder="usada quando a empresa não pede para ele se identificar como robô">
+        </div>
+      </div>
+      <p class="dica" style="margin-top:14px">
+        <label style="display:flex;align-items:center;gap:8px">
+          <input type="checkbox" name="ativo" value="true" th:checked="${agente.ativo}">
+          ligado
+        </label>
+        <label style="display:flex;align-items:center;gap:8px">
+          <input type="checkbox" name="respondeSabado" value="true"
+                 th:checked="${agente.respondeSabado}">
+          responde aos sábados
+        </label>
+      </p>
+      <div class="acoes" style="margin-top:10px">
+        <button class="botao" type="submit">Guardar</button>
+      </div>
+    </form>
+
+    <form method="post" action="/agente/testar">
+      <label for="ag-teste">Testar o entendimento</label>
+      <textarea id="ag-teste" name="texto" rows="3" required
+                placeholder="escreva uma frase como o cliente escreveria"></textarea>
+      <div class="acoes" style="margin-top:10px">
+        <button class="botao vazado" type="submit">Ver o que ele entenderia</button>
+      </div>
+    </form>
+  </div>
+
+  <span class="rotulo-bloco">O que ele sabe responder</span>
+  <div class="tabela-caixa" style="margin-bottom:22px">
+    <table>
+      <thead>
+      <tr>
+        <th>Quando o cliente diz</th>
+        <th>O que o agente faz</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr>
+        <td>quanto eu devo, qual o saldo, tem algo em aberto</td>
+        <td>lista o que está em aberto, com valor e vencimento, e soma o total</td>
+      </tr>
+      <tr>
+        <td>como eu pago, manda o PIX, segunda via</td>
+        <td>manda a chave PIX da empresa e o código do documento</td>
+      </tr>
+      <tr>
+        <td>já paguei, segue o comprovante</td>
+        <td>pede o comprovante e marca o caso como esperando conferência</td>
+      </tr>
+      <tr>
+        <td>pago sexta, pago dia 20</td>
+        <td>registra a promessa com a data e marca o caso para conferir</td>
+      </tr>
+      <tr>
+        <td>quero parcelar, consigo desconto</td>
+        <td>passa para uma pessoa e avisa o cliente de que passou</td>
+      </tr>
+      <tr>
+        <td>essa cobrança está errada, quero cancelar</td>
+        <td>passa para uma pessoa e marca o caso como contestado</td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <span class="rotulo-bloco" th:if="${!atendimentos.isEmpty()}">Últimos atendimentos</span>
+  <div class="tabela-caixa" th:if="${!atendimentos.isEmpty()}">
+    <table>
+      <thead>
+      <tr>
+        <th class="centro">Quando</th>
+        <th>O cliente disse</th>
+        <th class="centro">Entendeu como</th>
+        <th class="centro">Passou adiante</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr th:each="a : ${atendimentos}">
+        <td class="centro mono" th:text="${#temporals.format(a.ocorridoEm, 'dd/MM HH:mm')}"></td>
+        <td style="max-width:420px">
+          <small th:text="${#strings.abbreviate(a.pergunta, 160)}"></small>
+        </td>
+        <td class="centro" th:text="${a.intencaoLegivel}"></td>
+        <td class="centro">
+          <span class="marca-situacao" th:classappend="${a.escalado} ? 's-vencido' : 's-pago'"
+                th:text="${a.escalado} ? 'sim' : 'não'">não</span>
+          <small th:if="${a.motivo != null}" th:text="${a.motivo}"></small>
+        </td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+</main>
+
+<script th:replace="~{layout :: scripts}"></script>
+</body>
+</html>

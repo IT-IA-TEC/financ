@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head th:replace="~{layout :: cabeca('Integração')}"></head>
+<body>
+<header th:replace="~{layout :: topo('integracoes')}"></header>
+
+<main>
+  <div th:replace="~{layout :: recados}"></div>
+
+  <div class="cabecalho-pagina">
+    <div>
+      <span class="olho"><i></i><span th:text="${integracao.tipo.rotulo}">Tipo</span></span>
+      <h1 th:text="${integracao.nome}">Integração</h1>
+      <p th:text="${integracao.tipo.resumo}"></p>
+    </div>
+    <div class="acoes" style="margin:0">
+      <a class="botao vazado" href="/integracoes">Voltar</a>
+      <form method="post" th:action="@{'/integracoes/' + ${integracao.id} + '/testar'}"
+            th:if="${integracao.tipo.chamaParaFora}">
+        <button class="botao vazado" type="submit">Testar conexão</button>
+      </form>
+      <form method="post" th:action="@{'/integracoes/' + ${integracao.id} + '/ligar'}"
+            th:unless="${integracao.ativa}">
+        <button class="botao" type="submit">Ligar</button>
+      </form>
+      <form method="post" th:action="@{'/integracoes/' + ${integracao.id} + '/desligar'}"
+            th:if="${integracao.ativa}">
+        <button class="botao perigo" type="submit">Desligar</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="quadros">
+    <div class="quadro forte">
+      <span class="rotulo">Situação</span>
+      <span class="numero" style="font-size:20px"
+            th:text="${integracao.ativa} ? 'Ligada' : 'Desligada'">Desligada</span>
+      <small th:text="${integracao.ambiente}">PRODUCAO</small>
+    </div>
+    <div class="quadro">
+      <span class="rotulo">Forma de acesso</span>
+      <span class="numero" style="font-size:17px" th:text="${integracao.autenticacao.rotulo}">Token</span>
+      <small th:text="${integracao.autenticacao.resumo}"></small>
+    </div>
+    <div class="quadro">
+      <span class="rotulo">Última checagem</span>
+      <span class="numero" style="font-size:17px"
+            th:text="${integracao.ultimaChecagemEm != null}
+                     ? ${#temporals.format(integracao.ultimaChecagemEm, 'dd/MM HH:mm')}
+                     : 'nunca testada'">nunca</span>
+      <small th:text="${integracao.ultimaChecagemOk == null} ? ''
+                      : (${integracao.ultimaChecagemOk} ? 'respondeu' : ${integracao.ultimaChecagemErro})"></small>
+    </div>
+    <div class="quadro">
+      <span class="rotulo">Tentativas</span>
+      <span class="numero" th:text="${integracao.tentativas}">3</span>
+      <small th:text="'espera ' + ${integracao.esperaEntreTentativasMs} + ' ms · limite de '
+                      + ${integracao.tempoLimiteSegundos} + ' s'"></small>
+    </div>
+  </div>
+
+  <div class="alerta-box" th:if="${!faltando.isEmpty()}" style="margin-bottom:24px">
+    Falta preencher para poder ligar: <b th:text="${#strings.listJoin(faltando, ', ')}"></b>
+  </div>
+
+  <div class="secao">
+    <h2>Configuração</h2>
+    <form class="bloco" method="post" th:action="@{'/integracoes/' + ${integracao.id}}">
+      <div class="campos">
+        <div>
+          <label for="nome">Nome</label>
+          <input id="nome" name="nome" th:value="${integracao.nome}" required>
+        </div>
+        <div>
+          <label for="tipo">Tipo de ligação</label>
+          <select id="tipo" name="tipo">
+            <option th:each="t : ${tipos}" th:value="${t.name()}" th:text="${t.rotulo}"
+                    th:selected="${t == integracao.tipo}"></option>
+          </select>
+        </div>
+        <div>
+          <label for="autenticacao">Forma de acesso</label>
+          <select id="autenticacao" name="autenticacao">
+            <option th:each="a : ${autenticacoes}" th:value="${a.name()}" th:text="${a.rotulo}"
+                    th:selected="${a == integracao.autenticacao}"></option>
+          </select>
+        </div>
+        <div>
+          <label for="ambiente">Ambiente</label>
+          <select id="ambiente" name="ambiente">
+            <option value="PRODUCAO" th:selected="${integracao.ambiente == 'PRODUCAO'}">Produção</option>
+            <option value="TESTE" th:selected="${integracao.ambiente == 'TESTE'}">Teste</option>
+          </select>
+        </div>
+        <div th:if="${integracao.tipo.chamaParaFora}">
+          <label for="baseUrl">Endereço base</label>
+          <input id="baseUrl" name="baseUrl" th:value="${integracao.baseUrl}"
+                 placeholder="https://api.exemplo.com.br">
+        </div>
+      </div>
+
+      <th:block th:if="${!integracao.camposDeAcesso.isEmpty()}">
+        <span class="rotulo-bloco">Acesso</span>
+        <p class="dica">Segredo salvo não volta a aparecer: mostramos só os últimos dígitos.
+          Deixando o campo em branco, o que já estava guardado continua valendo.</p>
+        <div class="campos">
+          <div th:each="c : ${integracao.camposDeAcesso}">
+            <label th:for="${c.chave()}" th:text="${c.rotulo()} + (${c.exigido()} ? '' : ' (opcional)')">Campo</label>
+            <input th:id="${c.chave()}" th:name="${c.chave()}"
+                   th:type="${c.segredo()} ? 'password' : 'text'"
+                   th:value="${c.segredo()} ? '' : ${valores.get(c.chave())}"
+                   th:placeholder="${c.segredo()} ? ${valores.get(c.chave())} : ''">
+          </div>
+        </div>
+      </th:block>
+
+      <span class="rotulo-bloco">Comportamento</span>
+      <div class="campos">
+        <div>
+          <label for="tempoLimite">Tempo limite (segundos)</label>
+          <input id="tempoLimite" name="tempoLimite" type="number" min="1" max="300"
+                 th:value="${integracao.tempoLimiteSegundos}">
+        </div>
+        <div>
+          <label for="tentativas">Tentativas</label>
+          <input id="tentativas" name="tentativas" type="number" min="1" max="10"
+                 th:value="${integracao.tentativas}">
+        </div>
+        <div>
+          <label for="espera">Espera entre tentativas (ms)</label>
+          <input id="espera" name="espera" type="number" min="0" max="60000"
+                 th:value="${integracao.esperaEntreTentativasMs}">
+        </div>
+        <div th:if="${integracao.tipo.recebeDeFora}">
+          <label for="verificarAssinatura">Conferir assinatura do aviso</label>
+          <select id="verificarAssinatura" name="verificarAssinatura">
+            <option value="false" th:selected="${!integracao.verificarAssinatura}">não</option>
+            <option value="true" th:selected="${integracao.verificarAssinatura}">sim</option>
+          </select>
+        </div>
+      </div>
+
+      <span class="rotulo-bloco">Anotação</span>
+      <div class="campos">
+        <div>
+          <label for="observacao">Para que essa ligação serve aqui</label>
+          <input id="observacao" name="observacao" th:value="${integracao.observacao}">
+        </div>
+      </div>
+
+      <div class="acoes">
+        <button class="botao" type="submit">Salvar</button>
+      </div>
+    </form>
+  </div>
+
+  <div class="secao" th:if="${integracao.tipo.chamaParaFora}">
+    <h2>Operações</h2>
+    <p style="color:var(--text-secondary);font-size:14px;margin-bottom:16px">
+      Cada operação é uma chamada que esta integração pode fazer. Nada sai daqui sem estar nesta
+      lista. Os caminhos que vieram do modelo são sugestão: confira na documentação do provedor.
+    </p>
+
+    <div class="tabela-caixa" th:if="${!operacoes.isEmpty()}">
+      <table>
+        <thead>
+        <tr>
+          <th>Operação</th>
+          <th>Verbo</th>
+          <th>Caminho</th>
+          <th>Para que serve</th>
+          <th></th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="o : ${operacoes}">
+          <td><b th:text="${o.nome}">Nome</b></td>
+          <td class="mono" th:text="${o.verbo}">GET</td>
+          <td class="mono" th:text="${o.caminho}">/caminho</td>
+          <td th:text="${o.paraQue}"></td>
+          <td style="text-align:right">
+            <div class="linha-botoes" style="justify-content:flex-end">
+              <form method="post"
+                    th:action="@{'/integracoes/' + ${integracao.id} + '/operacoes/' + ${o.id} + '/executar'}">
+                <button class="botao pequeno vazado" type="submit">Executar</button>
+              </form>
+              <form method="post"
+                    th:action="@{'/integracoes/' + ${integracao.id} + '/operacoes/' + ${o.id} + '/apagar'}"
+                    onsubmit="return confirm('Remover esta operação?');">
+                <button class="botao pequeno perigo" type="submit">Remover</button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="vazio" th:if="${operacoes.isEmpty()}">
+      Nenhuma operação cadastrada. Cadastre a primeira abaixo.
+    </div>
+
+    <form class="bloco" method="post" style="margin-top:18px"
+          th:action="@{'/integracoes/' + ${integracao.id} + '/operacoes'}">
+      <span class="rotulo-bloco" style="margin-top:0">Nova operação</span>
+      <div class="campos">
+        <div>
+          <label for="op-nome">O que ela faz</label>
+          <input id="op-nome" name="nome" required placeholder="Consultar extrato">
+        </div>
+        <div>
+          <label for="op-verbo">Verbo</label>
+          <select id="op-verbo" name="verbo">
+            <option>GET</option><option>POST</option><option>PUT</option>
+            <option>PATCH</option><option>DELETE</option>
+          </select>
+        </div>
+        <div>
+          <label for="op-caminho">Caminho</label>
+          <input id="op-caminho" name="caminho" required placeholder="/v1/extrato">
+        </div>
+        <div>
+          <label for="op-paraque">Para que serve aqui</label>
+          <input id="op-paraque" name="paraQue" placeholder="traz o movimento da conta">
+        </div>
+      </div>
+      <div class="acoes">
+        <button class="botao" type="submit">Cadastrar operação</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- O WhatsApp e de mao dupla: manda por API e responde por aqui. -->
+  <div class="secao" th:if="${integracao.tipo.recebeDeFora
+                             or integracao.provedor?.name() == 'WHATSAPP'}">
+    <h2>Endereço de recebimento</h2>
+    <p style="color:var(--text-secondary);font-size:14px;margin-bottom:14px">
+      É este endereço que o outro sistema chama para avisar o que aconteceu. O trecho final é
+      secreto: quem não tiver ele não entrega nada aqui. A porta só aceita aviso com a
+      integração ligada.
+    </p>
+    <div class="endereco-webhook">
+      <code class="mono" th:text="${enderecoWebhook}">https://</code>
+      <form method="post" th:action="@{'/integracoes/' + ${integracao.id} + '/trocar-segredo'}"
+            onsubmit="return confirm('Trocar o endereço? O antigo para de funcionar na hora.');">
+        <button class="botao pequeno vazado" type="submit">Trocar endereço</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="secao">
+    <h2>Movimento desta integração</h2>
+    <div class="tabela-caixa" th:if="${!eventos.isEmpty()}">
+      <table>
+        <thead>
+        <tr>
+          <th>Quando</th>
+          <th>Direção</th>
+          <th>Operação</th>
+          <th>Referência</th>
+          <th>Situação</th>
+          <th>Conteúdo</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="e : ${eventos}">
+          <td class="mono" th:text="${#temporals.format(e.ocorridoEm, 'dd/MM HH:mm:ss')}"></td>
+          <td class="mono" th:text="${e.direcao}"></td>
+          <td th:text="${e.tipo}"></td>
+          <td class="mono" th:text="${e.referencia}"></td>
+          <td>
+            <span class="marca-situacao"
+                  th:classappend="${e.status == 'ERRO'} ? 's-vencido' : (${e.status == 'PROCESSADO'} ? 's-pago' : 's-aberto')"
+                  th:text="${e.status}"></span>
+          </td>
+          <td class="mono" style="font-size:11.5px" th:text="${e.resumoDaCarga}"></td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="vazio" th:if="${eventos.isEmpty()}">
+      Nada entrou nem saiu por esta integração ainda.
+    </div>
+  </div>
+</main>
+
+<script th:replace="~{layout :: scripts}"></script>
+
+</body>
+</html>

@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head th:replace="~{layout :: cabeca('Cobranças')}"></head>
+<body>
+<header th:replace="~{layout :: topo('servicos')}"></header>
+
+<main class="largo">
+  <div th:replace="~{layout :: recados}"></div>
+
+  <div class="cabecalho-pagina">
+    <div>
+      <span class="olho"><i></i>Cobranças</span>
+      <h1>Pacotes &amp; serviços</h1>
+      <nav th:replace="~{layout :: abas-catalogo('cobrancas')}"></nav>
+    </div>
+    <div class="acoes" style="margin:0">
+      <a class="botao" href="/cobrancas/fechamento">Fechamento do mês</a>
+    </div>
+  </div>
+
+  <p class="dica" style="margin-top:4px">Só as cobranças que nasceram de pacote ou de serviço.
+    O contas a receber inteiro continua em Títulos.</p>
+
+  <div class="cartoes">
+    <div class="cartao destaque">
+      <span class="rotulo">Cobrado</span>
+      <span class="numero"
+            th:text="'R$ ' + ${#numbers.formatDecimal(resumo.cobrado, 1, 'POINT', 2, 'COMMA')}">R$ 0,00</span>
+      <small>valor final de tudo que não foi cancelado</small>
+    </div>
+    <div class="cartao">
+      <span class="rotulo">Recebido</span>
+      <span class="numero"
+            th:text="'R$ ' + ${#numbers.formatDecimal(resumo.recebido, 1, 'POINT', 2, 'COMMA')}">R$ 0,00</span>
+      <small>lido do título quitado</small>
+    </div>
+    <div class="cartao">
+      <span class="rotulo">Pendente</span>
+      <span class="numero"
+            th:text="'R$ ' + ${#numbers.formatDecimal(resumo.pendente, 1, 'POINT', 2, 'COMMA')}">R$ 0,00</span>
+      <small th:text="${resumo.aguardando} + ' aguardando conferência'">0 aguardando conferência</small>
+    </div>
+    <div class="cartao">
+      <span class="rotulo">Gratuidades</span>
+      <span class="numero"
+            th:text="'R$ ' + ${#numbers.formatDecimal(resumo.gratuito, 1, 'POINT', 2, 'COMMA')}">R$ 0,00</span>
+      <small>registrado, sem valor a receber</small>
+    </div>
+  </div>
+
+  <form class="barra-busca" method="get" action="/cobrancas">
+    <select name="origem">
+      <option value="">Pacotes e serviços</option>
+      <option th:each="o : ${origens}" th:value="${o}" th:text="'Só ' + ${o.rotulo.toLowerCase()}"
+              th:selected="${origemEscolhida == o.name()}"></option>
+    </select>
+    <select name="situacao">
+      <option value="">Qualquer situação</option>
+      <option th:each="s : ${situacoes}" th:value="${s}" th:text="${s.rotulo}"
+              th:selected="${situacaoEscolhida == s.name()}"></option>
+    </select>
+    <select name="cliente">
+      <option value="">Todos os clientes</option>
+      <option th:each="c : ${clientes}" th:value="${c.id}" th:text="${c.nome}"
+              th:selected="${clienteEscolhido != null and clienteEscolhido.toString() == c.id.toString()}"></option>
+    </select>
+    <input type="date" name="de" th:value="${de}" title="Vencimento de">
+    <input type="date" name="ate" th:value="${ate}" title="Vencimento até">
+    <button class="botao pequeno" type="submit">Filtrar</button>
+    <a class="botao pequeno vazado" href="/cobrancas">Limpar</a>
+  </form>
+
+  <div class="alerta-box atencao" th:unless="${temSistemaDeCobranca}" style="margin-bottom:18px">
+    Nenhum sistema de cobrança ligado. Para enviar as cobranças, cadastre em Integrações uma
+    ligação do tipo Sistema de cobrança e crie nela a operação de criar cobrança.
+  </div>
+
+  <div class="tabela-caixa" th:if="${!cobrancas.isEmpty()}">
+    <table>
+      <thead>
+      <tr>
+        <th class="centro">Origem</th>
+        <th>Cliente</th>
+        <th>O que gerou</th>
+        <th class="centro">Período</th>
+        <th class="centro">Valor original</th>
+        <th class="centro">Desconto</th>
+        <th class="centro">Valor final</th>
+        <th class="centro">Vencimento</th>
+        <th class="centro">Cobrança</th>
+        <th class="centro">Pagamento</th>
+        <th></th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr th:each="c : ${cobrancas}">
+        <td class="centro" th:text="${c.origem.rotulo}">Pacote</td>
+        <td>
+          <b th:text="${c.pagador.nome}">Cliente</b>
+          <small th:if="${c.unidade != null}" th:text="${c.unidade.razaoSocial}"></small>
+        </td>
+        <td th:text="${c.origemResumida}">Pacote Essencial</td>
+        <td class="centro mono" th:text="${c.periodoResumido}">09/2026</td>
+        <td class="centro mono"
+            th:text="'R$ ' + ${#numbers.formatDecimal(c.valorOriginal, 1, 'POINT', 2, 'COMMA')}">R$ 0,00</td>
+        <td class="centro mono"
+            th:text="${c.temDesconto}
+                     ? 'R$ ' + ${#numbers.formatDecimal(c.desconto, 1, 'POINT', 2, 'COMMA')} : ''"></td>
+        <td class="centro mono" th:text="${c.valorResumido}">R$ 0,00</td>
+        <td class="centro mono"
+            th:text="${c.vencimento != null}
+                     ? ${#temporals.format(c.vencimento, 'dd/MM/yyyy')} : ''"></td>
+        <td class="centro">
+          <span class="marca-situacao"
+                th:classappend="${c.situacao.name() == 'PAGA'} ? 's-pago'
+                                : (${c.situacao.name() == 'PENDENTE'} ? 's-aberto'
+                                : (${c.situacao.name() == 'CANCELADA' or c.situacao.name() == 'SEM_VALOR'} ? 's-cancelado' : 's-parcial'))"
+                th:text="${c.situacao.rotulo}">pendente</span>
+        </td>
+        <td class="centro" th:text="${c.situacaoDoPagamento}">ainda sem título</td>
+        <td style="text-align:right">
+          <a class="botao pequeno vazado" th:href="@{'/cobrancas/' + ${c.id}}">Abrir</a>
+        </td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="vazio" th:if="${cobrancas.isEmpty()}">
+    Nenhuma cobrança com esses filtros. As de serviço nascem sozinhas quando a equipe registra
+    um atendimento que gera cobrança; as de pacote saem do botão acima.
+  </div>
+</main>
+
+<script th:replace="~{layout :: scripts}"></script>
+
+
+<script src="/js/janelas.js?v=1"></script>
+
+</body>
+</html>

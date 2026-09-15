@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head th:replace="~{layout :: cabeca('Clientes')}"></head>
+<body>
+<header th:replace="~{layout :: topo('clientes')}"></header>
+
+<main class="largo">
+  <div th:replace="~{layout :: recados}"></div>
+
+  <div class="cabecalho-pagina">
+    <div>
+      <span class="olho"><i></i>Carteira</span>
+      <h1>Clientes</h1>
+    </div>
+    <div class="acoes" style="margin:0">
+      <button class="botao vazado" type="button" data-abre="janela-colunas">Colunas</button>
+      <button class="botao vazado" type="button" data-abre="janela-importar-base">Importar base</button>
+      <button class="botao" type="button" data-abre="janela-novo-cliente">+ Novo cliente</button>
+    </div>
+  </div>
+
+  <form method="get" action="/clientes" id="filtros">
+  <div class="tabela-caixa" th:if="${!linhas.isEmpty()}">
+    <table class="carteira">
+      <thead>
+      <tr>
+        <th th:each="c : ${colunasDaPessoa}"
+            th:classappend="${filtro.temFiltro(c)} ? 'filtrada'">
+          <div th:replace="~{fragmentos/coluna :: cabecaDeColuna(${c})}"></div>
+        </th>
+        <th th:each="c : ${colunasDaUnidade}"
+            th:classappend="${filtro.temFiltro(c)} ? 'filtrada'">
+          <div th:replace="~{fragmentos/coluna :: cabecaDeColuna(${c})}"></div>
+        </th>
+      </tr>
+      </thead>
+      <tbody>
+      <th:block th:each="p : ${linhas}">
+        <tr th:each="u, it : ${p.unidades}">
+
+          <th:block th:if="${it.first}">
+            <td th:each="c : ${colunasDaPessoa}" th:rowspan="${p.unidades.size()}"
+                th:class="${c.name() == 'CLIENTE'} ? 'celula-pessoa' : 'celula-pessoa-extra'"
+                th:classappend="${c.alinhaADireita()} ? ' valor'">
+
+              <th:block th:if="${c.name() == 'CLIENTE'}">
+                <button type="button" class="nome-pessoa" th:if="${p.pagador != null}"
+                        th:data-perfil="@{'/clientes/' + ${p.pagador.id} + '/perfil'}">
+                  <span class="bolinha" th:text="${p.pagador.iniciais}">AB</span>
+                  <span class="quem">
+                    <b th:text="${p.nome}">Nome</b>
+                    <small class="mono" th:text="${p.documento} ?: 'sem CPF'">000</small>
+                  </span>
+                </button>
+                <span class="nome-pessoa sem-perfil" th:if="${p.pagador == null}">
+                  <span class="quem">
+                    <b th:text="${p.nome}">Nome</b>
+                    <small>sem pessoa vinculada</small>
+                  </span>
+                </span>
+              </th:block>
+
+              <th:block th:unless="${c.name() == 'CLIENTE'}">
+                <span th:if="${c.formato.name() == 'SITUACAO'}" class="marca-situacao"
+                      th:classappend="${p.situacao == 'crítico'} ? 's-vencido' : (${p.situacao == 'em atraso'} ? 's-parcial' : 's-aberto')"
+                      th:text="${p.situacao}">em dia</span>
+                <span th:unless="${c.formato.name() == 'SITUACAO'}" th:text="${p.valor(c)}"></span>
+              </th:block>
+            </td>
+          </th:block>
+
+          <td th:each="c : ${colunasDaUnidade}"
+              th:classappend="${c.alinhaADireita()} ? 'valor' : (${c.formato.name() == 'TEXTO' and c.name() != 'UNIDADE'} ? 'mono' : '')">
+            <b th:if="${c.name() == 'UNIDADE'}" th:text="${u.nome}">Unidade</b>
+            <span th:if="${c.formato.name() == 'SITUACAO'}" class="marca-situacao"
+                  th:classappend="${u.situacao == 'crítico'} ? 's-vencido' : (${u.situacao == 'em atraso'} ? 's-parcial' : 's-aberto')"
+                  th:text="${u.situacao}">em dia</span>
+            <span th:if="${c.name() != 'UNIDADE' and c.formato.name() != 'SITUACAO'}"
+                  th:text="${u.valor(c)}"></span>
+          </td>
+        </tr>
+      </th:block>
+      </tbody>
+    </table>
+  </div>
+  </form>
+
+  <div class="barra-filtros" th:if="${!filtro.vazio()}">
+    <span>Filtro aplicado nesta tabela.</span>
+    <a class="botao pequeno vazado" href="/clientes">Limpar filtros</a>
+  </div>
+
+  <div class="vazio" th:if="${linhas.isEmpty() and filtro.vazio()}">
+    Nenhum cliente nesta empresa ainda. Use o botão Novo cliente para cadastrar o primeiro.
+  </div>
+  <div class="vazio" th:if="${linhas.isEmpty() and !filtro.vazio()}">
+    Nenhum cliente atende a esse filtro. <a href="/clientes">Limpar filtros</a>.
+  </div>
+</main>
+
+<script th:replace="~{layout :: scripts}"></script>
+
+<dialog id="janela-colunas" class="janela estreita">
+  <form method="post" action="/clientes/colunas">
+    <div class="janela-topo">
+      <div>
+        <span class="olho"><i></i>Tabela</span>
+        <h2>Colunas da tela</h2>
+      </div>
+      <button type="button" class="fechar" data-fecha aria-label="Fechar">&#10005;</button>
+    </div>
+
+    <div class="janela-corpo">
+      <p class="dica">Só aparecem aqui campos que o sistema tem para mostrar. As colunas da
+        pessoa ficam junto do nome; as da unidade, na linha de cada unidade.</p>
+
+      <span class="rotulo-bloco">Da pessoa</span>
+      <div class="lista-colunas">
+        <label th:each="c : ${catalogoPessoa}" class="escolha"
+               th:classappend="${c.fixa} ? 'presa'">
+          <input type="checkbox" name="coluna" th:value="${c.name()}"
+                 th:checked="${colunas.contains(c)}" th:disabled="${c.fixa}">
+          <span th:text="${c.rotulo}">Coluna</span>
+          <small th:if="${c.fixa}">sempre visível</small>
+        </label>
+      </div>
+
+      <span class="rotulo-bloco">Da unidade</span>
+      <div class="lista-colunas">
+        <label th:each="c : ${catalogoUnidade}" class="escolha"
+               th:classappend="${c.fixa} ? 'presa'">
+          <input type="checkbox" name="coluna" th:value="${c.name()}"
+                 th:checked="${colunas.contains(c)}" th:disabled="${c.fixa}">
+          <span th:text="${c.rotulo}">Coluna</span>
+          <small th:if="${c.fixa}">sempre visível</small>
+        </label>
+      </div>
+    </div>
+
+    <div class="janela-pe">
+      <button type="button" class="botao vazado" data-fecha>Cancelar</button>
+      <button class="botao" type="submit">Salvar colunas</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="janela-novo-cliente" class="janela">
+  <form method="post" action="/clientes">
+    <div class="janela-topo">
+      <div>
+        <span class="olho"><i></i>Cadastro</span>
+        <h2>Novo cliente</h2>
+      </div>
+      <button type="button" class="fechar" data-fecha aria-label="Fechar">&#10005;</button>
+    </div>
+
+    <div class="janela-corpo">
+      <span class="rotulo-bloco">Quem paga</span>
+      <div class="campos">
+        <div>
+          <label for="nome">Nome</label>
+          <input id="nome" name="nome" required placeholder="Nome completo">
+        </div>
+        <div>
+          <label for="cpf">CPF</label>
+          <input id="cpf" name="cpf" placeholder="000.000.000-00">
+        </div>
+        <div>
+          <label for="whatsapp">WhatsApp</label>
+          <input id="whatsapp" name="whatsapp" placeholder="(11) 90000-0000">
+        </div>
+        <div>
+          <label for="email">E-mail</label>
+          <input id="email" name="email" type="email" placeholder="nome@empresa.com.br">
+        </div>
+      </div>
+
+      <span class="rotulo-bloco">Unidades desta pessoa</span>
+      <p class="dica">A unidade é de onde nasce a cobrança: um CNPJ, uma loja, uma filial ou um
+        contrato. A mesma pessoa pode ter quantas precisar. Em branco, a unidade recebe o nome
+        da pessoa.</p>
+
+      <div id="lista-unidades">
+        <div class="unidade-nova">
+          <div class="campos">
+            <div>
+              <label>Nome da unidade</label>
+              <input name="unidadeNome" placeholder="Razão social ou nome da loja">
+            </div>
+            <div>
+              <label>CNPJ da unidade</label>
+              <input name="unidadeDocumento" placeholder="00.000.000/0001-00">
+            </div>
+            <div>
+              <label>Código de origem</label>
+              <input name="unidadeCodigo" placeholder="código no sistema de origem">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="linha-botoes">
+        <button class="botao pequeno vazado" type="button" id="mais-unidade">+ Adicionar outro CNPJ</button>
+      </div>
+    </div>
+
+    <div class="janela-pe">
+      <button type="button" class="botao vazado" data-fecha>Cancelar</button>
+      <button class="botao" type="submit">Cadastrar cliente</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="janela-perfil" class="janela">
+  <div id="perfil-conteudo"></div>
+</dialog>
+
+
+<dialog id="janela-cpf-repetido" class="janela estreita" th:if="${pendente}">
+  <form method="post" action="/clientes">
+    <div class="janela-topo">
+      <div>
+        <span class="olho"><i></i>CPF já cadastrado</span>
+        <h2>Esse CPF já tem cliente</h2>
+      </div>
+      <button type="button" class="fechar" data-fecha aria-label="Fechar">&#10005;</button>
+    </div>
+    <div class="janela-corpo">
+      <p class="dica">
+        Já existe um cliente com esse CPF nesta empresa:
+        <b th:text="${existente.nome}">Nome</b>
+        <span class="mono" th:text="${existente.cpf}"></span>.
+      </p>
+      <p class="dica">
+        Quer somar as unidades informadas a esse cliente? Nenhum cadastro novo de pessoa é
+        criado, e o histórico do cliente continua inteiro.
+      </p>
+
+      <div class="tabela-caixa">
+        <table>
+          <thead>
+          <tr><th>Unidade</th><th class="centro">CNPJ</th><th class="centro">Código</th></tr>
+          </thead>
+          <tbody>
+          <tr th:each="u : ${pendenteUnidades}">
+            <td th:text="${u.nome()} ?: '(sem nome)'"></td>
+            <td class="mono centro" th:text="${u.documento()}"></td>
+            <td class="mono centro" th:text="${u.codigo()}"></td>
+          </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <input type="hidden" name="confirmado" value="true">
+      <input type="hidden" name="pagadorExistente" th:value="${existente.id}">
+      <input type="hidden" name="nome" th:value="${pendenteNome}">
+      <input type="hidden" name="cpf" th:value="${pendenteCpf}">
+      <input type="hidden" name="whatsapp" th:value="${pendenteWhatsapp}">
+      <input type="hidden" name="email" th:value="${pendenteEmail}">
+      <th:block th:each="u : ${pendenteUnidades}">
+        <input type="hidden" name="unidadeNome" th:value="${u.nome()}">
+        <input type="hidden" name="unidadeDocumento" th:value="${u.documento()}">
+        <input type="hidden" name="unidadeCodigo" th:value="${u.codigo()}">
+      </th:block>
+    </div>
+    <div class="janela-pe">
+      <button type="button" class="botao vazado" data-fecha>Não somar</button>
+      <button class="botao" type="submit">Somar ao cliente existente</button>
+    </div>
+  </form>
+</dialog>
+
+<script>
+  // Clona a linha de unidade, para cadastrar varios CNPJs de uma vez.
+  (function () {
+    const lista = document.getElementById('lista-unidades');
+    const mais = document.getElementById('mais-unidade');
+    if (!lista || !mais) return;
+    mais.addEventListener('click', function () {
+      const nova = lista.firstElementChild.cloneNode(true);
+      nova.querySelectorAll('input').forEach(function (campo) { campo.value = ''; });
+      lista.appendChild(nova);
+      const primeiro = nova.querySelector('input');
+      if (primeiro) primeiro.focus();
+    });
+    // A janela de CPF repetido abre sozinha quando o servidor manda.
+    const aviso = document.getElementById('janela-cpf-repetido');
+    if (aviso && typeof aviso.showModal === 'function') aviso.showModal();
+  })();
+</script>
+
+<dialog id="janela-importar-base" class="janela estreita">
+  <form method="post" action="/clientes/importar" enctype="multipart/form-data">
+    <div class="janela-topo">
+      <div>
+        <span class="olho"><i></i>Carteira</span>
+        <h2>Importar a base de clientes</h2>
+      </div>
+      <button type="button" class="fechar" data-fecha aria-label="Fechar">&#10005;</button>
+    </div>
+    <div class="janela-corpo">
+      <p class="dica">Arquivo de texto com cinco colunas separadas por ponto e vírgula:
+        nome da pessoa, CPF, razão social da unidade, CNPJ e WhatsApp. Exemplo:</p>
+      <div class="mono" style="border:1px solid var(--border-default); padding:12px; font-size:12.5px">
+        Maria Souza;123.456.789-00;Loja da Maria;12.345.678/0001-99;(11) 99999-0000
+      </div>
+      <div class="campos" style="margin-top:16px">
+        <div>
+          <label for="imp-arquivo">Arquivo</label>
+          <input id="imp-arquivo" name="arquivo" type="file" accept=".csv,.txt" required>
+        </div>
+      </div>
+      <p class="dica">Pessoa e unidade são reconhecidas pelo documento. Quem já existe é
+        reaproveitado, e nada vira cadastro repetido.</p>
+    </div>
+    <div class="janela-pe">
+      <button type="button" class="botao vazado" data-fecha>Cancelar</button>
+      <button class="botao" type="submit">Importar</button>
+    </div>
+  </form>
+</dialog>
+
+<script src="/js/janelas.js?v=1"></script>
+
+
+
+
+</body>
+</html>

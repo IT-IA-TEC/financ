@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head th:replace="~{layout :: cabeca('Disparos')}"></head>
+<body>
+<header th:replace="~{layout :: topo('cobranca')}"></header>
+
+<main class="largo">
+  <div th:replace="~{layout :: recados}"></div>
+
+  <div class="cabecalho-pagina com-resumo">
+    <div>
+      <span class="olho"><i></i>Cobrança em lote</span>
+      <h1>Disparos</h1>
+    </div>
+
+    <div class="cartoes-topo">
+      <div class="cartao-topo inverso">
+        <span class="rotulo">Na fila</span>
+        <b th:text="${naFila}">0</b>
+        <small>mensagens esperando sair</small>
+      </div>
+      <div class="cartao-topo">
+        <span class="rotulo">Disparos</span>
+        <b th:text="${lotes.size()}">0</b>
+        <small>já montados</small>
+      </div>
+      <div class="cartao-topo">
+        <span class="rotulo">Modelos</span>
+        <b th:text="${modelos.size()}">0</b>
+        <small>textos prontos para usar</small>
+      </div>
+      <div class="cartao-topo listrado">
+        <span class="rotulo">Chave PIX</span>
+        <b th:text="${empresa.chavePix != null} ? 'ok' : 'falta'">ok</b>
+        <small th:text="${empresa.chavePix != null}
+                        ? 'entra sozinha no texto' : 'cadastre para entrar no texto'"></small>
+      </div>
+    </div>
+
+    <div class="acoes" style="margin:0">
+      <button class="botao" type="button" data-abre="janela-disparo">+ Novo disparo</button>
+    </div>
+  </div>
+
+  <nav th:replace="~{layout :: abas-cobranca('disparos')}" class="modulo"></nav>
+
+  <div class="alerta-box" style="margin-bottom:18px">
+    Todo disparo nasce como prévia: o sistema mostra quem vai receber, quem ficou de fora e por
+    quê. Nada sai antes de alguém confirmar.
+  </div>
+
+  <div class="tabela-caixa" th:if="${!lotes.isEmpty()}">
+    <table>
+      <thead>
+      <tr>
+        <th class="centro">Quando</th>
+        <th>Disparo</th>
+        <th>Recorte</th>
+        <th class="centro">Canal</th>
+        <th class="centro">Vão receber</th>
+        <th class="centro">De fora</th>
+        <th class="centro">Valor</th>
+        <th class="centro">Situação</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr th:each="l : ${lotes}">
+        <td class="centro mono" th:text="${#temporals.format(l.criadoEm, 'dd/MM HH:mm')}">01/01</td>
+        <td><a th:href="@{'/disparos/' + ${l.id}}" th:text="${l.nome}">disparo</a></td>
+        <td th:text="${l.filtro}"></td>
+        <td class="centro" th:text="${l.canal.toLowerCase()}"></td>
+        <td class="centro mono" th:text="${l.quantidade}">0</td>
+        <td class="centro mono" th:text="${l.fora}">0</td>
+        <td class="centro mono"
+            th:text="'R$ ' + ${#numbers.formatDecimal(l.valorTotal, 1, 'POINT', 2, 'COMMA')}"></td>
+        <td class="centro">
+          <span class="marca-situacao"
+                th:classappend="${l.situacao == 'CONCLUIDO'} ? 's-pago'
+                                : (${l.situacao == 'CANCELADO'} ? 's-cancelado'
+                                : (${l.situacao == 'PREVIA'} ? 's-aberto' : 's-parcial'))"
+                th:text="${l.situacaoLegivel}">prévia</span>
+        </td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="vazio" th:if="${lotes.isEmpty()}">
+    Nenhum disparo montado ainda.
+  </div>
+</main>
+
+<script th:replace="~{layout :: scripts}"></script>
+
+<dialog id="janela-disparo" class="janela">
+  <form method="post" action="/disparos">
+    <div class="janela-topo">
+      <div>
+        <span class="olho"><i></i>Cobrança em lote</span>
+        <h2>Novo disparo</h2>
+      </div>
+      <button type="button" class="fechar" data-fecha aria-label="Fechar">&#10005;</button>
+    </div>
+    <div class="janela-corpo">
+      <p class="dica">Escolha o texto e o recorte. O sistema monta a prévia, e você confere antes
+        de qualquer mensagem sair.</p>
+      <div class="campos">
+        <div>
+          <label for="ds-nome">Nome deste disparo</label>
+          <input id="ds-nome" name="nome" placeholder="Cobrança dos vencidos">
+        </div>
+        <div>
+          <label for="ds-modelo">Texto</label>
+          <select id="ds-modelo" name="modeloId" required>
+            <option th:each="m : ${modelos}" th:value="${m.id}"
+                    th:text="${m.nome} + ' · ' + ${m.momentoLegivel}"></option>
+          </select>
+        </div>
+        <div>
+          <label for="ds-canal">Canal</label>
+          <select id="ds-canal" name="canal">
+            <option value="WHATSAPP">WhatsApp</option>
+            <option value="EMAIL">E-mail</option>
+          </select>
+        </div>
+      </div>
+      <div class="campos" style="margin-top:16px">
+        <div>
+          <label for="ds-visao">Quem entra</label>
+          <select id="ds-visao" name="visao">
+            <option value="vencidos">tudo que está vencido</option>
+            <option value="no_dia">vence hoje</option>
+            <option value="vence_em">vence nos próximos dias</option>
+            <option value="faixa_de_atraso">faixa de atraso</option>
+            <option value="todos">tudo que está em aberto</option>
+          </select>
+        </div>
+        <div>
+          <label for="ds-de">De (dias)</label>
+          <input id="ds-de" name="de" inputmode="numeric" placeholder="1">
+        </div>
+        <div>
+          <label for="ds-ate">Até (dias)</label>
+          <input id="ds-ate" name="ate" inputmode="numeric" placeholder="30">
+        </div>
+      </div>
+    </div>
+    <div class="janela-pe">
+      <button type="button" class="botao vazado" data-fecha>Cancelar</button>
+      <button class="botao" type="submit">Montar a prévia</button>
+    </div>
+  </form>
+</dialog>
+
+<script src="/js/janelas.js?v=1"></script>
+
+</body>
+</html>

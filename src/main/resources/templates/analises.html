@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head th:replace="~{layout :: cabeca('Análises')}"></head>
+<body>
+<header th:replace="~{layout :: topo('titulos')}"></header>
+
+<main class="largo">
+  <div th:replace="~{layout :: recados}"></div>
+
+  <div class="cabecalho-pagina com-resumo">
+    <div>
+      <span class="olho"><i></i>Livro</span>
+      <h1>Contas a receber</h1>
+      <nav th:replace="~{layout :: abas-receber('analises')}"></nav>
+    </div>
+
+    <div class="cartoes-topo">
+      <div class="cartao-topo inverso">
+        <span class="rotulo">Previsto em 6 meses</span>
+        <b th:text="'R$ ' + ${#numbers.formatDecimal(previsao.totalEstimado(), 1, 'POINT', 2, 'COMMA')}">R$ 0,00</b>
+        <small th:text="'de R$ ' + ${#numbers.formatDecimal(previsao.totalAVencer(), 1, 'POINT', 2, 'COMMA')} + ' a vencer'"></small>
+      </div>
+      <div class="cartao-topo">
+        <span class="rotulo">Taxa de conversão</span>
+        <b th:text="${previsao.taxaEmPorcento()} + '%'">0%</b>
+        <small>do cobrado vira dinheiro</small>
+      </div>
+      <div class="cartao-topo" th:classappend="${previsao.vencido.signum() > 0} ? 'alerta'">
+        <span class="rotulo">Vencido sem previsão</span>
+        <b th:text="'R$ ' + ${#numbers.formatDecimal(previsao.vencido, 1, 'POINT', 2, 'COMMA')}">R$ 0,00</b>
+        <small>fora da projeção, precisa ser trabalhado</small>
+      </div>
+      <div class="cartao-topo listrado">
+        <span class="rotulo">Concentração</span>
+        <b th:text="${concentracao} + '%'">0%</b>
+        <small th:text="'nos ' + ${ranking.size()} + ' maiores devedores'"></small>
+      </div>
+    </div>
+
+    <div class="acoes" style="margin:0">
+      <a class="botao" href="/analises/exportar">Exportar para a contabilidade</a>
+    </div>
+  </div>
+
+  <!-- --------------------------------------------- curva de recuperação -->
+  <span class="rotulo-bloco">Curva de recuperação, últimos 12 meses</span>
+  <div class="tabela-caixa">
+    <table>
+      <thead>
+      <tr>
+        <th class="centro">Mês</th>
+        <th class="centro">Cobrado, pela competência</th>
+        <th class="centro">Recebido, pela data do dinheiro</th>
+        <th class="centro">Diferença</th>
+        <th class="centro">Conversão</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr th:each="l : ${curva}">
+        <td class="centro mono" th:text="${l.mes}">09/2026</td>
+        <td class="centro mono"
+            th:text="'R$ ' + ${#numbers.formatDecimal(l.cobrado, 1, 'POINT', 2, 'COMMA')}">R$ 0,00</td>
+        <td class="centro mono"
+            th:text="'R$ ' + ${#numbers.formatDecimal(l.recebido, 1, 'POINT', 2, 'COMMA')}">R$ 0,00</td>
+        <td class="centro mono"
+            th:text="'R$ ' + ${#numbers.formatDecimal(l.diferenca(), 1, 'POINT', 2, 'COMMA')}">R$ 0,00</td>
+        <td class="centro">
+          <span class="marca-situacao"
+                th:classappend="${l.conversao().doubleValue() >= 80} ? 's-pago'
+                                : (${l.conversao().doubleValue() >= 40} ? 's-parcial' : 's-aberto')"
+                th:text="${l.conversao()} + '%'">0%</span>
+        </td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="dica">Os dois números usam critérios diferentes de propósito: o cobrado é do mês da
+    competência, o recebido é do dia em que o dinheiro entrou. Por isso a diferença de um mês
+    não é o que falta receber daquele mês.</p>
+
+  <!-- -------------------------------------------------- previsão de entrada -->
+  <span class="rotulo-bloco">Previsão de entrada, próximos 6 meses</span>
+  <div class="tabela-caixa">
+    <table>
+      <thead>
+      <tr>
+        <th class="centro">Mês</th>
+        <th class="centro">A vencer</th>
+        <th class="centro">Estimativa de entrada</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr th:each="l : ${previsao.meses}">
+        <td class="centro mono" th:text="${l.mes}">10/2026</td>
+        <td class="centro mono"
+            th:text="'R$ ' + ${#numbers.formatDecimal(l.cobrado, 1, 'POINT', 2, 'COMMA')}">R$ 0,00</td>
+        <td class="centro mono"
+            th:text="'R$ ' + ${#numbers.formatDecimal(l.recebido, 1, 'POINT', 2, 'COMMA')}">R$ 0,00</td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="dica">A estimativa é o que vence multiplicado pela taxa de conversão de
+    <b th:text="${previsao.taxaEmPorcento()} + '%'">0%</b>, tirada do próprio histórico da
+    empresa. É previsão, não promessa, e o que já está vencido fica de fora dela.</p>
+
+  <!-- --------------------------------------------------- ranking de risco -->
+  <span class="rotulo-bloco">Ranking de risco e concentração</span>
+  <div class="tabela-caixa" th:if="${!ranking.isEmpty()}">
+    <table>
+      <thead>
+      <tr>
+        <th>Cliente</th>
+        <th class="centro">Em aberto</th>
+        <th class="centro">Do qual vencido</th>
+        <th class="centro">Maior atraso</th>
+        <th class="centro">Parte do total</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr th:each="l : ${ranking}">
+        <td><b th:text="${l.cliente}">Cliente</b></td>
+        <td class="centro mono"
+            th:text="'R$ ' + ${#numbers.formatDecimal(l.emAberto, 1, 'POINT', 2, 'COMMA')}">R$ 0,00</td>
+        <td class="centro mono"
+            th:text="'R$ ' + ${#numbers.formatDecimal(l.vencido, 1, 'POINT', 2, 'COMMA')}">R$ 0,00</td>
+        <td class="centro mono" th:text="${l.maiorAtraso} + ' dias'">0 dias</td>
+        <td class="centro">
+          <span class="marca-situacao"
+                th:classappend="${l.participacao.doubleValue() >= 20} ? 's-vencido' : 's-aberto'"
+                th:text="${l.participacao} + '%'">0%</span>
+        </td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="vazio" th:if="${ranking.isEmpty()}">
+    Nada em aberto nesta empresa.
+  </div>
+  <p class="dica" th:if="${!ranking.isEmpty()}">
+    Estes <span th:text="${ranking.size()}">0</span> clientes concentram
+    <b th:text="${concentracao} + '%'">0%</b> de tudo que está em aberto. Quanto maior essa
+    conta, mais o resultado depende de poucas conversas.
+  </p>
+</main>
+
+<script th:replace="~{layout :: scripts}"></script>
+
+</body>
+</html>

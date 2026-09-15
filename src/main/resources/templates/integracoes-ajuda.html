@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head th:replace="~{layout :: cabeca('Tipos de integração')}"></head>
+<body>
+<header th:replace="~{layout :: topo('integracoes')}"></header>
+
+<main>
+  <div th:replace="~{layout :: recados}"></div>
+
+  <div class="cabecalho-pagina">
+    <div>
+      <span class="olho"><i></i>Documentação</span>
+      <h1>O que dá para integrar</h1>
+      <p>Toda ligação tem duas decisões: como ela funciona e como o outro lado sabe que somos nós.</p>
+    </div>
+    <a class="botao vazado" href="/integracoes">Voltar</a>
+  </div>
+
+  <div class="secao">
+    <h2>Como a ligação funciona</h2>
+    <div class="fichas-ajuda">
+      <article class="ficha-ajuda" th:each="t : ${tipos}">
+        <div class="ficha-topo">
+          <b th:text="${t.rotulo}">Tipo</b>
+          <span class="marca-situacao s-aberto" th:if="${t.chamaParaFora}">sai daqui</span>
+          <span class="marca-situacao s-parcial" th:if="${t.recebeDeFora}">recebe de fora</span>
+        </div>
+        <p class="resumo" th:text="${t.resumo}"></p>
+
+        <span class="rotulo-bloco">O que dá para fazer</span>
+        <ul>
+          <li th:each="x : ${t.OQueDaParaFazer}" th:text="${x}"></li>
+        </ul>
+
+        <span class="rotulo-bloco">Como se configura</span>
+        <ol>
+          <li th:each="x : ${t.comoFunciona}" th:text="${x}"></li>
+        </ol>
+
+        <span class="rotulo-bloco">Formas de acesso aceitas</span>
+        <div class="capacidades">
+          <span class="marca-situacao s-aberto" th:each="a : ${t.autenticacoes}"
+                th:text="${a.rotulo}"></span>
+        </div>
+      </article>
+    </div>
+  </div>
+
+  <div class="secao">
+    <h2>Como o outro lado sabe que somos nós</h2>
+    <div class="tabela-caixa">
+      <table>
+        <thead>
+        <tr>
+          <th>Forma de acesso</th>
+          <th>Quando usar</th>
+          <th>O que você precisa ter em mãos</th>
+          <th>Situação</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="a : ${autenticacoes}">
+          <td><b th:text="${a.rotulo}">Forma</b></td>
+          <td th:text="${a.resumo}"></td>
+          <td>
+            <span th:if="${a.campos.isEmpty()}">nada</span>
+            <span th:unless="${a.campos.isEmpty()}" th:each="c,it : ${a.campos}"
+                  th:text="${c.rotulo()} + (${it.last} ? '' : ' · ')"></span>
+          </td>
+          <td>
+            <span class="marca-situacao" th:classappend="${a.executaHoje()} ? 's-pago' : 's-parcial'"
+                  th:text="${a.executaHoje()} ? 'pronta' : 'guarda, execução depois'"></span>
+          </td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="secao">
+    <h2>Modelos prontos</h2>
+    <p style="color:var(--text-secondary);font-size:14px;margin-bottom:16px">
+      Cada modelo é um atalho: preenche tipo, acesso e operações de uma vez. Os caminhos das
+      operações são ponto de partida, então confira na documentação do provedor antes de ligar
+      em produção.
+    </p>
+    <div class="tabela-caixa">
+      <table>
+        <thead>
+        <tr>
+          <th>Modelo</th>
+          <th>Para que serve</th>
+          <th>Tipo</th>
+          <th>Acesso</th>
+          <th>Operações que já vêm</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="c : ${conectores}">
+          <td><b th:text="${c.rotulo}">Modelo</b></td>
+          <td th:text="${c.resumo}"></td>
+          <td th:text="${c.tipoSugerido.rotulo}"></td>
+          <td th:text="${c.autenticacaoSugerida.rotulo}"></td>
+          <td>
+            <span th:if="${c.operacoesSugeridas.isEmpty()}">nenhuma, você cadastra</span>
+            <span class="capacidades" th:unless="${c.operacoesSugeridas.isEmpty()}">
+              <span class="marca-situacao s-aberto" th:each="o : ${c.operacoesSugeridas}"
+                    th:text="${o.verbo()} + ' ' + ${o.nome()}"></span>
+            </span>
+          </td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="secao">
+    <h2>O que o módulo garante, em qualquer integração</h2>
+    <div class="grade-garantias">
+      <div>
+        <b>Credencial cifrada</b>
+        <p>Guardada cifrada e nunca devolvida para a tela. Segredo salvo aparece só com os
+          últimos dígitos.</p>
+      </div>
+      <div>
+        <b>Nada roda sem estar cadastrado</b>
+        <p>Só existe chamada para fora se a operação estiver cadastrada, com verbo e caminho.</p>
+      </div>
+      <div>
+        <b>Tudo fica registrado</b>
+        <p>Cada entrada e cada saída vira registro com data, situação e conteúdo, guardado bruto.</p>
+      </div>
+      <div>
+        <b>Falha passageira tenta de novo</b>
+        <p>Tempo limite, número de tentativas e espera entre elas são configurados por integração.</p>
+      </div>
+      <div>
+        <b>Endereço de recebimento secreto</b>
+        <p>Cada integração tem o seu, com trecho secreto trocável. Desligada, a porta não aceita nada.</p>
+      </div>
+      <div>
+        <b>Separação por empresa</b>
+        <p>Integração pertence a uma empresa. Uma nunca enxerga nem recebe pela outra.</p>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script th:replace="~{layout :: scripts}"></script>
+
+</body>
+</html>

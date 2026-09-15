@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head th:replace="~{layout :: cabeca('Esteira')}"></head>
+<body>
+<header th:replace="~{layout :: topo('cobranca')}"></header>
+
+<main class="largo">
+  <div th:replace="~{layout :: recados}"></div>
+
+  <div class="cabecalho-pagina com-resumo">
+    <div>
+      <span class="olho"><i></i>Quem deve, e há quanto tempo</span>
+      <h1>Esteira</h1>
+    </div>
+
+    <div class="cartoes-topo">
+      <div class="cartao-topo inverso">
+        <span class="rotulo">Vencido</span>
+        <b th:text="'R$ ' + ${#numbers.formatDecimal(vencido, 1, 'POINT', 2, 'COMMA')}">R$ 0,00</b>
+        <small th:text="${quantosVencidos} + ' cliente(s) em atraso'">0</small>
+      </div>
+      <div class="cartao-topo">
+        <span class="rotulo">Até 15 dias</span>
+        <b th:text="'R$ ' + ${#numbers.formatDecimal(
+             totais['1_7'].add(totais['8_15']), 1, 'POINT', 2, 'COMMA')}">R$ 0,00</b>
+        <small>ainda dá para resolver na conversa</small>
+      </div>
+      <div class="cartao-topo">
+        <span class="rotulo">Mais de 30 dias</span>
+        <b th:text="'R$ ' + ${#numbers.formatDecimal(
+             totais['31_60'].add(totais['61_mais']), 1, 'POINT', 2, 'COMMA')}">R$ 0,00</b>
+        <small>o dinheiro que está mais difícil</small>
+      </div>
+      <div class="cartao-topo listrado">
+        <span class="rotulo">Para hoje</span>
+        <b th:text="${paraHoje.size()}">0</b>
+        <small>ações marcadas, vencidas ou de hoje</small>
+      </div>
+    </div>
+  </div>
+
+  <nav th:replace="~{layout :: abas-cobranca('esteira')}" class="modulo"></nav>
+
+  <div class="alerta-box" style="margin-bottom:18px">
+    A faixa é calculada pelo vencimento: ninguém arrasta caso de coluna. O que se anota aqui é o
+    que o sistema não tem como saber, como o combinado com o cliente e quem está cuidando.
+    Caso em acordo, contestado ou no jurídico fica fora da cobrança automática da régua.
+  </div>
+
+  <div class="esteira-quadro">
+    <div class="coluna-esteira" th:each="c : ${quadro}">
+      <div class="topo-coluna">
+        <b th:text="${c.key.nome}">faixa</b>
+        <span class="mono" th:text="${c.value.size()} + ' · R$ '
+              + ${#numbers.formatDecimal(totais[c.key.chave], 1, 'POINT', 2, 'COMMA')}"></span>
+      </div>
+
+      <div class="cartao-caso" th:each="e : ${c.value}">
+        <b th:text="${e.quem}">cliente</b>
+        <span class="valor mono"
+              th:text="'R$ ' + ${#numbers.formatDecimal(e.emAberto, 1, 'POINT', 2, 'COMMA')}"></span>
+        <span class="detalhe" th:text="${e.documentos} + ' documento(s)'
+              + (${e.maiorAtraso > 0} ? ' · ' + ${e.maiorAtraso} + ' dias' : '')"></span>
+        <span class="marca-situacao"
+              th:classappend="${e.caso == null} ? 's-aberto'
+                              : (${e.caso.situacao == 'EM_ACORDO' or e.caso.situacao == 'PROMESSA'}
+                                 ? 's-parcial'
+                                 : (${e.caso.situacao == 'JURIDICO'} ? 's-cancelado' : 's-aberto'))"
+              th:text="${e.situacao()}">em cobrança</span>
+        <span class="detalhe" th:if="${e.caso != null and e.caso.proximaAcao != null}"
+              th:text="${e.caso.proximaAcao}
+                       + (${e.caso.proximaData != null}
+                          ? ' · ' + ${#temporals.format(e.caso.proximaData, 'dd/MM')} : '')"></span>
+        <span class="detalhe alerta" th:if="${e.semFalarHaMuito(hoje) and e.maiorAtraso > 0}">
+          sem falar com ele há mais de 7 dias
+        </span>
+
+        <div class="acoes-caso">
+          <a class="botao pequeno vazado" th:href="@{'/conversas/' + ${e.unidadeId}}">Conversar</a>
+          <button class="botao pequeno" type="button"
+                  th:data-abre="'janela-caso-' + ${e.unidadeId}">Anotar</button>
+        </div>
+      </div>
+
+      <div class="vazio-coluna" th:if="${c.value.isEmpty()}">ninguém aqui</div>
+    </div>
+  </div>
+
+  <span class="rotulo-bloco" th:if="${!paraHoje.isEmpty()}">O que está marcado para hoje</span>
+  <div class="tabela-caixa" th:if="${!paraHoje.isEmpty()}">
+    <table>
+      <thead>
+      <tr>
+        <th>Cliente</th>
+        <th>O que fazer</th>
+        <th class="centro">Quando</th>
+        <th>Quem</th>
+        <th class="centro">Situação</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr th:each="c : ${paraHoje}">
+        <td><a th:href="@{'/conversas/' + ${c.unidadeId}}"
+               th:text="${nomes[c.unidadeId]} ?: 'cliente'">cliente</a></td>
+        <td th:text="${c.proximaAcao}"></td>
+        <td class="centro mono"
+            th:text="${#temporals.format(c.proximaData, 'dd/MM/yyyy')}"></td>
+        <td th:text="${c.responsavel}"></td>
+        <td class="centro">
+          <span class="marca-situacao"
+                th:classappend="${c.atrasado(hoje)} ? 's-vencido' : 's-aberto'"
+                th:text="${c.situacaoLegivel}"></span>
+        </td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+</main>
+
+<script th:replace="~{layout :: scripts}"></script>
+
+<th:block th:each="c : ${quadro}">
+  <dialog th:each="e : ${c.value}" th:id="'janela-caso-' + ${e.unidadeId}" class="janela">
+    <form method="post" th:action="@{'/esteira/' + ${e.unidadeId}}">
+      <div class="janela-topo">
+        <div>
+          <span class="olho"><i></i>Caso de cobrança</span>
+          <h2 th:text="${e.quem}">Cliente</h2>
+        </div>
+        <button type="button" class="fechar" data-fecha aria-label="Fechar">&#10005;</button>
+      </div>
+      <div class="janela-corpo">
+        <div class="campos">
+          <div>
+            <label th:for="'st-' + ${e.unidadeId}">Situação</label>
+            <select th:id="'st-' + ${e.unidadeId}" name="situacao">
+              <option th:each="s : ${situacoes}" th:value="${s}"
+                      th:selected="${e.caso != null and e.caso.situacao == s}"
+                      th:text="${s == 'EM_COBRANCA'} ? 'em cobrança'
+                               : (${s == 'PROMESSA'} ? 'promessa de pagamento'
+                               : (${s == 'EM_ACORDO'} ? 'em acordo'
+                               : (${s == 'CONTESTADO'} ? 'contestado'
+                               : (${s == 'PARADO'} ? 'parado' : 'jurídico'))))"></option>
+            </select>
+          </div>
+          <div>
+            <label th:for="'rs-' + ${e.unidadeId}">Quem está cuidando</label>
+            <input th:id="'rs-' + ${e.unidadeId}" name="responsavel"
+                   th:value="${e.caso != null} ? ${e.caso.responsavel} : ''">
+          </div>
+          <div>
+            <label th:for="'dt-' + ${e.unidadeId}">Próxima data</label>
+            <input th:id="'dt-' + ${e.unidadeId}" name="proximaData" type="date"
+                   th:value="${e.caso != null} ? ${e.caso.proximaData} : ''">
+          </div>
+        </div>
+        <div class="campos" style="margin-top:16px">
+          <div style="grid-column:1/-1">
+            <label th:for="'ac-' + ${e.unidadeId}">Próxima ação</label>
+            <input th:id="'ac-' + ${e.unidadeId}" name="proximaAcao"
+                   placeholder="ligar para combinar a data do pagamento"
+                   th:value="${e.caso != null} ? ${e.caso.proximaAcao} : ''">
+          </div>
+          <div style="grid-column:1/-1">
+            <label th:for="'ob-' + ${e.unidadeId}">Observação</label>
+            <textarea th:id="'ob-' + ${e.unidadeId}" name="observacao" rows="3"
+                      th:text="${e.caso != null} ? ${e.caso.observacao} : ''"></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="janela-pe">
+        <button type="button" class="botao vazado" data-fecha>Cancelar</button>
+        <button class="botao" type="submit">Guardar</button>
+      </div>
+    </form>
+  </dialog>
+</th:block>
+
+<script src="/js/janelas.js?v=1"></script>
+
+</body>
+</html>

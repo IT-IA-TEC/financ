@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<body>
+<!-- A unidade aberta por dentro do perfil, com o caminho de volta no topo. -->
+<div class="janela-topo">
+  <div class="identidade">
+    <button type="button" class="voltar" th:if="${pagador != null}"
+            th:data-perfil="@{'/clientes/' + ${pagador.id} + '/perfil'}"
+            title="Voltar para a pessoa">&#8592;</button>
+    <div>
+      <span class="olho"><i></i>Empresa do cliente</span>
+      <h2 th:text="${unidade.razaoSocial}">Unidade</h2>
+      <span class="mono sub" th:text="${unidade.cnpjCpf} ?: 'sem CNPJ'"></span>
+    </div>
+  </div>
+  <button type="button" class="fechar" data-fecha aria-label="Fechar">&#10005;</button>
+</div>
+
+<nav class="abas-janela">
+  <button type="button" th:classappend="${aba == 'dados'} ? 'ativa'"
+          th:data-perfil="@{'/clientes/unidades/' + ${unidade.id} + '?aba=dados'}">Dados e documentos</button>
+  <button type="button" th:classappend="${aba == 'enderecos'} ? 'ativa'"
+          th:data-perfil="@{'/clientes/unidades/' + ${unidade.id} + '?aba=enderecos'}">Endereços</button>
+  <button type="button" th:classappend="${aba == 'contatos'} ? 'ativa'"
+          th:data-perfil="@{'/clientes/unidades/' + ${unidade.id} + '?aba=contatos'}">Contatos</button>
+  <button type="button" th:classappend="${aba == 'cobranca'} ? 'ativa'"
+          th:data-perfil="@{'/clientes/unidades/' + ${unidade.id} + '?aba=cobranca'}">Cobrança</button>
+  <button type="button" th:classappend="${aba == 'titulos'} ? 'ativa'"
+          th:data-perfil="@{'/clientes/unidades/' + ${unidade.id} + '?aba=titulos'}">Títulos</button>
+  <button type="button" th:classappend="${aba == 'documentos'} ? 'ativa'"
+          th:data-perfil="@{'/clientes/unidades/' + ${unidade.id} + '?aba=documentos'}">Documentos</button>
+  <button type="button" th:classappend="${aba == 'historico'} ? 'ativa'"
+          th:data-perfil="@{'/clientes/unidades/' + ${unidade.id} + '?aba=historico'}">Histórico</button>
+</nav>
+
+<div class="janela-corpo">
+  <p class="trilha" th:if="${pagador != null}">
+    <button type="button" class="elo" th:data-perfil="@{'/clientes/' + ${pagador.id} + '/perfil'}"
+            th:text="${pagador.nome}">Pessoa</button>
+    <span th:text="' · ' + ${unidade.razaoSocial}"></span>
+  </p>
+
+  <div class="quadros">
+    <div class="quadro forte">
+      <span class="rotulo">Em aberto</span>
+      <span class="numero" th:text="${'R$ ' + #numbers.formatDecimal(linha.emAberto, 1, 'POINT', 2, 'COMMA')}">R$ 0,00</span>
+      <small th:text="${linha.quantidadeTitulos} + ' título(s)'"></small>
+    </div>
+    <div class="quadro">
+      <span class="rotulo">Vencido</span>
+      <span class="numero vermelho" th:text="${'R$ ' + #numbers.formatDecimal(linha.vencido, 1, 'POINT', 2, 'COMMA')}">R$ 0,00</span>
+      <small th:text="${linha.maiorAtraso > 0} ? 'maior atraso de ' + ${linha.maiorAtraso} + ' dias' : 'nada vencido'"></small>
+    </div>
+    <div class="quadro">
+      <span class="rotulo">Situação na Receita</span>
+      <span class="numero" style="font-size:17px" th:text="${unidade.situacaoCadastral} ?: 'não consultada'"></span>
+      <small th:text="'dados de: ' + ${unidade.fonte}"></small>
+    </div>
+    <div class="quadro">
+      <span class="rotulo">Próximo vencimento</span>
+      <span class="numero mono" style="font-size:17px"
+            th:text="${linha.proximoVencimento != null}
+                     ? ${#temporals.format(linha.proximoVencimento, 'dd/MM/yyyy')} : 'nada a vencer'"></span>
+      <small th:text="${linha.ultimoRecebimento != null}
+                      ? 'último recebimento em ' + ${#temporals.format(linha.ultimoRecebimento, 'dd/MM/yyyy')}
+                      : 'nunca recebeu'"></small>
+    </div>
+  </div>
+
+  <!-- ------------------------------------------------------------- dados -->
+  <th:block th:if="${aba == 'dados'}">
+    <div class="linha-botoes" style="margin-top:0;margin-bottom:8px">
+      <form method="post" th:action="@{'/clientes/unidades/' + ${unidade.id} + '/consultar-cnpj'}"
+            th:if="${consultaDisponivel}">
+        <button class="botao pequeno vazado" type="submit">Buscar dados na Receita</button>
+      </form>
+      <span class="aviso-linha" th:unless="${consultaDisponivel}">
+        Para buscar da Receita, configure a integração Consulta de CNPJ em Integrações.
+      </span>
+    </div>
+
+    <form method="post" th:action="@{'/clientes/unidades/' + ${unidade.id} + '/dados'}">
+      <span class="rotulo-bloco" style="margin-top:0">Identificação da empresa</span>
+      <div class="campos">
+        <div>
+          <label th:for="'u-razao-' + ${unidade.id}">Razão social</label>
+          <input th:id="'u-razao-' + ${unidade.id}" name="razaoSocial" th:value="${unidade.razaoSocial}" required>
+        </div>
+        <div>
+          <label th:for="'u-fant-' + ${unidade.id}">Nome fantasia</label>
+          <input th:id="'u-fant-' + ${unidade.id}" name="nomeFantasia" th:value="${unidade.nomeFantasia}">
+        </div>
+        <div>
+          <label th:for="'u-cnpj-' + ${unidade.id}">CNPJ</label>
+          <input th:id="'u-cnpj-' + ${unidade.id}" name="cnpjCpf" th:value="${unidade.cnpjCpf}">
+        </div>
+        <div>
+          <label th:for="'u-cod-' + ${unidade.id}">Código de origem</label>
+          <input th:id="'u-cod-' + ${unidade.id}" name="codigoExterno" th:value="${unidade.codigoExterno}">
+        </div>
+      </div>
+
+      <span class="rotulo-bloco">Dados fiscais</span>
+      <div class="campos">
+        <div>
+          <label th:for="'u-ie-' + ${unidade.id}">Inscrição estadual</label>
+          <input th:id="'u-ie-' + ${unidade.id}" name="inscricaoEstadual" th:value="${unidade.inscricaoEstadual}">
+        </div>
+        <div>
+          <label th:for="'u-im-' + ${unidade.id}">Inscrição municipal</label>
+          <input th:id="'u-im-' + ${unidade.id}" name="inscricaoMunicipal" th:value="${unidade.inscricaoMunicipal}">
+        </div>
+        <div>
+          <label th:for="'u-reg-' + ${unidade.id}">Regime tributário</label>
+          <select th:id="'u-reg-' + ${unidade.id}" name="regimeTributario">
+            <option value="">não informado</option>
+            <option value="SIMPLES NACIONAL" th:selected="${unidade.regimeTributario == 'SIMPLES NACIONAL'}">Simples Nacional</option>
+            <option value="LUCRO PRESUMIDO" th:selected="${unidade.regimeTributario == 'LUCRO PRESUMIDO'}">Lucro Presumido</option>
+            <option value="LUCRO REAL" th:selected="${unidade.regimeTributario == 'LUCRO REAL'}">Lucro Real</option>
+            <option value="MEI" th:selected="${unidade.regimeTributario == 'MEI'}">MEI</option>
+          </select>
+        </div>
+        <div>
+          <label th:for="'u-porte-' + ${unidade.id}">Porte</label>
+          <input th:id="'u-porte-' + ${unidade.id}" name="porte" th:value="${unidade.porte}">
+        </div>
+        <div>
+          <label th:for="'u-cnae-' + ${unidade.id}">CNAE principal</label>
+          <input th:id="'u-cnae-' + ${unidade.id}" name="cnaePrincipal" th:value="${unidade.cnaePrincipal}">
+        </div>
+        <div>
+          <label th:for="'u-cnaed-' + ${unidade.id}">Atividade</label>
+          <input th:id="'u-cnaed-' + ${unidade.id}" name="cnaeDescricao" th:value="${unidade.cnaeDescricao}">
+        </div>
+        <div>
+          <label th:for="'u-abert-' + ${unidade.id}">Data de abertura</label>
+          <input th:id="'u-abert-' + ${unidade.id}" name="dataAbertura" type="date"
+                 th:value="${unidade.dataAbertura != null} ? ${#temporals.format(unidade.dataAbertura, 'yyyy-MM-dd')} : ''">
+        </div>
+        <div>
+          <label th:for="'u-sit-' + ${unidade.id}">Situação cadastral</label>
+          <input th:id="'u-sit-' + ${unidade.id}" name="situacaoCadastral" th:value="${unidade.situacaoCadastral}">
+        </div>
+        <div>
+          <label th:for="'u-simples-' + ${unidade.id}">Optante pelo Simples</label>
+          <select th:id="'u-simples-' + ${unidade.id}" name="optanteSimples">
+            <option value="">não informado</option>
+            <option value="true" th:selected="${unidade.optanteSimples != null and unidade.optanteSimples}">sim</option>
+            <option value="false" th:selected="${unidade.optanteSimples != null and !unidade.optanteSimples}">não</option>
+          </select>
+        </div>
+      </div>
+
+      <span class="rotulo-bloco">Retenções que se aplicam</span>
+      <div class="lista-colunas">
+        <label class="escolha" th:each="r : ${ {'ISS','IR','PIS','COFINS','CSLL','INSS'} }">
+          <input type="checkbox" name="retencao" th:value="${r}"
+                 th:checked="${unidade.retencoes != null and #strings.contains(unidade.retencoes, r)}">
+          <span th:text="${r}">ISS</span>
+        </label>
+      </div>
+
+      <span class="rotulo-bloco">Contato da unidade</span>
+      <div class="campos">
+        <div>
+          <label th:for="'u-resp-' + ${unidade.id}">Responsável</label>
+          <input th:id="'u-resp-' + ${unidade.id}" name="responsavel" th:value="${unidade.responsavel}">
+        </div>
+        <div>
+          <label th:for="'u-tel-' + ${unidade.id}">Telefone</label>
+          <input th:id="'u-tel-' + ${unidade.id}" name="telefone" th:value="${unidade.telefone}">
+        </div>
+        <div>
+          <label th:for="'u-mail-' + ${unidade.id}">E-mail</label>
+          <input th:id="'u-mail-' + ${unidade.id}" name="email" type="email" th:value="${unidade.email}">
+        </div>
+      </div>
+
+      <div class="linha-botoes">
+        <button class="botao pequeno" type="submit">Salvar dados</button>
+        <span class="aviso-linha" th:if="${unidade.sincronizadoDeForaEm != null}"
+              th:text="'último dado de fora recebido em ' + ${#temporals.format(unidade.sincronizadoDeForaEm, 'dd/MM/yyyy HH:mm')}"></span>
+      </div>
+    </form>
+  </th:block>
+
+  <!-- --------------------------------------------------------- enderecos -->
+  <th:block th:if="${aba == 'dados'}">
+    <span class="rotulo-bloco">Acordo comercial desta unidade</span>
+    <p class="dica">Percentual, plataforma e tom de cobrança são desta unidade, e não da pessoa:
+      a mesma pessoa pode ter uma loja com um acordo e outra com outro.</p>
+    <form method="post" th:action="@{'/clientes/unidades/' + ${unidade.id} + '/comercial'}">
+      <div class="campos">
+        <div>
+          <label th:for="'pc-' + ${unidade.id}">Percentual cobrado (%)</label>
+          <input th:id="'pc-' + ${unidade.id}" name="percentual" type="number" step="0.01"
+                 min="0" max="100" th:value="${unidade.percentual}">
+        </div>
+        <div>
+          <label th:for="'pl-' + ${unidade.id}">Plataforma</label>
+          <input th:id="'pl-' + ${unidade.id}" name="plataforma" th:value="${unidade.plataforma}"
+                 placeholder="marketplace, loja própria">
+        </div>
+        <div>
+          <label th:for="'tc-' + ${unidade.id}">Tom de cobrança</label>
+          <select th:id="'tc-' + ${unidade.id}" name="tomDeCobranca">
+            <option value="PADRAO" th:selected="${unidade.tomDeCobranca == 'PADRAO'}">padrão</option>
+            <option value="FIRME" th:selected="${unidade.tomDeCobranca == 'FIRME'}">firme</option>
+            <option value="CUIDADOSO" th:selected="${unidade.tomDeCobranca == 'CUIDADOSO'}">cuidadoso</option>
+          </select>
+        </div>
+        <div>
+          <label th:for="'ap-' + ${unidade.id}">Aceita parcelamento</label>
+          <select th:id="'ap-' + ${unidade.id}" name="aceitaParcelamento">
+            <option value="true" th:selected="${unidade.aceitaParcelamento}">sim</option>
+            <option value="false" th:selected="${!unidade.aceitaParcelamento}">não</option>
+          </select>
+        </div>
+        <div>
+          <label th:for="'in-' + ${unidade.id}">Início na casa</label>
+          <input th:id="'in-' + ${unidade.id}" name="inicioNaCasa" type="date"
+                 th:value="${unidade.inicioNaCasa}">
+        </div>
+        <div>
+          <label th:for="'mt-' + ${unidade.id}">Motivo, se mudou o percentual</label>
+          <input th:id="'mt-' + ${unidade.id}" name="motivo" placeholder="opcional">
+        </div>
+      </div>
+      <div class="linha-botoes">
+        <button class="botao pequeno" type="submit">Salvar acordo comercial</button>
+      </div>
+    </form>
+
+    <span class="rotulo-bloco">Passar esta unidade para outra pessoa</span>
+    <p class="dica">A dívida continua sendo da unidade. O que muda é quem responde por ela daqui
+      em diante, e a troca fica registrada no histórico com o motivo.</p>
+    <form method="post" th:action="@{'/clientes/unidades/' + ${unidade.id} + '/dono'}">
+      <div class="campos">
+        <div>
+          <label th:for="'dn-' + ${unidade.id}">Nova pessoa responsável</label>
+          <select th:id="'dn-' + ${unidade.id}" name="pagadorId" required>
+            <option th:each="p : ${pessoas}" th:value="${p.id}" th:text="${p.nome}"
+                    th:selected="${pagador != null and p.id == pagador.id}"></option>
+          </select>
+        </div>
+        <div>
+          <label th:for="'dm-' + ${unidade.id}">Motivo</label>
+          <input th:id="'dm-' + ${unidade.id}" name="motivo" required
+                 placeholder="venda da loja, troca de responsável">
+        </div>
+      </div>
+      <div class="linha-botoes">
+        <button class="botao pequeno perigo" type="submit">Passar para esta pessoa</button>
+      </div>
+    </form>
+  </th:block>
+
+  <th:block th:if="${aba == 'enderecos'}">
+    <div class="tabela-caixa" th:if="${!enderecos.isEmpty()}">
+      <table>
+        <thead><tr><th class="centro">Tipo</th><th>Endereço</th><th class="centro">CEP</th>
+          <th class="centro">Origem</th></tr></thead>
+        <tbody>
+        <tr th:each="e : ${enderecos}">
+          <td class="centro" th:text="${e.tipo}"></td>
+          <td th:text="${e.linha}"></td>
+          <td class="centro mono" th:text="${e.cep}"></td>
+          <td class="centro mono" th:text="${e.fonte}"></td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="vazio" th:if="${enderecos.isEmpty()}">Nenhum endereço cadastrado.</div>
+
+    <form method="post" th:action="@{'/clientes/unidades/' + ${unidade.id} + '/enderecos'}">
+      <span class="rotulo-bloco">Novo endereço</span>
+      <div class="campos">
+        <div>
+          <label th:for="'e-tipo-' + ${unidade.id}">Tipo</label>
+          <select th:id="'e-tipo-' + ${unidade.id}" name="tipo">
+            <option value="PRINCIPAL">principal</option>
+            <option value="COBRANCA">cobrança</option>
+            <option value="ENTREGA">entrega</option>
+            <option value="FISCAL">fiscal</option>
+          </select>
+        </div>
+        <div>
+          <label th:for="'e-cep-' + ${unidade.id}">CEP</label>
+          <input th:id="'e-cep-' + ${unidade.id}" name="cep">
+        </div>
+        <div>
+          <label th:for="'e-log-' + ${unidade.id}">Logradouro</label>
+          <input th:id="'e-log-' + ${unidade.id}" name="logradouro">
+        </div>
+        <div>
+          <label th:for="'e-num-' + ${unidade.id}">Número</label>
+          <input th:id="'e-num-' + ${unidade.id}" name="numero">
+        </div>
+        <div>
+          <label th:for="'e-comp-' + ${unidade.id}">Complemento</label>
+          <input th:id="'e-comp-' + ${unidade.id}" name="complemento">
+        </div>
+        <div>
+          <label th:for="'e-bai-' + ${unidade.id}">Bairro</label>
+          <input th:id="'e-bai-' + ${unidade.id}" name="bairro">
+        </div>
+        <div>
+          <label th:for="'e-cid-' + ${unidade.id}">Cidade</label>
+          <input th:id="'e-cid-' + ${unidade.id}" name="cidade">
+        </div>
+        <div>
+          <label th:for="'e-uf-' + ${unidade.id}">UF</label>
+          <input th:id="'e-uf-' + ${unidade.id}" name="uf" maxlength="2">
+        </div>
+      </div>
+      <div class="linha-botoes">
+        <button class="botao pequeno" type="submit">Adicionar endereço</button>
+      </div>
+    </form>
+  </th:block>
+
+  <!-- ---------------------------------------------------------- contatos -->
+  <th:block th:if="${aba == 'contatos'}">
+    <div class="tabela-caixa" th:if="${!contatos.isEmpty()}">
+      <table>
+        <thead><tr><th class="centro">Ordem</th><th>Contato</th><th class="centro">Telefone</th>
+          <th>Papéis</th><th class="centro">Aceita cobrança</th></tr></thead>
+        <tbody>
+        <tr th:each="c : ${contatos}">
+          <td class="centro mono" th:text="${c.prioridade}"></td>
+          <td><b th:text="${c.nome}"></b><small th:text="${c.email}"></small></td>
+          <td class="centro mono" th:text="${c.telefone} ?: ${c.whatsapp}"></td>
+          <td><span class="marca-situacao s-aberto" th:each="p : ${c.papeis}" th:text="${p.nome}"></span></td>
+          <td class="centro"><span class="marca-situacao"
+                th:classappend="${c.aceitaCobranca} ? 's-pago' : 's-vencido'"
+                th:text="${c.aceitaCobranca} ? 'sim' : 'não'"></span></td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="vazio" th:if="${contatos.isEmpty()}">Nenhum contato só desta unidade.</div>
+
+    <form method="post" th:action="@{'/clientes/' + ${pagador.id} + '/contatos'}" th:if="${pagador != null}">
+      <input type="hidden" name="unidadeId" th:value="${unidade.id}">
+      <span class="rotulo-bloco">Novo contato desta unidade</span>
+      <div class="campos">
+        <div>
+          <label th:for="'uc-nome-' + ${unidade.id}">Nome</label>
+          <input th:id="'uc-nome-' + ${unidade.id}" name="nome" required>
+        </div>
+        <div>
+          <label th:for="'uc-tel-' + ${unidade.id}">Telefone</label>
+          <input th:id="'uc-tel-' + ${unidade.id}" name="telefone">
+        </div>
+        <div>
+          <label th:for="'uc-zap-' + ${unidade.id}">WhatsApp</label>
+          <input th:id="'uc-zap-' + ${unidade.id}" name="whatsapp">
+        </div>
+        <div>
+          <label th:for="'uc-mail-' + ${unidade.id}">E-mail</label>
+          <input th:id="'uc-mail-' + ${unidade.id}" name="email" type="email">
+        </div>
+      </div>
+      <span class="rotulo-bloco">Papéis</span>
+      <div class="lista-colunas">
+        <label th:each="p : ${papeis}" class="escolha">
+          <input type="checkbox" name="papel" th:value="${p.id}">
+          <span th:text="${p.nome}"></span>
+        </label>
+      </div>
+      <div class="linha-botoes">
+        <button class="botao pequeno" type="submit">Adicionar contato</button>
+      </div>
+    </form>
+  </th:block>
+
+  <!-- ---------------------------------------------------------- cobranca -->
+  <th:block th:if="${aba == 'cobranca'}">
+    <p class="dica">Como esta empresa paga. Tudo aqui pode chegar de fora: da plataforma de
+      cobrança, do banco ou de uma importação. Por isso o sistema guarda de onde veio o dado.</p>
+
+    <form method="post" th:action="@{'/clientes/unidades/' + ${unidade.id} + '/cobranca'}">
+      <span class="rotulo-bloco" style="margin-top:0">Como recebe</span>
+      <div class="campos">
+        <div>
+          <label th:for="'b-forma-' + ${unidade.id}">Forma preferida</label>
+          <select th:id="'b-forma-' + ${unidade.id}" name="forma">
+            <option value="">não definida</option>
+            <option value="PIX" th:selected="${cobranca.formaPreferida == 'PIX'}">PIX</option>
+            <option value="BOLETO" th:selected="${cobranca.formaPreferida == 'BOLETO'}">boleto</option>
+            <option value="CARTAO" th:selected="${cobranca.formaPreferida == 'CARTAO'}">cartão</option>
+            <option value="TRANSFERENCIA" th:selected="${cobranca.formaPreferida == 'TRANSFERENCIA'}">transferência</option>
+            <option value="DEBITO AUTOMATICO" th:selected="${cobranca.formaPreferida == 'DEBITO AUTOMATICO'}">débito automático</option>
+          </select>
+        </div>
+        <div>
+          <label th:for="'b-pix-' + ${unidade.id}">Chave PIX do cliente</label>
+          <input th:id="'b-pix-' + ${unidade.id}" name="chavePix" th:value="${cobranca.chavePix}">
+        </div>
+        <div>
+          <label th:for="'b-mail-' + ${unidade.id}">E-mail que recebe a cobrança</label>
+          <input th:id="'b-mail-' + ${unidade.id}" name="emailCobranca" th:value="${cobranca.emailCobranca}">
+        </div>
+        <div>
+          <label th:for="'b-dia-' + ${unidade.id}">Dia de vencimento</label>
+          <input th:id="'b-dia-' + ${unidade.id}" name="diaVencimento" type="number" min="1" max="31"
+                 th:value="${cobranca.diaVencimento}">
+        </div>
+        <div>
+          <label th:for="'b-per-' + ${unidade.id}">Periodicidade</label>
+          <select th:id="'b-per-' + ${unidade.id}" name="periodicidade">
+            <option value="">não definida</option>
+            <option value="MENSAL" th:selected="${cobranca.periodicidade == 'MENSAL'}">mensal</option>
+            <option value="TRIMESTRAL" th:selected="${cobranca.periodicidade == 'TRIMESTRAL'}">trimestral</option>
+            <option value="AVULSO" th:selected="${cobranca.periodicidade == 'AVULSO'}">avulso</option>
+          </select>
+        </div>
+        <div>
+          <label th:for="'b-deb-' + ${unidade.id}">Aceita débito recorrente</label>
+          <select th:id="'b-deb-' + ${unidade.id}" name="debitoRecorrente">
+            <option value="false" th:selected="${!cobranca.aceitaDebitoRecorrente}">não</option>
+            <option value="true" th:selected="${cobranca.aceitaDebitoRecorrente}">sim</option>
+          </select>
+        </div>
+      </div>
+
+      <span class="rotulo-bloco">Conta bancária do cliente</span>
+      <div class="campos">
+        <div>
+          <label th:for="'b-banco-' + ${unidade.id}">Banco</label>
+          <input th:id="'b-banco-' + ${unidade.id}" name="banco" th:value="${cobranca.banco}">
+        </div>
+        <div>
+          <label th:for="'b-ag-' + ${unidade.id}">Agência</label>
+          <input th:id="'b-ag-' + ${unidade.id}" name="agencia" th:value="${cobranca.agencia}">
+        </div>
+        <div>
+          <label th:for="'b-conta-' + ${unidade.id}">Conta</label>
+          <input th:id="'b-conta-' + ${unidade.id}" name="conta" th:value="${cobranca.conta}">
+        </div>
+        <div>
+          <label th:for="'b-tit-' + ${unidade.id}">Titular</label>
+          <input th:id="'b-tit-' + ${unidade.id}" name="titular" th:value="${cobranca.titular}">
+        </div>
+      </div>
+
+      <span class="rotulo-bloco">Regras de cobrança</span>
+      <div class="campos">
+        <div>
+          <label th:for="'b-juros-' + ${unidade.id}">Juros ao mês (%)</label>
+          <input th:id="'b-juros-' + ${unidade.id}" name="juros" type="number" step="0.001"
+                 th:value="${cobranca.jurosAoMes}">
+        </div>
+        <div>
+          <label th:for="'b-multa-' + ${unidade.id}">Multa (%)</label>
+          <input th:id="'b-multa-' + ${unidade.id}" name="multa" type="number" step="0.001"
+                 th:value="${cobranca.multaPercentual}">
+        </div>
+        <div>
+          <label th:for="'b-desc-' + ${unidade.id}">Desconto por antecipação (%)</label>
+          <input th:id="'b-desc-' + ${unidade.id}" name="desconto" type="number" step="0.001"
+                 th:value="${cobranca.descontoAntecipacao}">
+        </div>
+        <div>
+          <label th:for="'b-car-' + ${unidade.id}">Dias de carência</label>
+          <input th:id="'b-car-' + ${unidade.id}" name="carencia" type="number" min="0"
+                 th:value="${cobranca.diasCarencia}">
+        </div>
+        <div>
+          <label th:for="'b-prot-' + ${unidade.id}">Protestar após (dias)</label>
+          <input th:id="'b-prot-' + ${unidade.id}" name="protestarApos" type="number" min="0"
+                 th:value="${cobranca.protestarAposDias}">
+        </div>
+      </div>
+      <div class="campos" style="margin-top:16px">
+        <div style="grid-column:1/-1">
+          <label th:for="'b-inst-' + ${unidade.id}">Instruções</label>
+          <input th:id="'b-inst-' + ${unidade.id}" name="instrucoes" th:value="${cobranca.instrucoes}">
+        </div>
+      </div>
+
+      <div class="linha-botoes">
+        <button class="botao pequeno" type="submit">Salvar cobrança</button>
+        <span class="aviso-linha" th:text="'origem do dado: ' + ${cobranca.fonte}"></span>
+      </div>
+    </form>
+  </th:block>
+
+  <!-- ----------------------------------------------------------- titulos -->
+  <th:block th:if="${aba == 'titulos'}">
+    <div class="tabela-caixa" th:if="${!linha.titulos.isEmpty()}">
+      <table>
+        <thead>
+        <tr><th class="centro">Nº</th><th class="centro">Competência</th><th class="centro">Descrição</th>
+          <th class="centro">Vencimento</th><th class="centro">Valor</th><th class="centro">Saldo</th>
+          <th class="centro">Situação</th><th></th></tr>
+        </thead>
+        <tbody>
+        <tr th:each="t : ${linha.titulos}">
+          <td class="mono centro" th:text="${t.numero}">1</td>
+          <td class="mono centro" th:text="${#temporals.format(t.competencia, 'MM/yyyy')}"></td>
+          <td class="centro" th:text="${t.descricao}"></td>
+          <td class="mono centro" th:text="${#temporals.format(t.vencimento, 'dd/MM/yyyy')}"></td>
+          <td class="valor centro" th:text="${#numbers.formatDecimal(t.valor, 1, 'POINT', 2, 'COMMA')}"></td>
+          <td class="valor centro" th:text="${#numbers.formatDecimal(t.saldo, 1, 'POINT', 2, 'COMMA')}"></td>
+          <td class="centro">
+            <span th:if="${t.estaVencido(hoje)}" class="marca-situacao s-vencido"
+                  th:text="${t.diasDeAtraso(hoje)} + ' dias'"></span>
+            <span th:unless="${t.estaVencido(hoje)}" class="marca-situacao"
+                  th:classappend="${'s-' + t.situacao.name().toLowerCase()}" th:text="${t.situacao}"></span>
+          </td>
+          <td style="text-align:right">
+            <a class="botao pequeno vazado" th:href="@{'/titulos/' + ${t.id}}">Abrir</a>
+          </td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="vazio" th:if="${linha.titulos.isEmpty()}">
+      Esta unidade ainda não tem título lançado.
+    </div>
+  </th:block>
+
+  <!-- -------------------------------------------------------- documentos -->
+  <th:block th:if="${aba == 'documentos'}">
+    <form method="post" enctype="multipart/form-data"
+          th:action="@{'/clientes/' + ${pagador.id} + '/documentos'}" th:if="${pagador != null}">
+      <input type="hidden" name="unidadeId" th:value="${unidade.id}">
+      <span class="rotulo-bloco" style="margin-top:0">Anexar documento desta unidade</span>
+      <div class="campos">
+        <div>
+          <label th:for="'ud-arq-' + ${unidade.id}">Arquivo</label>
+          <input th:id="'ud-arq-' + ${unidade.id}" name="arquivo" type="file" required>
+        </div>
+        <div>
+          <label th:for="'ud-tipo-' + ${unidade.id}">Tipo</label>
+          <select th:id="'ud-tipo-' + ${unidade.id}" name="tipo">
+            <option th:each="t : ${tiposDocumento}" th:value="${t}" th:text="${t}"></option>
+          </select>
+        </div>
+        <div>
+          <label th:for="'ud-val-' + ${unidade.id}">Validade</label>
+          <input th:id="'ud-val-' + ${unidade.id}" name="validade" type="date">
+        </div>
+      </div>
+      <div class="linha-botoes">
+        <button class="botao pequeno" type="submit">Anexar</button>
+      </div>
+    </form>
+
+    <div class="tabela-caixa" th:if="${!documentos.isEmpty()}">
+      <table>
+        <thead><tr><th class="centro">Tipo</th><th>Arquivo</th><th class="centro">Validade</th>
+          <th class="centro">Anexado em</th><th></th></tr></thead>
+        <tbody>
+        <tr th:each="d : ${documentos}">
+          <td class="centro" th:text="${d.tipo}"></td>
+          <td th:text="${d.nomeArquivo}"></td>
+          <td class="centro mono" th:text="${d.validade != null} ? ${#temporals.format(d.validade, 'dd/MM/yyyy')} : ''"></td>
+          <td class="centro mono" th:text="${#temporals.format(d.anexadoEm, 'dd/MM/yyyy')}"></td>
+          <td style="text-align:right">
+            <a class="botao pequeno vazado" th:href="@{'/clientes/documentos/' + ${d.id}}">Baixar</a>
+          </td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="vazio" th:if="${documentos.isEmpty()}">Nenhum documento desta unidade.</div>
+  </th:block>
+
+  <!-- ---------------------------------------------------------- historico -->
+  <th:block th:if="${aba == 'historico'}">
+    <span class="rotulo-bloco" style="margin-top:0">Trocas desta unidade</span>
+    <div class="tabela-caixa" th:if="${trocas != null and !trocas.isEmpty()}">
+      <table>
+        <thead>
+        <tr>
+          <th class="centro">Quando</th>
+          <th class="centro">O que mudou</th>
+          <th>De, para</th>
+          <th>Motivo</th>
+          <th>Quem</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="t : ${trocas}">
+          <td class="centro mono" th:text="${#temporals.format(t.quando, 'dd/MM/yyyy HH:mm')}"></td>
+          <td class="centro" th:text="${t.tipo.toLowerCase()}"></td>
+          <td th:text="${t.resumo}"></td>
+          <td th:text="${t.motivo}"></td>
+          <td th:text="${t.quem}"></td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="vazio" th:if="${trocas == null or trocas.isEmpty()}">
+      Esta unidade nunca mudou de dono, de telefone nem de percentual por aqui.
+    </div>
+
+    <span class="rotulo-bloco">Movimento do sistema</span>
+    <div class="linha-tempo" th:if="${!historico.isEmpty()}">
+      <div class="momento" th:each="h : ${historico}">
+        <span class="quando mono" th:text="${#temporals.format(h.ocorridoEm, 'dd/MM/yyyy HH:mm')}"></span>
+        <div class="conteudo">
+          <b th:text="${h.tipoLegivel}"></b>
+          <p th:text="${h.descricao}"></p>
+          <small th:text="${h.autor}"></small>
+        </div>
+      </div>
+    </div>
+    <div class="vazio" th:if="${historico.isEmpty()}">Nada registrado para esta unidade.</div>
+  </th:block>
+</div>
+</body>
+</html>

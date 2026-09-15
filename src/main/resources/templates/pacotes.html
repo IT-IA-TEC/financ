@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head th:replace="~{layout :: cabeca('Pacotes')}"></head>
+<body>
+<header th:replace="~{layout :: topo('servicos')}"></header>
+
+<main class="largo">
+  <div th:replace="~{layout :: recados}"></div>
+
+  <div class="cabecalho-pagina">
+    <div>
+      <span class="olho"><i></i>Gestão de pacotes</span>
+      <h1>Pacotes &amp; serviços</h1>
+      <nav th:replace="~{layout :: abas-catalogo('pacotes')}"></nav>
+    </div>
+    <div class="acoes" style="margin:0">
+      <button class="botao" type="button" data-abre="janela-novo-pacote">+ Novo pacote</button>
+    </div>
+  </div>
+
+  <p class="dica" style="margin-top:4px">Onde você define o que está incluído na
+    contratação de cada cliente.</p>
+
+  <form class="barra-busca" method="get" action="/pacotes">
+    <input type="search" name="busca" th:value="${busca}" placeholder="Buscar por nome ou código">
+    <select name="situacao">
+      <option value="">Ativos e inativos</option>
+      <option value="ativo" th:selected="${situacaoEscolhida == 'ativo'}">Só ativos</option>
+      <option value="inativo" th:selected="${situacaoEscolhida == 'inativo'}">Só inativos</option>
+    </select>
+    <button class="botao pequeno" type="submit">Buscar</button>
+    <a class="botao pequeno vazado" href="/pacotes">Limpar</a>
+  </form>
+
+  <div class="tabela-caixa" th:if="${!pacotes.isEmpty()}">
+    <table>
+      <thead>
+      <tr>
+        <th class="centro">Código</th>
+        <th>Pacote</th>
+        <th class="centro">Periodicidade</th>
+        <th class="centro">Serviços incluídos</th>
+        <th class="centro">Valor</th>
+        <th class="centro">Situação</th>
+        <th></th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr th:each="p : ${pacotes}">
+        <td class="mono centro" th:text="${p.codigo}">P0001</td>
+        <td>
+          <b th:text="${p.nome}">Pacote</b>
+          <small th:if="${p.descricao != null}" th:text="${p.descricao}"></small>
+        </td>
+        <td class="centro" th:text="${p.periodicidadeResumida}">Mensal</td>
+        <td class="centro mono" th:text="${p.composicao.size()}">0</td>
+        <td class="centro">
+          <span th:if="${p.valorDefinido}" class="mono" th:text="${p.valorResumido}">R$ 0,00</span>
+          <span th:unless="${p.valorDefinido}" class="marca-situacao s-parcial">valor não definido</span>
+        </td>
+        <td class="centro">
+          <span class="marca-situacao" th:classappend="${p.ativo} ? 's-pago' : 's-cancelado'"
+                th:text="${p.ativo} ? 'ativo' : 'inativo'">ativo</span>
+        </td>
+        <td style="text-align:right">
+          <a class="botao pequeno vazado" th:href="@{'/pacotes/' + ${p.id}}">Abrir</a>
+        </td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="vazio" th:if="${pacotes.isEmpty()}">
+    Nenhum pacote cadastrado. O pacote reúne serviços que já estão no catálogo,
+    sem precisar cadastrar nada de novo.
+  </div>
+</main>
+
+<script th:replace="~{layout :: scripts}"></script>
+
+<dialog id="janela-novo-pacote" class="janela">
+  <form method="post" action="/pacotes">
+    <div class="janela-topo">
+      <div>
+        <span class="olho"><i></i>Gestão de pacotes</span>
+        <h2>Novo pacote</h2>
+      </div>
+      <button type="button" class="fechar" data-fecha aria-label="Fechar">&#10005;</button>
+    </div>
+    <div class="janela-corpo">
+      <p class="dica">O código é gerado pelo sistema. A composição, os limites e as
+        contratações são definidos depois, dentro do pacote.</p>
+      <div class="campos">
+        <div>
+          <label for="pac-nome">Nome do pacote</label>
+          <input id="pac-nome" name="nome" required placeholder="Essencial, Completo, Avançado">
+        </div>
+        <div>
+          <label for="pac-valor">Valor do pacote (R$)</label>
+          <input id="pac-valor" name="valor" type="number" step="0.01" min="0" placeholder="deixe vazio se ainda não definiu">
+        </div>
+        <div>
+          <label for="pac-periodicidade">Periodicidade</label>
+          <select id="pac-periodicidade" name="periodicidade">
+            <option th:each="p : ${periodicidades}" th:value="${p}" th:text="${p.rotulo}"></option>
+          </select>
+        </div>
+        <div>
+          <label for="pac-outra">Se for outra, qual</label>
+          <input id="pac-outra" name="periodicidadeOutra" placeholder="a cada 45 dias">
+        </div>
+      </div>
+      <div class="campos" style="margin-top:16px">
+        <div style="grid-column:1/-1">
+          <label for="pac-desc">Descrição</label>
+          <input id="pac-desc" name="descricao" placeholder="O que este pacote entrega ao cliente">
+        </div>
+      </div>
+    </div>
+    <div class="janela-pe">
+      <button type="button" class="botao vazado" data-fecha>Cancelar</button>
+      <button class="botao" type="submit">Cadastrar</button>
+    </div>
+  </form>
+</dialog>
+
+<script src="/js/janelas.js?v=1"></script>
+
+</body>
+</html>

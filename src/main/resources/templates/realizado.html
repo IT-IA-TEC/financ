@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head th:replace="~{layout :: cabeca('Atendimento')}"></head>
+<body>
+<header th:replace="~{layout :: topo('servicos')}"></header>
+
+<main class="largo">
+  <div th:replace="~{layout :: recados}"></div>
+
+  <div class="cabecalho-pagina">
+    <div>
+      <span class="olho"><i></i>Serviço realizado</span>
+      <h1 th:text="${atendimento.servico.nome}">Serviço</h1>
+      <p th:text="${atendimento.pagador.nome} + ' · '
+                  + ${#temporals.format(atendimento.realizadoEm, 'dd/MM/yyyy')}"></p>
+    </div>
+    <div class="acoes" style="margin:0">
+      <a class="botao vazado" href="/realizados">Voltar aos atendimentos</a>
+      <form method="post" th:action="@{'/realizados/' + ${atendimento.id} + '/cancelar'}"
+            th:if="${atendimento.situacao.name() == 'REGISTRADO'}">
+        <button class="botao perigo" type="submit">Cancelar atendimento</button>
+      </form>
+      <form method="post" th:action="@{'/realizados/' + ${atendimento.id} + '/reabrir'}"
+            th:unless="${atendimento.situacao.name() == 'REGISTRADO'}">
+        <button class="botao" type="submit">Reabrir atendimento</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="cartoes">
+    <div class="cartao">
+      <span class="rotulo">Tratamento</span>
+      <span class="numero" style="font-size:17px" th:text="${atendimento.tratamento.rotulo}">Incluído no pacote</span>
+      <small th:text="${atendimento.tratamento.comoFunciona}"></small>
+    </div>
+    <div class="cartao">
+      <span class="rotulo">Valor</span>
+      <span class="numero" th:text="${atendimento.valorResumido}">sem cobrança</span>
+      <small th:text="${atendimento.desconto != null}
+                      ? 'com desconto aplicado neste atendimento'
+                      : 'sem desconto'"></small>
+    </div>
+    <div class="cartao">
+      <span class="rotulo">Pacote do cliente</span>
+      <span class="numero" style="font-size:17px"
+            th:text="${cobertura.temPacote} ? ${cobertura.nomeDoPacote} : 'nenhum'">nenhum</span>
+      <small th:text="${cobertura.explicacao}"></small>
+    </div>
+    <div class="cartao">
+      <span class="rotulo">Situação</span>
+      <span class="numero" style="font-size:17px" th:text="${atendimento.situacao.rotulo}">registrado</span>
+      <small th:text="'registrado por ' + (${atendimento.criadoPor} ?: 'alguém')"></small>
+    </div>
+  </div>
+
+  <!-- ------------------------------------------------------------- dados -->
+  <span class="rotulo-bloco">Dados do atendimento</span>
+  <form class="bloco" method="post" th:action="@{'/realizados/' + ${atendimento.id}}">
+    <div class="campos">
+      <div>
+        <label for="cliente">Cliente atendido</label>
+        <select id="cliente" name="pagadorId" required>
+          <option th:each="c : ${clientes}" th:value="${c.id}" th:text="${c.nome}"
+                  th:selected="${c.id == atendimento.pagador.id}"></option>
+        </select>
+      </div>
+      <div>
+        <label for="unidade">Unidade</label>
+        <select id="unidade" name="unidadeId">
+          <option value="">sem unidade específica</option>
+          <option th:each="u : ${unidades}" th:value="${u.id}" th:text="${u.razaoSocial}"
+                  th:selected="${atendimento.unidade != null and atendimento.unidade.id == u.id}"></option>
+        </select>
+      </div>
+      <div>
+        <label for="servico">Serviço realizado</label>
+        <select id="servico" name="servicoId" required>
+          <option th:each="s : ${servicos}" th:value="${s.id}"
+                  th:text="${s.codigo} + ' · ' + ${s.nome}"
+                  th:selected="${s.id == atendimento.servico.id}"></option>
+        </select>
+      </div>
+      <div>
+        <label for="data">Data</label>
+        <input id="data" name="realizadoEm" type="date" th:value="${atendimento.realizadoEm}">
+      </div>
+      <div>
+        <label for="quantidade">Quantidade</label>
+        <input id="quantidade" name="quantidade" type="number" step="1" min="1"
+               th:value="${atendimento.quantidade}">
+      </div>
+      <div>
+        <label for="responsavel">Responsável</label>
+        <input id="responsavel" name="responsavel" th:value="${atendimento.responsavel}">
+      </div>
+      <div>
+        <label for="tratamento">Tratamento</label>
+        <select id="tratamento" name="tratamento">
+          <option value="PELO_PACOTE">deixar o sistema decidir pelo pacote</option>
+          <option th:each="t : ${tratamentos}" th:value="${t}" th:text="${t.rotulo}"
+                  th:selected="${t == atendimento.tratamento}"></option>
+        </select>
+      </div>
+      <div>
+        <label for="valor">Valor cobrado (R$)</label>
+        <input id="valor" name="valorCobrado" type="number" step="0.01" min="0"
+               th:value="${atendimento.valorCobrado}">
+      </div>
+      <div>
+        <label for="desconto">Desconto (R$)</label>
+        <input id="desconto" name="desconto" type="number" step="0.01" min="0"
+               th:value="${atendimento.desconto}">
+      </div>
+    </div>
+    <div class="campos" style="margin-top:16px">
+      <div style="grid-column:1/-1">
+        <label for="observacao">Observações</label>
+        <input id="observacao" name="observacao" th:value="${atendimento.observacao}">
+      </div>
+    </div>
+    <div class="acoes">
+      <button class="botao" type="submit">Salvar atendimento</button>
+    </div>
+  </form>
+
+  <!-- ------------------------------------------------- itens executados -->
+  <span class="rotulo-bloco">Itens executados</span>
+  <div class="tabela-caixa" th:if="${!atendimento.itens.isEmpty()}">
+    <table>
+      <thead>
+      <tr>
+        <th>Item</th>
+        <th class="centro">Quantidade</th>
+        <th>Observação</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr th:each="i : ${atendimento.itens}">
+        <td th:text="${i.item.nome}">Item</td>
+        <td class="centro mono"
+            th:text="${#numbers.formatDecimal(i.quantidade, 1, 'POINT', 0, 'COMMA')}">1</td>
+        <td th:text="${i.observacao}"></td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="vazio" th:if="${atendimento.itens.isEmpty()}">
+    Nenhum item registrado neste atendimento.
+  </div>
+
+  <form class="bloco" method="post" style="margin-top:16px"
+        th:action="@{'/realizados/' + ${atendimento.id} + '/itens'}">
+    <div class="campos">
+      <div>
+        <label for="item">Item do serviço</label>
+        <select id="item" name="itemId" required>
+          <option th:each="i : ${atendimento.servico.itensAtivos}" th:value="${i.id}"
+                  th:text="${i.nome}"></option>
+        </select>
+      </div>
+      <div>
+        <label for="item-qtd">Quantidade</label>
+        <input id="item-qtd" name="quantidade" type="number" step="1" min="1" value="1">
+      </div>
+      <div>
+        <label for="item-obs">Observação</label>
+        <input id="item-obs" name="observacao" placeholder="opcional">
+      </div>
+    </div>
+    <div class="acoes">
+      <button class="botao pequeno" type="submit">Adicionar item executado</button>
+    </div>
+  </form>
+
+  <!-- ---------------------------------------------------- comprovantes -->
+  <span class="rotulo-bloco">Comprovantes</span>
+  <form class="bloco" method="post" enctype="multipart/form-data"
+        th:action="@{'/realizados/' + ${atendimento.id} + '/comprovantes'}">
+    <div class="campos">
+      <div>
+        <label for="arquivo">Arquivo</label>
+        <input id="arquivo" name="arquivo" type="file" required>
+      </div>
+      <div>
+        <label for="tipo">Tipo</label>
+        <select id="tipo" name="tipo">
+          <option th:each="t : ${tiposDeDocumento}" th:value="${t}" th:text="${t}"></option>
+        </select>
+      </div>
+      <div>
+        <label for="anexo-obs">Observação</label>
+        <input id="anexo-obs" name="observacao" placeholder="opcional">
+      </div>
+    </div>
+    <div class="acoes">
+      <button class="botao pequeno" type="submit">Anexar comprovante</button>
+    </div>
+  </form>
+
+  <div class="tabela-caixa" th:if="${!comprovantes.isEmpty()}" style="margin-top:16px">
+    <table>
+      <thead>
+      <tr>
+        <th>Arquivo</th>
+        <th class="centro">Tipo</th>
+        <th class="centro">Tamanho</th>
+        <th class="centro">Quando</th>
+        <th></th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr th:each="d : ${comprovantes}">
+        <td th:text="${d.nomeArquivo}">arquivo</td>
+        <td class="centro" th:text="${d.tipo}"></td>
+        <td class="centro mono" th:text="${d.tamanhoLegivel}"></td>
+        <td class="centro mono"
+            th:text="${#temporals.format(d.anexadoEm, 'dd/MM/yyyy')}"></td>
+        <td style="text-align:right">
+          <a class="botao pequeno vazado" th:href="@{'/clientes/documentos/' + ${d.id}}">Abrir</a>
+        </td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="vazio" th:if="${comprovantes.isEmpty()}">
+    Nenhum comprovante anexado a este atendimento.
+  </div>
+</main>
+
+<script th:replace="~{layout :: scripts}"></script>
+
+</body>
+</html>

@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head th:replace="~{layout :: cabeca('Regras da empresa')}"></head>
+<body>
+<header th:replace="~{layout :: topo('')}"></header>
+
+<main>
+  <div th:replace="~{layout :: recados}"></div>
+
+  <div class="cabecalho-pagina">
+    <div>
+      <span class="olho"><i></i>Configuração</span>
+      <h1>Regras desta empresa</h1>
+    </div>
+    <div class="acoes" style="margin:0">
+      <a class="botao vazado" href="/empresas/configurar">Configurações</a>
+    </div>
+  </div>
+
+  <div class="alerta-box" style="margin-bottom:22px">
+    Tudo aqui nasce desligado, e vale por empresa. Ligar uma regra muda o que acontece daqui
+    em diante: nada do que já foi lançado é recalculado.
+  </div>
+
+  <form class="bloco" method="post" action="/empresas/regras">
+
+    <span class="rotulo-bloco" style="margin-top:0">Cobrança por PIX</span>
+    <div class="campos">
+      <div>
+        <label for="pixIdentificador">Identificador próprio em cada cobrança</label>
+        <select id="pixIdentificador" name="pixIdentificador">
+          <option value="false" th:selected="${!regra.pixIdentificador}">desligado</option>
+          <option value="true" th:selected="${regra.pixIdentificador}">ligado</option>
+        </select>
+      </div>
+      <div>
+        <label for="pixAutomatico">Oferecer Pix Automático</label>
+        <select id="pixAutomatico" name="pixAutomatico">
+          <option value="false" th:selected="${!regra.pixAutomatico}">desligado</option>
+          <option value="true" th:selected="${regra.pixAutomatico}">ligado</option>
+        </select>
+      </div>
+    </div>
+    <p class="dica">Com o identificador ligado, cada cobrança sai com um código próprio e o
+      aviso do banco encontra o título sozinho, sem ninguém ler comprovante. O Pix Automático
+      é a autorização única: quem aceita deixa de ser cobrado todo mês.</p>
+
+    <span class="rotulo-bloco">Atendimento automático</span>
+    <div class="campos">
+      <div>
+        <label for="agenteSeIdentifica">O agente se identifica como robô</label>
+        <select id="agenteSeIdentifica" name="agenteSeIdentifica">
+          <option value="false" th:selected="${!regra.agenteSeIdentifica}">só quando perguntado não</option>
+          <option value="true" th:selected="${regra.agenteSeIdentifica}">sim, quando perguntado</option>
+        </select>
+      </div>
+    </div>
+    <p class="dica">Ligado, o agente responde que é um atendimento automático quando o cliente
+      pergunta. Desligado, ele segue a conversa sem tocar no assunto.</p>
+
+    <span class="rotulo-bloco">Juros e multa por atraso</span>
+    <div class="campos">
+      <div>
+        <label for="cobrarJuros">Cobrar do atraso</label>
+        <select id="cobrarJuros" name="cobrarJuros">
+          <option value="false" th:selected="${!regra.cobrarJuros}">desligado</option>
+          <option value="true" th:selected="${regra.cobrarJuros}">ligado</option>
+        </select>
+      </div>
+      <div>
+        <label for="multaPorAtraso">Multa (%)</label>
+        <input id="multaPorAtraso" name="multaPorAtraso" type="number" step="0.01" min="0"
+               th:value="${regra.multaPorAtraso}">
+      </div>
+      <div>
+        <label for="jurosAoMes">Juros ao mês (%)</label>
+        <input id="jurosAoMes" name="jurosAoMes" type="number" step="0.01" min="0"
+               th:value="${regra.jurosAoMes}">
+      </div>
+      <div>
+        <label for="carenciaDias">Carência (dias)</label>
+        <input id="carenciaDias" name="carenciaDias" type="number" min="0" max="60"
+               th:value="${regra.carenciaDias}">
+      </div>
+    </div>
+    <p class="dica">A multa entra uma vez, sobre o valor. Os juros correm por dia, pela taxa do
+      mês dividida por trinta. Dentro da carência nada é somado. O valor original do título
+      nunca muda: o acréscimo aparece como valor atualizado até a data de hoje.</p>
+
+    <div class="acoes">
+      <button class="botao" type="submit">Salvar regras</button>
+    </div>
+  </form>
+
+  <p class="dica" th:if="${regra.atualizadoPor != null}"
+     th:text="'Última alteração por ' + ${regra.atualizadoPor} + ' em '
+              + ${#temporals.format(regra.atualizadoEm, 'dd/MM/yyyy HH:mm')}"></p>
+</main>
+
+<script th:replace="~{layout :: scripts}"></script>
+
+</body>
+</html>

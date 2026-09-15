@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head th:replace="~{layout :: cabeca('Fluxos')}"></head>
+<body>
+<header th:replace="~{layout :: topo('cobranca')}"></header>
+
+<main class="largo">
+  <div th:replace="~{layout :: recados}"></div>
+
+  <div class="cabecalho-pagina com-resumo">
+    <div>
+      <span class="olho"><i></i>Quando, se, faça</span>
+      <h1>Fluxos</h1>
+    </div>
+
+    <div class="cartoes-topo">
+      <div class="cartao-topo inverso">
+        <span class="rotulo">Ligados</span>
+        <b th:text="${#lists.size(fluxos.?[ativo])}">0</b>
+        <small>rodam sozinhos de manhã</small>
+      </div>
+      <div class="cartao-topo">
+        <span class="rotulo">Montados</span>
+        <b th:text="${fluxos.size()}">0</b>
+        <small>no total</small>
+      </div>
+      <div class="cartao-topo">
+        <span class="rotulo">Ações recentes</span>
+        <b th:text="${#lists.size(execucoes.?[fez()])}">0</b>
+        <small>nas últimas rodadas</small>
+      </div>
+      <div class="cartao-topo listrado">
+        <span class="rotulo">Rodada</span>
+        <b>08h20</b>
+        <small>logo depois da régua</small>
+      </div>
+    </div>
+
+    <div class="acoes" style="margin:0">
+      <button class="botao" type="button" data-abre="janela-fluxo">+ Novo fluxo</button>
+      <form method="post" action="/fluxos/rodar" style="display:inline">
+        <button class="botao vazado" type="submit">Rodar agora</button>
+      </form>
+    </div>
+  </div>
+
+  <nav th:replace="~{layout :: abas-cobranca('fluxos')}" class="modulo"></nav>
+
+  <div class="alerta-box" style="margin-bottom:18px">
+    Um fluxo é sempre a mesma frase: quando acontecer tal coisa, se tais condições valerem, faça
+    tais ações. Mensagem mandada por fluxo respeita as mesmas travas da cobrança: quem pediu para
+    não ser cobrado continua sem receber, e ninguém leva duas do mesmo documento no mesmo dia.
+  </div>
+
+  <div class="lista-fluxos">
+    <div class="cartao-fluxo" th:each="f : ${fluxos}">
+      <div class="cabeca-fluxo">
+        <div>
+          <b th:text="${f.nome}">fluxo</b>
+          <span class="quando" th:text="${f.quandoLegivel}">quando</span>
+          <span class="detalhe" th:if="${f.descricao != null}" th:text="${f.descricao}"></span>
+        </div>
+        <div class="acoes-caso">
+          <span class="marca-situacao" th:classappend="${f.ativo} ? 's-pago' : 's-cancelado'"
+                th:text="${f.ativo} ? 'ligado' : 'desligado'">ligado</span>
+          <form method="post" th:if="${f.ativo}" th:action="@{'/fluxos/' + ${f.id} + '/desativar'}">
+            <button class="botao pequeno vazado" type="submit">Desligar</button>
+          </form>
+        </div>
+      </div>
+
+      <div class="receita">
+        <div class="linha-passo" th:each="p : ${receitas[f.id]}">
+          <span class="tipo" th:text="${p.ehCondicao()} ? 'se' : 'faça'">se</span>
+          <span th:text="${p.resumo}">passo</span>
+          <form method="post"
+                th:action="@{'/fluxos/' + ${f.id} + '/passos/' + ${p.id} + '/apagar'}">
+            <button class="botao pequeno vazado" type="submit">tirar</button>
+          </form>
+        </div>
+        <div class="vazio-coluna" th:if="${receitas[f.id].isEmpty()}">
+          este fluxo ainda não faz nada: acrescente uma ação
+        </div>
+      </div>
+
+      <div class="acoes-caso">
+        <button class="botao pequeno vazado" type="button"
+                th:data-abre="'janela-cond-' + ${f.id}">+ Condição</button>
+        <button class="botao pequeno" type="button"
+                th:data-abre="'janela-acao-' + ${f.id}">+ Ação</button>
+      </div>
+    </div>
+  </div>
+  <div class="vazio" th:if="${fluxos.isEmpty()}">
+    Nenhum fluxo montado ainda.
+  </div>
+
+  <span class="rotulo-bloco" th:if="${!execucoes.isEmpty()}">O que os fluxos fizeram</span>
+  <div class="tabela-caixa" th:if="${!execucoes.isEmpty()}">
+    <table>
+      <thead>
+      <tr>
+        <th class="centro">Quando</th>
+        <th>O que aconteceu</th>
+        <th class="centro">Resultado</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr th:each="e : ${execucoes}">
+        <td class="centro mono" th:text="${#temporals.format(e.ocorridoEm, 'dd/MM HH:mm')}"></td>
+        <td th:text="${e.detalhe}"></td>
+        <td class="centro">
+          <span class="marca-situacao" th:classappend="${e.fez()} ? 's-pago' : 's-aberto'"
+                th:text="${e.fez()} ? 'fez' : 'não fez'">fez</span>
+        </td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+</main>
+
+<script th:replace="~{layout :: scripts}"></script>
+
+<dialog id="janela-fluxo" class="janela">
+  <form method="post" action="/fluxos">
+    <div class="janela-topo">
+      <div>
+        <span class="olho"><i></i>Quando, se, faça</span>
+        <h2>Novo fluxo</h2>
+      </div>
+      <button type="button" class="fechar" data-fecha aria-label="Fechar">&#10005;</button>
+    </div>
+    <div class="janela-corpo">
+      <div class="campos">
+        <div>
+          <label for="fx-nome">Nome</label>
+          <input id="fx-nome" name="nome" required placeholder="Atraso de 15 dias vira caso parado">
+        </div>
+        <div>
+          <label for="fx-gatilho">Quando acontece</label>
+          <select id="fx-gatilho" name="gatilho">
+            <option value="VENCE_EM_DIAS">quando faltarem X dias para vencer</option>
+            <option value="VENCEU_HOJE">no dia do vencimento</option>
+            <option value="ATRASO_DE_DIAS">quando completar X dias de atraso</option>
+            <option value="CLIENTE_RESPONDEU">quando o cliente responder</option>
+            <option value="PAGAMENTO_ENTROU">quando o pagamento entrar</option>
+            <option value="ACORDO_QUEBRADO">quando um acordo for quebrado</option>
+          </select>
+        </div>
+        <div>
+          <label for="fx-dias">Dias</label>
+          <input id="fx-dias" name="dias" inputmode="numeric" value="0">
+        </div>
+      </div>
+      <div class="campos" style="margin-top:16px">
+        <div style="grid-column:1/-1">
+          <label for="fx-desc">Para que serve</label>
+          <input id="fx-desc" name="descricao"
+                 placeholder="explique em uma linha, para a equipe entender">
+        </div>
+      </div>
+    </div>
+    <div class="janela-pe">
+      <button type="button" class="botao vazado" data-fecha>Cancelar</button>
+      <button class="botao" type="submit">Criar o fluxo</button>
+    </div>
+  </form>
+</dialog>
+
+<th:block th:each="f : ${fluxos}">
+  <dialog th:id="'janela-cond-' + ${f.id}" class="janela">
+    <form method="post" th:action="@{'/fluxos/' + ${f.id} + '/condicoes'}">
+      <div class="janela-topo">
+        <div>
+          <span class="olho"><i></i>Só faz se</span>
+          <h2>Nova condição</h2>
+        </div>
+        <button type="button" class="fechar" data-fecha aria-label="Fechar">&#10005;</button>
+      </div>
+      <div class="janela-corpo">
+        <div class="campos">
+          <div>
+            <label th:for="'cc-' + ${f.id}">O que conferir</label>
+            <select th:id="'cc-' + ${f.id}" name="campo">
+              <option value="VALOR_EM_ABERTO">valor em aberto</option>
+              <option value="DIAS_ATRASO">dias de atraso</option>
+              <option value="SITUACAO_DO_CASO">situação do caso</option>
+              <option value="TOM_DO_CLIENTE">tom do cliente</option>
+            </select>
+          </div>
+          <div>
+            <label th:for="'co-' + ${f.id}">Como</label>
+            <select th:id="'co-' + ${f.id}" name="operador">
+              <option value="MAIOR">maior que</option>
+              <option value="MENOR">menor que</option>
+              <option value="IGUAL">igual a</option>
+              <option value="DIFERENTE">diferente de</option>
+            </select>
+          </div>
+          <div>
+            <label th:for="'cv-' + ${f.id}">Valor</label>
+            <input th:id="'cv-' + ${f.id}" name="valor" required placeholder="500">
+          </div>
+        </div>
+      </div>
+      <div class="janela-pe">
+        <button type="button" class="botao vazado" data-fecha>Cancelar</button>
+        <button class="botao" type="submit">Acrescentar</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog th:id="'janela-acao-' + ${f.id}" class="janela">
+    <form method="post" th:action="@{'/fluxos/' + ${f.id} + '/acoes'}">
+      <div class="janela-topo">
+        <div>
+          <span class="olho"><i></i>Então faça</span>
+          <h2>Nova ação</h2>
+        </div>
+        <button type="button" class="fechar" data-fecha aria-label="Fechar">&#10005;</button>
+      </div>
+      <div class="janela-corpo">
+        <div class="campos">
+          <div>
+            <label th:for="'aa-' + ${f.id}">O que fazer</label>
+            <select th:id="'aa-' + ${f.id}" name="acao">
+              <option value="MANDAR_MENSAGEM">mandar mensagem</option>
+              <option value="MARCAR_CASO">marcar o caso</option>
+              <option value="ANOTAR_PROXIMA_ACAO">anotar a próxima ação</option>
+              <option value="REGISTRAR_OBSERVACAO">registrar observação</option>
+            </select>
+          </div>
+          <div>
+            <label th:for="'am-' + ${f.id}">Texto da mensagem</label>
+            <select th:id="'am-' + ${f.id}" name="modeloId">
+              <option value="">não é mensagem</option>
+              <option th:each="m : ${modelos}" th:value="${m.id}" th:text="${m.nome}"></option>
+            </select>
+          </div>
+          <div>
+            <label th:for="'ad-' + ${f.id}">Em quantos dias</label>
+            <input th:id="'ad-' + ${f.id}" name="dias" inputmode="numeric" value="0">
+          </div>
+        </div>
+        <div class="campos" style="margin-top:16px">
+          <div style="grid-column:1/-1">
+            <label th:for="'at-' + ${f.id}">O que escrever</label>
+            <input th:id="'at-' + ${f.id}" name="texto"
+                   placeholder="para marcar o caso use: EM_COBRANCA, PROMESSA, EM_ACORDO, CONTESTADO, PARADO ou JURIDICO">
+          </div>
+        </div>
+      </div>
+      <div class="janela-pe">
+        <button type="button" class="botao vazado" data-fecha>Cancelar</button>
+        <button class="botao" type="submit">Acrescentar</button>
+      </div>
+    </form>
+  </dialog>
+</th:block>
+
+<script src="/js/janelas.js?v=1"></script>
+
+</body>
+</html>

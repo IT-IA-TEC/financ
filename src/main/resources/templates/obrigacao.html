@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head th:replace="~{layout :: cabeca('Conta a pagar')}"></head>
+<body>
+<header th:replace="~{layout :: topo('pagar')}"></header>
+
+<main class="largo">
+  <div th:replace="~{layout :: recados}"></div>
+
+  <div class="cabecalho-pagina">
+    <div>
+      <span class="olho"><i></i>Conta <span class="mono" th:text="${obrigacao.numero}">1</span>
+        <span th:if="${obrigacao.etiquetaParcela != null}"
+              th:text="' · parcela ' + ${obrigacao.etiquetaParcela}"></span></span>
+      <h1 th:text="${obrigacao.descricao}">Conta</h1>
+      <p th:text="${obrigacao.favorecido.nome} + ' · ' + ${obrigacao.tipoOperacao.rotulo}"></p>
+    </div>
+    <div class="acoes" style="margin:0">
+      <a class="botao vazado" href="/pagar">Voltar às contas</a>
+      <form method="post" th:action="@{'/pagar/' + ${obrigacao.id} + '/completar'}"
+            th:if="${obrigacao.qualidade.name() == 'RASCUNHO'}">
+        <button class="botao" type="submit">Marcar como completa</button>
+      </form>
+      <form method="post" th:action="@{'/pagar/' + ${obrigacao.id} + '/pedir-aprovacao'}"
+            th:if="${obrigacao.aprovacao.name() == 'NAO_EXIGIDA'}">
+        <button class="botao vazado" type="submit">Enviar para aprovação</button>
+      </form>
+      <form method="post" th:action="@{'/pagar/' + ${obrigacao.id} + '/aprovar'}"
+            th:if="${obrigacao.aprovacao.name() == 'PENDENTE'}">
+        <button class="botao" type="submit">Aprovar</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- --------------------------------------------- os cinco controles -->
+  <div class="cartoes">
+    <div class="cartao inverso">
+      <span class="rotulo">Valor devido</span>
+      <span class="numero" th:text="${obrigacao.valorResumido}">R$ 0,00</span>
+      <small th:text="'pago R$ ' + ${#numbers.formatDecimal(obrigacao.totalPago, 1, 'POINT', 2, 'COMMA')}
+                      + ' · saldo R$ ' + ${#numbers.formatDecimal(obrigacao.saldo, 1, 'POINT', 2, 'COMMA')}"></small>
+    </div>
+    <div class="cartao">
+      <span class="rotulo">Cadastro</span>
+      <span class="numero" style="font-size:17px" th:text="${obrigacao.qualidade.rotulo}">completo</span>
+      <small th:text="${obrigacao.qualidade.comoFunciona}"></small>
+    </div>
+    <div class="cartao">
+      <span class="rotulo">Aprovação</span>
+      <span class="numero" style="font-size:17px" th:text="${obrigacao.aprovacao.rotulo}">não exigida</span>
+      <small th:text="${obrigacao.aprovadaPor != null}
+                      ? 'por ' + ${obrigacao.aprovadaPor} : ${obrigacao.aprovacao.comoFunciona}"></small>
+    </div>
+    <div class="cartao">
+      <span class="rotulo">No banco</span>
+      <span class="numero" style="font-size:17px" th:text="${obrigacao.execucao.rotulo}">não encaminhada</span>
+      <small th:text="${obrigacao.execucao.comoFunciona}"></small>
+    </div>
+    <div class="cartao">
+      <span class="rotulo">Liquidação</span>
+      <span class="numero" style="font-size:17px" th:text="${obrigacao.liquidacao.rotulo}">em aberto</span>
+      <small th:text="${obrigacao.estaVencida(hoje)}
+                      ? 'vencida há ' + ${obrigacao.diasDeAtraso(hoje)} + ' dias'
+                      : 'vence em ' + ${#temporals.format(obrigacao.vencimento, 'dd/MM/yyyy')}"></small>
+    </div>
+    <div class="cartao">
+      <span class="rotulo">Conciliação</span>
+      <span class="numero" style="font-size:17px" th:text="${obrigacao.conciliacao.rotulo}">não conciliada</span>
+      <small th:text="${obrigacao.conciliacao.comoFunciona}"></small>
+    </div>
+  </div>
+
+  <div class="alerta-box atencao" th:if="${!pendencias.isEmpty()}" style="margin-top:18px">
+    Pendências: <span th:each="p, i : ${pendencias}"
+                      th:text="${p} + (${i.last} ? '' : ', ')"></span>.
+  </div>
+
+  <div class="alerta-box" th:if="${obrigacao.cancelada}" style="margin-top:18px">
+    Conta cancelada. Motivo: <b th:text="${obrigacao.motivoCancelamento}"></b>
+  </div>
+
+  <!-- ---------------------------------------------------- dados gerais -->
+  <span class="rotulo-bloco">Dados gerais</span>
+  <form class="bloco" method="post" th:action="@{'/pagar/' + ${obrigacao.id}}">
+    <p class="dica">Mudar o valor ou o favorecido derruba a aprovação: quem aprovou aprovou
+      aquele valor para aquela pessoa.</p>
+    <div class="campos">
+      <div>
+        <label for="favorecido">Favorecido</label>
+        <select id="favorecido" name="favorecidoId" required>
+          <option th:each="f : ${favorecidos}" th:value="${f.id}" th:text="${f.nome}"
+                  th:selected="${f.id == obrigacao.favorecido.id}"></option>
+        </select>
+      </div>
+      <div>
+        <label for="descricao">Descrição</label>
+        <input id="descricao" name="descricao" th:value="${obrigacao.descricao}" required>
+      </div>
+      <div>
+        <label for="tipo">Tipo de operação</label>
+        <select id="tipo" name="tipo">
+          <option th:each="t : ${tipos}" th:value="${t}" th:text="${t.rotulo}"
+                  th:selected="${t == obrigacao.tipoOperacao}"></option>
+        </select>
+      </div>
+      <div>
+        <label for="emissao">Emissão</label>
+        <input id="emissao" name="emissao" type="date" th:value="${obrigacao.emissao}">
+      </div>
+      <div>
+        <label for="competencia">Competência</label>
+        <input id="competencia" name="competencia" type="date" th:value="${obrigacao.competencia}">
+      </div>
+      <div>
+        <label for="vencimento">Vencimento</label>
+        <input id="vencimento" name="vencimento" type="date" th:value="${obrigacao.vencimento}" required>
+      </div>
+      <div>
+        <label for="valor">Valor devido (R$)</label>
+        <input id="valor" name="valor" type="number" step="0.01" min="0"
+               th:value="${obrigacao.valor}" required>
+      </div>
+      <div>
+        <label for="conta">Conta financeira</label>
+        <select id="conta" name="contaId">
+          <option value="">definir na hora de pagar</option>
+          <option th:each="c : ${contasFinanceiras}" th:value="${c.id}" th:text="${c.resumo}"
+                  th:selected="${obrigacao.conta != null and obrigacao.conta.id == c.id}"></option>
+        </select>
+      </div>
+      <div>
+        <label for="pagadora">Quem paga</label>
+        <select id="pagadora" name="empresaPagadoraId">
+          <option value="">a própria empresa</option>
+          <option th:each="e : ${empresasDoGrupo}" th:value="${e.id}" th:text="${e.nome}"
+                  th:selected="${obrigacao.empresaPagadora != null and obrigacao.empresaPagadora.id == e.id}"></option>
+        </select>
+      </div>
+      <div>
+        <label for="pessoa">Pessoa relacionada</label>
+        <input id="pessoa" name="pessoaRelacionada" th:value="${obrigacao.pessoaRelacionada}">
+      </div>
+      <div>
+        <label for="bem">Bem relacionado</label>
+        <select id="bem" name="bemId">
+          <option value="">nenhum</option>
+          <option th:each="b : ${bens}" th:value="${b.id}" th:text="${b.etiqueta}"
+                  th:selected="${obrigacao.bem != null and obrigacao.bem.id == b.id}"></option>
+        </select>
+      </div>
+      <div>
+        <label for="solicitante">Solicitante</label>
+        <input id="solicitante" name="solicitante" th:value="${obrigacao.solicitante}">
+      </div>
+    </div>
+    <div class="campos" style="margin-top:16px">
+      <div style="grid-column:1/-1">
+        <label for="observacao">Observação</label>
+        <input id="observacao" name="observacao" th:value="${obrigacao.observacao}">
+      </div>
+    </div>
+    <div class="acoes">
+      <button class="botao" type="submit">Salvar dados</button>
+    </div>
+  </form>
+
+  <!-- ------------------------------------------------------ composição -->
+  <span class="rotulo-bloco">Composição do valor</span>
+  <div class="alerta-box atencao" th:if="${!obrigacao.composicaoFecha()}" style="margin-bottom:14px">
+    A composição soma
+    <b th:text="'R$ ' + ${#numbers.formatDecimal(obrigacao.totalDosItens, 1, 'POINT', 2, 'COMMA')}"></b>
+    e o valor da conta é
+    <b th:text="${obrigacao.valorResumido}"></b>. Enquanto não fecharem, o total não se explica.
+  </div>
+
+  <div class="tabela-caixa" th:if="${!obrigacao.itens.isEmpty()}">
+    <table>
+      <thead>
+      <tr>
+        <th>O que é</th>
+        <th>Natureza</th>
+        <th>Centro de custo</th>
+        <th>Pessoa</th>
+        <th>Bem</th>
+        <th class="centro">Quantidade</th>
+        <th class="centro">Valor</th>
+        <th>Critério do rateio</th>
+        <th></th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr th:each="i : ${obrigacao.itens}">
+        <td th:text="${i.descricao}">Item</td>
+        <td th:text="${i.natureza != null} ? ${i.natureza.caminho} : 'sem natureza'"></td>
+        <td th:text="${i.centroDeCusto != null} ? ${i.centroDeCusto.nome} : 'sem centro'"></td>
+        <td th:text="${i.pessoa}"></td>
+        <td th:text="${i.bem != null} ? ${i.bem.etiqueta} : ''"></td>
+        <td class="centro mono"
+            th:text="${#numbers.formatDecimal(i.quantidade, 1, 'POINT', 0, 'COMMA')}">1</td>
+        <td class="centro mono"
+            th:text="'R$ ' + ${#numbers.formatDecimal(i.total, 1, 'POINT', 2, 'COMMA')}">R$ 0,00</td>
+        <td>
+          <span th:if="${i.veioDeRateio()}"
+                th:text="${i.criterioRateio} + ' · ' + ${i.percentual} + '%'"></span>
+        </td>
+        <td style="text-align:right">
+          <form method="post"
+                th:action="@{'/pagar/' + ${obrigacao.id} + '/itens/' + ${i.id} + '/remover'}">
+            <button class="botao pequeno vazado" type="submit">Tirar</button>
+          </form>
+        </td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="vazio" th:if="${obrigacao.itens.isEmpty()}">
+    Sem composição. Enquanto não houver ao menos uma linha, esta conta aparece como
+    sem classificação nos relatórios.
+  </div>
+
+  <form class="bloco" method="post" style="margin-top:16px"
+        th:action="@{'/pagar/' + ${obrigacao.id} + '/itens'}">
+    <div class="campos">
+      <div>
+        <label for="it-descricao">O que é</label>
+        <input id="it-descricao" name="descricao" required placeholder="troca de fonte">
+      </div>
+      <div>
+        <label for="it-valor">Valor (R$)</label>
+        <input id="it-valor" name="valor" type="number" step="0.01" min="0" required>
+      </div>
+      <div>
+        <label for="it-quantidade">Quantidade</label>
+        <input id="it-quantidade" name="quantidade" type="number" step="1" min="1" value="1">
+      </div>
+      <div>
+        <label for="it-natureza">Natureza</label>
+        <select id="it-natureza" name="naturezaId">
+          <option value="">sem natureza</option>
+          <option th:each="n : ${naturezas}" th:value="${n.id}" th:text="${n.caminho}"></option>
+        </select>
+      </div>
+      <div>
+        <label for="it-centro">Centro de custo</label>
+        <select id="it-centro" name="centroId">
+          <option value="">sem centro</option>
+          <option th:each="c : ${centros}" th:value="${c.id}" th:text="${c.nome}"></option>
+        </select>
+      </div>
+      <div>
+        <label for="it-pessoa">Pessoa</label>
+        <input id="it-pessoa" name="pessoa" placeholder="a quem se refere">
+      </div>
+      <div>
+        <label for="it-bem">Bem</label>
+        <select id="it-bem" name="bemId">
+          <option value="">nenhum</option>
+          <option th:each="b : ${bens}" th:value="${b.id}" th:text="${b.etiqueta}"></option>
+        </select>
+      </div>
+    </div>
+    <div class="acoes">
+      <button class="botao pequeno" type="submit">Adicionar à composição</button>
+    </div>
+  </form>
+
+  <!-- ---------------------------------------------------------- rateio -->
+  <span class="rotulo-bloco">Ratear entre áreas</span>
+  <form class="bloco" method="post" th:action="@{'/pagar/' + ${obrigacao.id} + '/ratear'}">
+    <p class="dica">O rateio substitui a composição inteira e guarda o critério. A soma fecha
+      exatamente com o valor da conta, e a diferença de centavos vai para a última área.</p>
+    <div class="campos">
+      <div>
+        <label for="rt-descricao">O que está sendo dividido</label>
+        <input id="rt-descricao" name="descricao" required th:value="${obrigacao.descricao}">
+      </div>
+      <div>
+        <label for="rt-natureza">Natureza</label>
+        <select id="rt-natureza" name="naturezaId">
+          <option value="">sem natureza</option>
+          <option th:each="n : ${naturezas}" th:value="${n.id}" th:text="${n.caminho}"></option>
+        </select>
+      </div>
+      <div>
+        <label for="rt-criterio">Critério</label>
+        <input id="rt-criterio" name="criterio" required
+               placeholder="por número de usuários, por área ocupada">
+      </div>
+    </div>
+    <div class="campos" style="margin-top:14px">
+      <div th:each="c, i : ${centros}" th:if="${i.index < 6}">
+        <label th:for="'rt-pc-' + ${c.id}" th:text="${c.nome}">Área</label>
+        <div style="display:flex; gap:8px; align-items:center">
+          <input type="checkbox" name="centros" th:value="${c.id}" th:id="'rt-ck-' + ${c.id}">
+          <input th:id="'rt-pc-' + ${c.id}" name="percentuais" type="number" step="0.01"
+                 min="0" max="100" placeholder="%">
+        </div>
+      </div>
+    </div>
+    <div class="acoes">
+      <button class="botao pequeno" type="submit">Aplicar rateio</button>
+    </div>
+  </form>
+
+  <!-- ------------------------------------------------------ pagamentos -->
+  <span class="rotulo-bloco">Pagamentos</span>
+  <div class="tabela-caixa" th:if="${!obrigacao.pagamentos.isEmpty()}">
+    <table>
+      <thead>
+      <tr>
+        <th class="centro">Quando</th>
+        <th class="centro">Valor</th>
+        <th class="centro">Juros e multa</th>
+        <th class="centro">Desconto e retenção</th>
+        <th class="centro">Saiu do banco</th>
+        <th>Conta</th>
+        <th>Forma</th>
+        <th class="centro">Situação</th>
+        <th></th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr th:each="p : ${obrigacao.pagamentos}">
+        <td class="centro mono" th:text="${#temporals.format(p.pagoEm, 'dd/MM/yyyy')}">01/01/2026</td>
+        <td class="centro mono"
+            th:text="'R$ ' + ${#numbers.formatDecimal(p.valor, 1, 'POINT', 2, 'COMMA')}">R$ 0,00</td>
+        <td class="centro mono"
+            th:text="'R$ ' + ${#numbers.formatDecimal(p.juros.add(p.multa), 1, 'POINT', 2, 'COMMA')}">R$ 0,00</td>
+        <td class="centro mono"
+            th:text="'R$ ' + ${#numbers.formatDecimal(p.desconto.add(p.retencao), 1, 'POINT', 2, 'COMMA')}">R$ 0,00</td>
+        <td class="centro mono"
+            th:text="'R$ ' + ${#numbers.formatDecimal(p.saidaDoBanco, 1, 'POINT', 2, 'COMMA')}">R$ 0,00</td>
+        <td th:text="${p.conta != null} ? ${p.conta.nome} : ''"></td>
+        <td th:text="${p.forma}"></td>
+        <td class="centro">
+          <span class="marca-situacao" th:classappend="${p.estornado} ? 's-cancelado' : 's-pago'"
+                th:text="${p.estornado} ? 'estornado' : 'válido'">válido</span>
+        </td>
+        <td style="text-align:right">
+          <form method="post" th:unless="${p.estornado}"
+                th:action="@{'/pagar/' + ${obrigacao.id} + '/pagamentos/' + ${p.id} + '/estornar'}"
+                style="display:flex; gap:8px; justify-content:flex-end">
+            <input name="motivo" placeholder="motivo do estorno" required style="width:auto">
+            <button class="botao pequeno perigo" type="submit">Estornar</button>
+          </form>
+        </td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="vazio" th:if="${obrigacao.pagamentos.isEmpty()}">
+    Nenhum pagamento registrado.
+  </div>
+
+  <form class="bloco" method="post" style="margin-top:16px"
+        th:action="@{'/pagar/' + ${obrigacao.id} + '/pagamentos'}">
+    <div class="campos">
+      <div>
+        <label for="pg-data">Pago em</label>
+        <input id="pg-data" name="pagoEm" type="date" th:value="${hoje}" required>
+      </div>
+      <div>
+        <label for="pg-valor">Valor (R$)</label>
+        <input id="pg-valor" name="valor" type="number" step="0.01" min="0"
+               th:value="${obrigacao.saldo}" required>
+      </div>
+      <div>
+        <label for="pg-conta">Conta usada</label>
+        <select id="pg-conta" name="contaId">
+          <option value="">não informada</option>
+          <option th:each="c : ${contasFinanceiras}" th:value="${c.id}" th:text="${c.resumo}"></option>
+        </select>
+      </div>
+      <div>
+        <label for="pg-forma">Forma</label>
+        <input id="pg-forma" name="forma" placeholder="PIX, boleto, transferência">
+      </div>
+      <div>
+        <label for="pg-juros">Juros (R$)</label>
+        <input id="pg-juros" name="juros" type="number" step="0.01" min="0">
+      </div>
+      <div>
+        <label for="pg-multa">Multa (R$)</label>
+        <input id="pg-multa" name="multa" type="number" step="0.01" min="0">
+      </div>
+      <div>
+        <label for="pg-desconto">Desconto (R$)</label>
+        <input id="pg-desconto" name="desconto" type="number" step="0.01" min="0">
+      </div>
+      <div>
+        <label for="pg-retencao">Retenção (R$)</label>
+        <input id="pg-retencao" name="retencao" type="number" step="0.01" min="0">
+      </div>
+    </div>
+    <div class="acoes">
+      <button class="botao" type="submit">Registrar pagamento</button>
+    </div>
+  </form>
+
+  <!-- -------------------------------------------- andamento e conciliação -->
+  <span class="rotulo-bloco">Andamento no banco e conciliação</span>
+  <div class="bloco">
+    <p class="dica">Encaminhar não comprova pagamento, e agendar no banco também não. Por isso
+      estes controles são separados do valor pago.</p>
+    <div class="campos">
+      <form method="post" th:action="@{'/pagar/' + ${obrigacao.id} + '/execucao'}">
+        <label for="ex-execucao">Andamento no banco</label>
+        <select id="ex-execucao" name="execucao" onchange="this.form.submit()">
+          <option th:each="e : ${execucoes}" th:value="${e}" th:text="${e.rotulo}"
+                  th:selected="${e == obrigacao.execucao}"></option>
+        </select>
+      </form>
+      <form method="post" th:action="@{'/pagar/' + ${obrigacao.id} + '/conciliacao'}">
+        <label for="cn-conciliacao">Conciliação</label>
+        <select id="cn-conciliacao" name="conciliacao" onchange="this.form.submit()">
+          <option th:each="c : ${conciliacoes}" th:value="${c}" th:text="${c.rotulo}"
+                  th:selected="${c == obrigacao.conciliacao}"></option>
+        </select>
+      </form>
+      <form method="post" th:action="@{'/pagar/' + ${obrigacao.id} + '/cancelar'}"
+            th:unless="${obrigacao.cancelada}">
+        <label for="cl-motivo">Cancelar esta conta</label>
+        <div style="display:flex; gap:8px">
+          <input id="cl-motivo" name="motivo" placeholder="motivo" required>
+          <button class="botao pequeno perigo" type="submit">Cancelar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ------------------------------------------------ documentos e origem -->
+  <span class="rotulo-bloco">Documentos e origem</span>
+  <div class="bloco">
+    <div class="campos">
+      <div>
+        <label>De onde veio</label>
+        <p th:text="${obrigacao.origem.rotulo}">Digitado</p>
+      </div>
+      <div>
+        <label>Referência da origem</label>
+        <p class="mono" th:text="${obrigacao.origemReferencia} ?: 'sem referência'">sem referência</p>
+      </div>
+      <div>
+        <label>Registrado por</label>
+        <p th:text="${obrigacao.criadoPor} + ' em '
+                    + ${#temporals.format(obrigacao.criadoEm, 'dd/MM/yyyy HH:mm')}"></p>
+      </div>
+    </div>
+  </div>
+
+  <form class="bloco" method="post" enctype="multipart/form-data" style="margin-top:16px"
+        th:action="@{'/pagar/' + ${obrigacao.id} + '/documentos'}">
+    <div class="campos">
+      <div>
+        <label for="doc-arquivo">Arquivo</label>
+        <input id="doc-arquivo" name="arquivo" type="file" required>
+      </div>
+      <div>
+        <label for="doc-tipo">Tipo</label>
+        <select id="doc-tipo" name="tipo">
+          <option th:each="t : ${tiposDeDocumento}" th:value="${t}" th:text="${t}"></option>
+        </select>
+      </div>
+      <div>
+        <label for="doc-obs">Observação</label>
+        <input id="doc-obs" name="observacao">
+      </div>
+    </div>
+    <div class="acoes">
+      <button class="botao pequeno" type="submit">Anexar documento</button>
+    </div>
+  </form>
+</main>
+
+<script th:replace="~{layout :: scripts}"></script>
+
+</body>
+</html>

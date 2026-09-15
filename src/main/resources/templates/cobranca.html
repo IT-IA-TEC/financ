@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head th:replace="~{layout :: cabeca('Cobrança')}"></head>
+<body>
+<header th:replace="~{layout :: topo('servicos')}"></header>
+
+<main class="largo">
+  <div th:replace="~{layout :: recados}"></div>
+
+  <div class="cabecalho-pagina">
+    <div>
+      <span class="olho"><i></i>Cobrança de <span th:text="${cobranca.origem.rotulo.toLowerCase()}">pacote</span></span>
+      <h1 th:text="${cobranca.descricao}">Cobrança</h1>
+      <p th:text="${cobranca.pagador.nome} + ' · ' + ${cobranca.origemResumida}"></p>
+    </div>
+    <div class="acoes" style="margin:0">
+      <a class="botao vazado" href="/cobrancas">Voltar às cobranças</a>
+      <form method="post" th:action="@{'/cobrancas/' + ${cobranca.id} + '/aprovar'}"
+            th:if="${cobranca.situacao.name() == 'PENDENTE'}">
+        <button class="botao" type="submit">Aprovar e lançar título</button>
+      </form>
+      <form method="post" th:action="@{'/cobrancas/' + ${cobranca.id} + '/enviar'}"
+            th:if="${cobranca.situacao.name() == 'APROVADA'}">
+        <button class="botao" type="submit" th:disabled="${!temSistemaDeCobranca}">Enviar ao sistema de cobrança</button>
+      </form>
+      <form method="post" th:action="@{'/cobrancas/' + ${cobranca.id} + '/cancelar'}"
+            th:if="${cobranca.situacao.name() != 'CANCELADA'}">
+        <button class="botao perigo" type="submit">Cancelar cobrança</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="cartoes">
+    <div class="cartao destaque">
+      <span class="rotulo">Valor final</span>
+      <span class="numero" th:text="${cobranca.valorResumido}">R$ 0,00</span>
+      <small th:text="${cobranca.temDesconto}
+                      ? 'original R$ ' + ${#numbers.formatDecimal(cobranca.valorOriginal, 1, 'POINT', 2, 'COMMA')}
+                        + ', desconto R$ ' + ${#numbers.formatDecimal(cobranca.desconto, 1, 'POINT', 2, 'COMMA')}
+                      : 'sem desconto'"></small>
+    </div>
+    <div class="cartao">
+      <span class="rotulo">Situação da cobrança</span>
+      <span class="numero" style="font-size:17px" th:text="${cobranca.situacao.rotulo}">pendente</span>
+      <small th:text="${cobranca.situacao.comoFunciona}"></small>
+    </div>
+    <div class="cartao">
+      <span class="rotulo">Pagamento</span>
+      <span class="numero" style="font-size:17px" th:text="${cobranca.situacaoDoPagamento}">ainda sem título</span>
+      <small th:text="${cobranca.titulo != null}
+                      ? 'título ' + ${cobranca.titulo.numero} + ' · ' + ${cobranca.titulo.identificadorPix}
+                      : 'o título nasce quando a cobrança é aprovada'"></small>
+    </div>
+    <div class="cartao">
+      <span class="rotulo">Período de referência</span>
+      <span class="numero" style="font-size:17px" th:text="${cobranca.periodoResumido}">09/2026</span>
+      <small th:text="${cobranca.vencimento != null}
+                      ? 'vence em ' + ${#temporals.format(cobranca.vencimento, 'dd/MM/yyyy')}
+                      : 'sem vencimento definido'"></small>
+    </div>
+  </div>
+
+  <!-- ------------------------------------------------- valores e desconto -->
+  <span class="rotulo-bloco">Valor, desconto e vencimento</span>
+  <form class="bloco" method="post" th:action="@{'/cobrancas/' + ${cobranca.id}}">
+    <p class="dica" th:unless="${cobranca.situacao.aindaEditavel()}">
+      Esta cobrança já foi aprovada. Para mudar o valor, cancele e gere outra.
+    </p>
+    <div class="campos">
+      <div>
+        <label for="valorOriginal">Valor original (R$)</label>
+        <input id="valorOriginal" name="valorOriginal" type="number" step="0.01" min="0"
+               th:value="${cobranca.valorOriginal}" required
+               th:disabled="${!cobranca.situacao.aindaEditavel()}">
+      </div>
+      <div>
+        <label for="desconto">Desconto (R$)</label>
+        <input id="desconto" name="desconto" type="number" step="0.01" min="0"
+               th:value="${cobranca.desconto}"
+               th:disabled="${!cobranca.situacao.aindaEditavel()}">
+      </div>
+      <div>
+        <label for="vencimento">Vencimento</label>
+        <input id="vencimento" name="vencimento" type="date" th:value="${cobranca.vencimento}"
+               th:disabled="${!cobranca.situacao.aindaEditavel()}">
+      </div>
+    </div>
+    <div class="campos" style="margin-top:16px">
+      <div style="grid-column:1/-1">
+        <label for="justificativa">Justificativa do desconto</label>
+        <input id="justificativa" name="justificativa" th:value="${cobranca.justificativa}"
+               placeholder="obrigatória quando há desconto"
+               th:disabled="${!cobranca.situacao.aindaEditavel()}">
+      </div>
+    </div>
+    <div class="acoes" th:if="${cobranca.situacao.aindaEditavel()}">
+      <button class="botao" type="submit">Salvar valores</button>
+    </div>
+  </form>
+
+  <div class="alerta-box" th:if="${cobranca.aprovadaPor != null}" style="margin-top:16px">
+    Aprovada por <b th:text="${cobranca.aprovadaPor}">alguém</b>
+    em <span th:text="${#temporals.format(cobranca.aprovadaEm, 'dd/MM/yyyy HH:mm')}"></span>.
+  </div>
+
+  <!-- ------------------------------------------------------------- itens -->
+  <span class="rotulo-bloco">Itens e quantidades</span>
+  <div class="tabela-caixa" th:if="${!cobranca.itens.isEmpty()}">
+    <table>
+      <thead>
+      <tr>
+        <th>Item</th>
+        <th class="centro">Quantidade</th>
+        <th class="centro">Valor unitário</th>
+        <th class="centro">Total</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr th:each="i : ${cobranca.itens}">
+        <td th:text="${i.descricao}">Item</td>
+        <td class="centro mono"
+            th:text="${#numbers.formatDecimal(i.quantidade, 1, 'POINT', 0, 'COMMA')}">1</td>
+        <td class="centro mono"
+            th:text="${i.valorUnitario != null}
+                     ? 'R$ ' + ${#numbers.formatDecimal(i.valorUnitario, 1, 'POINT', 2, 'COMMA')}
+                     : 'incluído'"></td>
+        <td class="centro mono"
+            th:text="'R$ ' + ${#numbers.formatDecimal(i.total, 1, 'POINT', 2, 'COMMA')}">R$ 0,00</td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="vazio" th:if="${cobranca.itens.isEmpty()}">
+    Esta cobrança não tem itens detalhados. O valor é do serviço ou do pacote inteiro.
+  </div>
+
+  <!-- --------------------------------------------------- envio ao Conexa -->
+  <span class="rotulo-bloco">Envio ao sistema de cobrança</span>
+  <div class="bloco">
+    <div class="campos">
+      <div>
+        <label>Identificação no sistema de cobrança</label>
+        <p class="mono" th:text="${cobranca.referenciaExterna} ?: 'ainda não enviada'">ainda não enviada</p>
+      </div>
+      <div>
+        <label>Enviada em</label>
+        <p class="mono" th:text="${cobranca.enviadaEm != null}
+                                 ? ${#temporals.format(cobranca.enviadaEm, 'dd/MM/yyyy HH:mm')}
+                                 : 'nunca'">nunca</p>
+      </div>
+      <div>
+        <label>Identificação no financeiro</label>
+        <p class="mono" th:text="${cobranca.titulo != null}
+                                 ? ${cobranca.titulo.identificadorPix} : 'sem título'">sem título</p>
+      </div>
+    </div>
+    <div class="alerta-box atencao" th:if="${cobranca.ultimoErro != null}" style="margin-top:14px">
+      Último erro no envio: <span th:text="${cobranca.ultimoErro}"></span>
+    </div>
+  </div>
+
+  <!-- ------------------------------------------------------------ origem -->
+  <span class="rotulo-bloco">De onde veio</span>
+  <div class="bloco">
+    <p th:if="${cobranca.realizado != null}">
+      Serviço realizado em
+      <b th:text="${#temporals.format(cobranca.realizado.realizadoEm, 'dd/MM/yyyy')}"></b>,
+      tratado como
+      <b th:text="${cobranca.realizado.tratamento.rotulo.toLowerCase()}"></b>.
+      <a th:href="@{'/realizados/' + ${cobranca.realizado.id}}">Abrir o atendimento</a>
+    </p>
+    <p th:if="${cobranca.contratacao != null}">
+      Contratação do pacote <b th:text="${cobranca.contratacao.pacote.nome}"></b>,
+      vigência <span th:text="${cobranca.contratacao.vigenciaResumida}"></span>.
+      <a th:href="@{'/pacotes/' + ${cobranca.contratacao.pacote.id} + '?aba=contratacoes'}">Abrir o pacote</a>
+    </p>
+    <p th:if="${cobranca.titulo != null}">
+      Título <b th:text="${cobranca.titulo.numero}"></b> no financeiro.
+      <a th:href="@{'/titulos/' + ${cobranca.titulo.id}}">Abrir o título</a>
+    </p>
+  </div>
+</main>
+
+<script th:replace="~{layout :: scripts}"></script>
+
+</body>
+</html>
