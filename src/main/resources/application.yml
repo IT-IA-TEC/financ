@@ -37,11 +37,18 @@ spring:
 
   datasource:
     url: ${FINANCEIRO_DB_URL}
+    # sem esta linha o sistema continua tentando o banco de arquivo
+    driver-class-name: org.postgresql.Driver
     username: ${FINANCEIRO_DB_USUARIO}
     password: ${FINANCEIRO_DB_SENHA}
 
   flyway:
     locations: classpath:db/migration/postgresql
+    # o banco do Supabase ja nasce com uma funcao de seguranca dele, e sem estas
+    # duas linhas o Flyway se recusa a comecar achando que o banco esta em uso.
+    # A versao zero garante que nenhum passo seja pulado: tudo e aplicado.
+    baseline-on-migrate: true
+    baseline-version: 0
 
   thymeleaf:
     cache: true
