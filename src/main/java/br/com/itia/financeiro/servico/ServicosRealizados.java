@@ -1,6 +1,5 @@
 package br.com.itia.financeiro.servico;
 
-import br.com.itia.financeiro.config.Avisos;
 import br.com.itia.financeiro.dominio.AbrangenciaDoPacote;
 import br.com.itia.financeiro.dominio.ClienteEspelho;
 import br.com.itia.financeiro.dominio.ContratacaoDePacote;

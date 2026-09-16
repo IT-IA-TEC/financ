@@ -1,6 +1,5 @@
 package br.com.itia.financeiro.servico;
 
-import br.com.itia.financeiro.config.Avisos;
 import br.com.itia.financeiro.dominio.Departamento;
 import br.com.itia.financeiro.dominio.Empresa;
 import br.com.itia.financeiro.dominio.FormaDePreco;

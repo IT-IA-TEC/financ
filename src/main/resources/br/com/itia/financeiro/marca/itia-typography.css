@@ -1,0 +1,20 @@
+/* tokens/typography.css. Tracking não existe no JavaFX CSS — ver TrackedText. */
+.itia-display{-fx-font-family:"Space Grotesk";-fx-font-weight:700;-fx-font-size:64px;}
+.itia-h1{-fx-font-family:"Space Grotesk";-fx-font-weight:600;-fx-font-size:44px;}
+.itia-h2{-fx-font-family:"Space Grotesk";-fx-font-weight:600;-fx-font-size:28px;}
+.itia-h3{-fx-font-family:"Space Grotesk";-fx-font-weight:600;-fx-font-size:18px;}
+.itia-lead{-fx-font-family:"Space Grotesk";-fx-font-weight:600;-fx-font-size:34px;}
+.itia-body{-fx-font-family:"IBM Plex Sans";-fx-font-weight:400;-fx-font-size:17px;}
+.itia-small{-fx-font-family:"IBM Plex Sans";-fx-font-weight:400;-fx-font-size:14px;}
+.itia-caption{-fx-font-family:"IBM Plex Sans";-fx-font-weight:500;-fx-font-size:12px;}
+.itia-eyebrow{-fx-font-family:"IBM Plex Sans";-fx-font-weight:600;-fx-font-size:13px;}
+.itia-meta{-fx-font-family:"IBM Plex Sans";-fx-font-weight:400;-fx-font-size:11px;}
+.itia-mono{-fx-font-family:"IBM Plex Mono";-fx-font-weight:400;-fx-font-size:13px;}
+.itia-logotype{-fx-font-family:"Space Grotesk";-fx-font-weight:700;}
+.itia-secondary{-fx-text-fill:-text-secondary;}
+.itia-muted{-fx-text-fill:-text-muted;}
+.itia-on-inverse{-fx-text-fill:-text-on-inverse;}
+.itia-on-inverse-muted{-fx-text-fill:-text-on-inverse-muted;}
+.itia-accent-text{-fx-text-fill:-accent;}
+.itia-link{-fx-text-fill:-link;-fx-underline:false;-fx-cursor:hand;}
+.itia-link:hover{-fx-text-fill:-link-hover;}

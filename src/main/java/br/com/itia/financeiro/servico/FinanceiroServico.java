@@ -11,7 +11,6 @@ import br.com.itia.financeiro.repositorio.EmpresaRepositorio;
 import br.com.itia.financeiro.repositorio.EventoRepositorio;
 import br.com.itia.financeiro.repositorio.PagamentoRepositorio;
 import br.com.itia.financeiro.repositorio.TituloRepositorio;
-import br.com.itia.financeiro.config.Avisos;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

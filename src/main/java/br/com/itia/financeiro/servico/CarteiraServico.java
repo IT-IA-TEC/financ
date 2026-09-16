@@ -9,7 +9,6 @@ import br.com.itia.financeiro.dominio.Titulo;
 import br.com.itia.financeiro.repositorio.ClienteRepositorio;
 import br.com.itia.financeiro.repositorio.PagadorRepositorio;
 import br.com.itia.financeiro.repositorio.TituloRepositorio;
-import br.com.itia.financeiro.config.Avisos;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

@@ -1,0 +1,1261 @@
+/* A identidade do IT.FC em janela.
+ *
+ * Cada valor daqui saiu do itfc-design-system.json entregue pela You. Nenhuma
+ * tela inventa cor, letra ou medida.
+ *
+ *   laranja  #FE4901   acento #FF9200   texto  #D43D00   toque  #E64200
+ *   ink      #111114   ink2   #1C1C1F   grafite #3F3F46  apoio  #52525B
+ *   apagado  #6B6B72   névoa  #A1A1AA   borda  #E4E4E7   forte  #D4D4D8
+ *   página   #FFFFFF   superfície #FAFAFA   superfície2 #F4F4F5
+ *   verde    #1B7A44   vermelho #C0392B   âmbar #B25E09   azul #3A5A8C
+ *
+ * Duas letras: Clash Display nos títulos e números, Geist no resto.
+ * Dois cantos: 14 em tudo, pílula só no botão. Sombra sempre neutra.
+ */
+
+.root {
+    -fx-font-family: "Geist", "Segoe UI", sans-serif;
+    -fx-font-size: 15px;
+    -fx-background-color: #FFFFFF;
+    -fx-focus-color: #D43D00;
+    -fx-faint-focus-color: transparent;
+}
+
+/* títulos e números grandes usam a letra de display */
+.titulo-pagina, .titulo-item, .quadro .numero, .marca .label, .nome-empresa {
+    -fx-font-family: "Clash Display", "Segoe UI", sans-serif;
+    -fx-font-weight: bold;
+}
+
+/* --------------------------------------------------------- barra do topo */
+.topo {
+    -fx-background-color: #FFFFFF;
+    -fx-border-color: transparent transparent #E4E4E7 transparent;
+    -fx-border-width: 0 0 1 0;
+}
+.marca .label {
+    -fx-text-fill: #111114;
+    -fx-font-size: 19px;
+}
+.marca .ponto {
+    -fx-text-fill: #FE4901;
+}
+.menu .item {
+    /* caixa alta em peso normal fica fraca: o item parado vai em Medium e no
+       grafite, para ler sem esforço mesmo sem estar escolhido */
+    -fx-text-fill: #3F3F46;
+    -fx-font-family: "Geist Medium", "Geist", "Segoe UI", sans-serif;
+    -fx-font-size: 13px;
+    -fx-padding: 11 0 11 0;
+    -fx-cursor: hand;
+    -fx-border-color: transparent;
+    -fx-border-width: 0 0 2 0;
+}
+.menu .item:hover {
+    -fx-text-fill: #111114;
+}
+.menu .item.ativo {
+    -fx-text-fill: #111114;
+    -fx-font-family: "Geist SemiBold", "Geist", "Segoe UI", sans-serif;
+    -fx-border-color: transparent transparent #FE4901 transparent;
+}
+/* o chip da empresa */
+.empresa-atual {
+    -fx-font-family: "Geist", "Segoe UI", sans-serif;
+    -fx-font-size: 12.5px;
+    -fx-text-fill: #6B6B72;
+    -fx-border-color: #E4E4E7;
+    -fx-border-width: 1;
+    -fx-border-radius: 999;
+    -fx-background-radius: 999;
+    -fx-padding: 7 16 7 16;
+    -fx-background-color: #FFFFFF;
+    -fx-cursor: hand;
+}
+.empresa-atual:hover {
+    -fx-border-color: #111114;
+    -fx-text-fill: #111114;
+}
+/* a bolinha de quem entrou */
+.perfil {
+    -fx-background-color: #111114;
+    -fx-background-radius: 999;
+    -fx-min-width: 36;
+    -fx-min-height: 36;
+    -fx-max-width: 36;
+    -fx-max-height: 36;
+    -fx-text-fill: #FFFFFF;
+    -fx-font-family: "Geist SemiBold", "Geist", "Segoe UI", sans-serif;
+    -fx-font-size: 12px;
+    -fx-alignment: center;
+    -fx-cursor: hand;
+}
+
+/* ---------------------------------------------------------------- conteúdo */
+.rolagem, .rolagem > .viewport {
+    -fx-background-color: #FFFFFF;
+}
+.rolagem {
+    -fx-background-insets: 0;
+    -fx-padding: 0;
+    -fx-border-width: 0;
+}
+.conteudo {
+    -fx-background-color: #FFFFFF;
+}
+.cabecalho-pagina {
+    -fx-border-color: transparent transparent #E4E4E7 transparent;
+    -fx-border-width: 0 0 1 0;
+    -fx-padding: 0 0 12 0;
+}
+.titulo-pagina {
+    -fx-text-fill: #111114;
+    -fx-font-size: 30px;
+}
+.linha-apoio {
+    -fx-text-fill: #52525B;
+    -fx-font-size: 14px;
+}
+/* o olho: ponto laranja e o rótulo em caixa alta */
+.olho, .olho-claro {
+    -fx-font-family: "Geist Medium", "Geist", "Segoe UI", sans-serif;
+    -fx-font-size: 11.5px;
+    -fx-text-fill: #6B6B72;
+}
+
+/* ------------------------------------------------------ cartões do topo */
+.quadro {
+    -fx-background-color: #FFFFFF;
+    -fx-border-color: #E4E4E7;
+    -fx-border-width: 1;
+    -fx-border-radius: 14;
+    -fx-background-radius: 14;
+    -fx-padding: 14 18 14 18;
+}
+.quadro .rotulo {
+    -fx-font-family: "Geist Medium", "Geist", "Segoe UI", sans-serif;
+    -fx-font-size: 11.5px;
+    -fx-text-fill: #6B6B72;
+}
+.quadro .numero {
+    -fx-font-size: 26px;
+    -fx-text-fill: #111114;
+}
+.quadro .apoio {
+    -fx-font-family: "Geist Medium", "Geist", "Segoe UI", sans-serif;
+    -fx-font-size: 12.5px;
+    -fx-text-fill: #52525B;
+}
+/* o cartão escuro, de quando o número manda na tela */
+.quadro.forte {
+    -fx-background-color: #111114;
+    -fx-border-color: #111114;
+}
+.quadro.forte .rotulo {
+    -fx-text-fill: #A1A1AA;
+}
+.quadro.forte .numero {
+    -fx-text-fill: #FF9200;
+}
+.quadro.forte .apoio {
+    -fx-text-fill: #FFFFFF;
+}
+/* o que pede atenção: âmbar, não vermelho */
+.quadro.atencao {
+    -fx-border-color: #E4E4E7 #E4E4E7 #E4E4E7 #B25E09;
+    -fx-border-width: 1 1 1 3;
+}
+.quadro.atencao .numero {
+    -fx-text-fill: #B25E09;
+}
+.quadro .numero.vermelho {
+    -fx-text-fill: #C0392B;
+}
+.quadro.positivo .apoio {
+    -fx-text-fill: #1B7A44;
+}
+.quadro.listrado {
+    -fx-background-color: #111114;
+    -fx-border-color: #111114;
+}
+.quadro.listrado .rotulo {
+    -fx-text-fill: #A1A1AA;
+}
+.quadro.listrado .numero, .quadro.listrado .apoio {
+    -fx-text-fill: #FFFFFF;
+}
+
+/* -------------------------------------------------------------- seções */
+.titulo-secao {
+    -fx-font-family: "Geist Medium", "Geist", "Segoe UI", sans-serif;
+    -fx-font-size: 11.5px;
+    -fx-text-fill: #6B6B72;
+    -fx-padding: 0 0 14 0;
+}
+.vazio {
+    -fx-background-color: #FAFAFA;
+    -fx-border-color: #E4E4E7;
+    -fx-border-width: 1;
+    -fx-border-radius: 14;
+    -fx-background-radius: 14;
+    -fx-padding: 40 26 40 26;
+}
+.vazio .texto {
+    -fx-text-fill: #52525B;
+}
+.caixa {
+    -fx-background-color: #FFFFFF;
+    -fx-border-color: #E4E4E7;
+    -fx-border-width: 1;
+    -fx-border-radius: 14;
+    -fx-background-radius: 14;
+    -fx-padding: 20;
+}
+
+/* ------------------------------------------------- etiquetas de situação */
+.marca-situacao {
+    -fx-font-family: "Geist Medium", "Geist", "Segoe UI", sans-serif;
+    -fx-font-size: 12px;
+    -fx-padding: 4 10 4 10;
+    -fx-border-width: 1;
+    -fx-border-radius: 14;
+    -fx-background-radius: 14;
+    -fx-border-color: #E4E4E7;
+    -fx-background-color: #FFFFFF;
+    -fx-text-fill: #52525B;
+}
+.marca-situacao.s-pago {
+    -fx-background-color: #DCF0E4;
+    -fx-border-color: #DCF0E4;
+    -fx-text-fill: #0F4A28;
+}
+.marca-situacao.s-vencido {
+    -fx-background-color: #F8DAD6;
+    -fx-border-color: #F8DAD6;
+    -fx-text-fill: #7F2018;
+}
+.marca-situacao.s-parcial {
+    -fx-background-color: #F6E2C8;
+    -fx-border-color: #F6E2C8;
+    -fx-text-fill: #8A4906;
+}
+.marca-situacao.s-aberto {
+    -fx-background-color: #E5EAF2;
+    -fx-border-color: #E5EAF2;
+    -fx-text-fill: #3A5A8C;
+}
+.marca-situacao.s-cancelado {
+    -fx-text-fill: #A1A1AA;
+    -fx-border-color: #E4E4E7;
+    -fx-background-color: #FFFFFF;
+}
+
+/* -------------------------------------------------------------- botões */
+.botao {
+    /* sólido escuro: retângulo de canto curvo, preto com texto branco. Ao passar
+       o mouse só as letras acendem no laranja. */
+    -fx-background-color: #111114;
+    -fx-text-fill: #FFFFFF;
+    -fx-font-family: "Geist SemiBold", "Geist", "Segoe UI", sans-serif;
+    -fx-font-size: 14.5px;
+    -fx-padding: 0 22 0 22;
+    -fx-min-height: 48;
+    -fx-pref-height: 48;
+    -fx-background-radius: 12;
+    -fx-border-radius: 12;
+    -fx-border-color: #111114;
+    -fx-border-width: 1;
+    -fx-cursor: hand;
+}
+.botao:hover {
+    -fx-background-color: #111114;
+    -fx-border-color: #111114;
+    -fx-text-fill: #FE4901;
+}
+.botao.vazado {
+    -fx-background-color: #FFFFFF;
+    -fx-text-fill: #111114;
+    -fx-border-color: #D4D4D8;
+}
+.botao.vazado:hover {
+    -fx-background-color: #FAFAFA;
+    -fx-border-color: #111114;
+    -fx-text-fill: #111114;
+}
+.botao.perigo {
+    -fx-background-color: #FFFFFF;
+    -fx-border-color: #C0392B;
+    -fx-text-fill: #C0392B;
+}
+.botao.perigo:hover {
+    -fx-background-color: #C0392B;
+    -fx-text-fill: #FFFFFF;
+}
+
+/* ---------------------------------------------------------- formulários */
+.rotulo-campo {
+    -fx-font-family: "Geist Medium", "Geist", "Segoe UI", sans-serif;
+    -fx-font-size: 13px;
+    -fx-text-fill: #111114;
+}
+.text-field, .text-area, .combo-box, .date-picker {
+    -fx-background-color: #FFFFFF;
+    -fx-background-radius: 14;
+    -fx-border-radius: 14;
+    -fx-border-color: #D4D4D8;
+    -fx-border-width: 1;
+    -fx-padding: 0 14 0 14;
+    -fx-min-height: 48;
+    -fx-pref-height: 48;
+    -fx-font-size: 14px;
+    -fx-prompt-text-fill: #6B6B72;
+}
+.text-field:hover, .combo-box:hover, .date-picker:hover {
+    -fx-border-color: #111114;
+}
+.text-field:focused, .text-area:focused, .combo-box:focused, .date-picker:focused {
+    -fx-border-color: #111114;
+    -fx-effect: innershadow(gaussian, rgba(212,61,0,0.35), 0, 0, 0, 0);
+}
+/* o campo de data: o quadradinho do calendario fica dentro da borda do campo,
+   sem o botao cinza de fabrica do Java */
+.date-picker {
+    -fx-padding: 0 4 0 0;
+}
+.date-picker > .text-field {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-border-width: 0;
+    -fx-padding: 0 8 0 14;
+    -fx-min-height: 46;
+    -fx-pref-height: 46;
+}
+.date-picker > .text-field:hover, .date-picker > .text-field:focused {
+    -fx-border-color: transparent;
+    -fx-effect: null;
+}
+.date-picker > .arrow-button {
+    -fx-background-color: transparent;
+    -fx-background-radius: 12;
+    -fx-border-color: transparent;
+    -fx-padding: 0 10 0 10;
+    -fx-cursor: hand;
+}
+.date-picker > .arrow-button:hover {
+    -fx-background-color: #F4F4F5;
+}
+.date-picker > .arrow-button > .arrow {
+    -fx-background-color: #52525B;
+}
+.date-picker > .arrow-button:hover > .arrow {
+    -fx-background-color: #111114;
+}
+.date-picker-popup {
+    -fx-background-color: #FFFFFF;
+    -fx-background-radius: 14;
+    -fx-border-color: #E4E4E7;
+    -fx-border-radius: 14;
+    -fx-effect: dropshadow(gaussian, rgba(17,17,20,0.14), 24, 0, 0, 10);
+}
+.date-picker-popup > .month-year-pane {
+    -fx-background-color: #FFFFFF;
+    -fx-padding: 12 12 8 12;
+}
+.date-picker-popup > * > .spinner > .label {
+    -fx-text-fill: #111114;
+    -fx-font-family: "Geist SemiBold", "Geist", "Segoe UI", sans-serif;
+}
+.date-picker-popup > * > .day-name-cell {
+    -fx-text-fill: #6B6B72;
+    -fx-font-size: 11px;
+}
+.date-picker-popup > * > .day-cell {
+    -fx-background-color: #FFFFFF;
+    -fx-text-fill: #111114;
+    -fx-border-color: transparent;
+}
+.date-picker-popup > * > .day-cell:hover {
+    -fx-background-color: #F4F4F5;
+}
+.date-picker-popup > * > .selected {
+    -fx-background-color: #FE4901;
+    -fx-text-fill: #FFFFFF;
+}
+.date-picker-popup > * > .today {
+    -fx-border-color: #FE4901;
+    -fx-border-width: 1;
+}
+.date-picker-popup > * > .previous-month, .date-picker-popup > * > .next-month {
+    -fx-text-fill: #A1A1AA;
+}
+
+/* a seta da lista de escolha, no traco da marca */
+.combo-box > .arrow-button {
+    -fx-background-color: transparent;
+    -fx-padding: 0 8 0 8;
+}
+.combo-box > .arrow-button > .arrow {
+    -fx-background-color: #52525B;
+}
+.combo-box:hover > .arrow-button > .arrow {
+    -fx-background-color: #111114;
+}
+
+.text-area {
+    -fx-min-height: 96;
+    -fx-padding: 12 14 12 14;
+}
+.text-area .content {
+    -fx-background-color: #FFFFFF;
+    -fx-background-radius: 14;
+}
+.dica {
+    -fx-font-size: 12px;
+    -fx-text-fill: #6B6B72;
+}
+
+/* -------------------------------------------------------------- tabela
+   Cabeçalho claro, sem zebra, linha alta e régua fina entre elas. */
+.tabela {
+    -fx-background-color: #FFFFFF;
+    -fx-border-color: #E4E4E7;
+    -fx-border-width: 1;
+    -fx-border-radius: 14;
+    -fx-background-radius: 14;
+}
+.celula-cabecalho {
+    -fx-background-color: #F4F4F5;
+    -fx-text-fill: #6B6B72;
+    -fx-font-family: "Geist Medium", "Geist", "Segoe UI", sans-serif;
+    -fx-font-size: 11.5px;
+    -fx-padding: 12 20 12 20;
+    -fx-border-color: transparent transparent #E4E4E7 transparent;
+    -fx-border-width: 0 0 1 0;
+}
+.celula {
+    -fx-text-fill: #111114;
+    -fx-font-size: 13.5px;
+    -fx-padding: 15 20 15 20;
+    -fx-border-color: transparent transparent #E4E4E7 transparent;
+    -fx-border-width: 0 0 1 0;
+}
+.celula.par {
+    -fx-background-color: #FFFFFF;
+}
+.celula.valor {
+    -fx-font-family: "Geist SemiBold", "Geist", "Segoe UI", sans-serif;
+}
+.celula.elo {
+    -fx-text-fill: #D43D00;
+}
+.mono {
+    -fx-font-family: "Geist", "Segoe UI", sans-serif;
+}
+
+/* ------------------------------------------------------------- recados */
+.recado {
+    -fx-background-color: #FFFFFF;
+    -fx-border-color: #E4E4E7 #E4E4E7 #E4E4E7 #111114;
+    -fx-border-width: 1 1 1 3;
+    -fx-border-radius: 14;
+    -fx-background-radius: 14;
+    -fx-padding: 15 17 15 17;
+    -fx-text-fill: #111114;
+}
+.recado.erro {
+    -fx-border-color: #E4E4E7 #E4E4E7 #E4E4E7 #C0392B;
+    -fx-text-fill: #C0392B;
+}
+
+/* ----------------------------------------------------------------- abas */
+.abas {
+    -fx-background-color: #FFFFFF;
+    -fx-border-color: transparent transparent #E4E4E7 transparent;
+    -fx-border-width: 0 0 1 0;
+    -fx-padding: 0 14 0 14;
+}
+.aba {
+    -fx-text-fill: #52525B;
+    -fx-font-size: 13px;
+    -fx-font-family: "Geist Medium", "Geist", "Segoe UI", sans-serif;
+    -fx-padding: 3 10 3 10;
+    -fx-cursor: hand;
+    -fx-border-color: transparent;
+    -fx-border-width: 0 0 2 0;
+}
+.aba:hover {
+    -fx-text-fill: #111114;
+}
+.aba.ativa {
+    -fx-text-fill: #111114;
+    -fx-font-family: "Geist SemiBold", "Geist", "Segoe UI", sans-serif;
+    -fx-border-color: transparent transparent #FE4901 transparent;
+}
+.traco-aba {
+    -fx-text-fill: transparent;
+    -fx-font-size: 1px;
+    -fx-padding: 0;
+    -fx-min-width: 11;
+}
+
+/* ------------------------------------------------- cartão de empresa */
+.cartao-empresa {
+    -fx-background-color: #111114;
+    -fx-border-color: #111114;
+    -fx-border-width: 1;
+    -fx-border-radius: 14;
+    -fx-background-radius: 14;
+    -fx-cursor: hand;
+}
+.cartao-empresa:hover {
+    -fx-background-color: #1C1C1F;
+    -fx-border-color: #FE4901;
+}
+.apelido-empresa {
+    -fx-font-family: "Geist Medium", "Geist", "Segoe UI", sans-serif;
+    -fx-font-size: 11px;
+    -fx-text-fill: #FF9200;
+}
+.nome-empresa {
+    -fx-font-size: 22px;
+    -fx-text-fill: #FFFFFF;
+}
+.pe-empresa {
+    -fx-background-color: #1C1C1F;
+    -fx-border-color: #3F3F46 transparent transparent transparent;
+    -fx-border-width: 1 0 0 0;
+    -fx-background-radius: 0 0 14 14;
+}
+.movimento-empresa {
+    -fx-font-size: 12px;
+    -fx-text-fill: #A1A1AA;
+}
+.entrar-empresa {
+    -fx-font-family: "Geist SemiBold", "Geist", "Segoe UI", sans-serif;
+    -fx-font-size: 12.5px;
+    -fx-text-fill: #FF9200;
+}
+
+/* -------------------------------------------------- coluna escura da mesa */
+.coluna-lista {
+    -fx-background-color: #111114;
+    -fx-border-color: #1C1C1F;
+    -fx-border-width: 1;
+    -fx-border-radius: 14;
+    -fx-background-radius: 14;
+}
+.faixa-coluna {
+    -fx-background-color: transparent;
+    -fx-padding: 0 14 0 0;
+    -fx-border-color: transparent transparent #1C1C1F transparent;
+    -fx-border-width: 0 0 1 0;
+}
+.nome-coluna {
+    -fx-background-color: transparent;
+    -fx-text-fill: #FFFFFF;
+    -fx-font-family: "Geist Medium", "Geist", "Segoe UI", sans-serif;
+    -fx-font-size: 10.5px;
+    -fx-padding: 14 14 14 14;
+}
+.contador-coluna {
+    -fx-font-size: 11px;
+    -fx-text-fill: #FF9200;
+}
+.item-lista {
+    -fx-padding: 11 14 11 11;
+    -fx-border-color: transparent transparent #1C1C1F #111114;
+    -fx-border-width: 0 0 1 3;
+    -fx-cursor: hand;
+}
+.item-lista:hover {
+    -fx-background-color: #1C1C1F;
+}
+.item-lista.aberto {
+    -fx-background-color: #1C1C1F;
+    -fx-border-color: transparent transparent #1C1C1F #FE4901;
+}
+.item-lista .titulo-item {
+    -fx-text-fill: #FFFFFF;
+    -fx-font-size: 13.5px;
+}
+.item-lista .codigo-item {
+    -fx-font-size: 11.5px;
+    -fx-text-fill: #A1A1AA;
+}
+.item-lista .apoio-item {
+    -fx-font-size: 12px;
+    -fx-text-fill: #A1A1AA;
+}
+.coluna-lista .dica {
+    -fx-text-fill: #A1A1AA;
+}
+.coluna-lista .botao.vazado {
+    -fx-background-color: transparent;
+    -fx-text-fill: #FFFFFF;
+    -fx-border-color: #3F3F46;
+}
+.coluna-lista .botao.vazado:hover {
+    -fx-background-color: #FFFFFF;
+    -fx-text-fill: #111114;
+    -fx-border-color: #FFFFFF;
+}
+
+/* ------------------------------------------------ janela que abre por cima */
+.janela-flutuante {
+    -fx-background-color: #FFFFFF;
+    -fx-border-color: #E4E4E7;
+    -fx-border-width: 1;
+    -fx-border-radius: 14;
+    -fx-background-radius: 14;
+}
+.topo-janela {
+    -fx-background-color: #FFFFFF;
+    -fx-padding: 22 26 22 26;
+    -fx-border-color: transparent;
+    -fx-border-width: 0;
+}
+.titulo-janela {
+    -fx-font-family: "Clash Display", "Segoe UI", sans-serif;
+    -fx-font-weight: bold;
+    -fx-font-size: 21px;
+    -fx-text-fill: #111114;
+}
+.apoio-janela {
+    -fx-font-size: 13.5px;
+    -fx-text-fill: #52525B;
+}
+.fechar-janela {
+    -fx-background-color: #FFFFFF;
+    -fx-background-radius: 999;
+    -fx-border-radius: 999;
+    -fx-border-color: #E4E4E7;
+    -fx-border-width: 1;
+    -fx-min-width: 40;
+    -fx-min-height: 40;
+    -fx-max-width: 40;
+    -fx-max-height: 40;
+    -fx-font-size: 14px;
+    -fx-text-fill: #111114;
+    -fx-cursor: hand;
+}
+.fechar-janela:hover {
+    -fx-background-color: #F4F4F5;
+}
+.corpo-janela, .corpo-janela > .viewport {
+    -fx-background-color: #FFFFFF;
+}
+.corpo-janela {
+    -fx-background-insets: 0;
+    -fx-padding: 0;
+    -fx-border-width: 0;
+}
+.pe-janela {
+    -fx-background-color: #FFFFFF;
+    -fx-border-color: #E4E4E7 transparent transparent transparent;
+    -fx-border-width: 1 0 0 0;
+}
+
+/* ------------------------------------------------- menu de escolha do novo */
+.titulo-item-menu {
+    -fx-font-family: "Geist SemiBold", "Geist", "Segoe UI", sans-serif;
+    -fx-font-size: 14px;
+    -fx-text-fill: #111114;
+}
+.marca-item-menu {
+    -fx-font-family: "Geist Medium", "Geist", "Segoe UI", sans-serif;
+    -fx-font-size: 10.5px;
+    -fx-text-fill: #6B6B72;
+}
+.context-menu {
+    -fx-background-color: #FFFFFF;
+    -fx-background-radius: 14;
+    -fx-border-color: #E4E4E7;
+    -fx-border-width: 1;
+    -fx-border-radius: 14;
+    -fx-padding: 6;
+    -fx-effect: dropshadow(gaussian, rgba(17,17,20,0.12), 48, 0, 0, 20);
+}
+.context-menu .menu-item {
+    -fx-padding: 11 14 11 14;
+    -fx-background-radius: 14;
+}
+.context-menu .menu-item:focused {
+    -fx-background-color: #FAFAFA;
+}
+
+/* ------------------------------------------------------------- rolagem */
+.scroll-bar {
+    -fx-background-color: #FFFFFF;
+}
+.scroll-bar .thumb {
+    -fx-background-color: #D4D4D8;
+    -fx-background-radius: 999;
+}
+.scroll-bar .track {
+    -fx-background-color: transparent;
+}
+.scroll-bar .increment-button, .scroll-bar .decrement-button {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+}
+
+/* --------------------------------------------------------- porta de entrada */
+.lado-escuro {
+    -fx-background-color: #111114;
+}
+.tese {
+    -fx-font-family: "Clash Display", "Segoe UI", sans-serif;
+    -fx-font-weight: bold;
+    -fx-font-size: 44px;
+    -fx-text-fill: #FFFFFF;
+    -fx-line-spacing: -4px;
+}
+.tese-apoio {
+    -fx-font-size: 15px;
+    -fx-text-fill: #A1A1AA;
+    -fx-line-spacing: 4px;
+}
+.pilar {
+    -fx-border-color: #3F3F46 transparent transparent transparent;
+    -fx-border-width: 3 0 0 0;
+    -fx-padding: 12 0 0 0;
+}
+.pilar.primeiro {
+    -fx-border-color: #FE4901 transparent transparent transparent;
+}
+.num-pilar {
+    -fx-font-family: "Geist Medium", "Geist", "Segoe UI", sans-serif;
+    -fx-font-size: 11px;
+    -fx-text-fill: #6B6B72;
+}
+.nome-pilar {
+    -fx-font-family: "Clash Display", "Segoe UI", sans-serif;
+    -fx-font-weight: bold;
+    -fx-font-size: 19px;
+    -fx-text-fill: #FFFFFF;
+}
+.texto-pilar {
+    -fx-font-size: 13.5px;
+    -fx-text-fill: #A1A1AA;
+    -fx-line-spacing: 2px;
+}
+.rodape-portao {
+    -fx-font-size: 11.5px;
+    -fx-text-fill: #52525B;
+}
+.lado-claro {
+    -fx-background-color: #FFFFFF;
+}
+.titulo-portao {
+    -fx-font-family: "Clash Display", "Segoe UI", sans-serif;
+    -fx-font-weight: bold;
+    -fx-font-size: 30px;
+    -fx-text-fill: #111114;
+}
+.chamada {
+    -fx-font-size: 14px;
+    -fx-text-fill: #52525B;
+}
+.rotulo-portao {
+    -fx-font-family: "Geist Medium", "Geist", "Segoe UI", sans-serif;
+    -fx-font-size: 13px;
+    -fx-text-fill: #111114;
+}
+.botao-portao {
+    -fx-padding: 0 22 0 22;
+    -fx-min-height: 54;
+    -fx-pref-height: 54;
+    -fx-font-size: 15px;
+}
+.aviso-sem-trava {
+    -fx-font-size: 12.5px;
+    -fx-text-fill: #52525B;
+    -fx-border-color: transparent transparent transparent #FE4901;
+    -fx-border-width: 0 0 0 3;
+    -fx-padding: 0 0 0 11;
+}
+.recado-portao {
+    -fx-font-size: 13px;
+    -fx-text-fill: #C0392B;
+}
+
+/* --------------------------------------------------- lista ao lado do detalhe */
+.item-lista .titulo-item {
+    -fx-font-size: 13.5px;
+}
+.cartao-empresa .apelido, .cartao-empresa .nome, .cartao-empresa .numero {
+    -fx-text-fill: #FFFFFF;
+}
+
+/* --------------------------------------- coluna que rola por dentro da mesa */
+.rolagem-coluna, .rolagem-coluna > .viewport {
+    -fx-background-color: transparent;
+}
+.rolagem-coluna {
+    -fx-background-insets: 0;
+    -fx-padding: 0;
+    -fx-border-width: 0;
+}
+
+
+/* ------------------------------------------- tudo o que fica sobre o escuro
+   Nenhum texto herda o preto quando o fundo é preto: quem estiver dentro de um
+   bloco escuro lê em claro, em qualquer módulo e em qualquer sub-aba. */
+.coluna-lista .label,
+.quadro.forte .label,
+.quadro.listrado .label,
+.cartao-empresa .label,
+.painel-escuro .label {
+    -fx-text-fill: #E4E4E7;
+}
+.coluna-lista .titulo-item,
+.coluna-lista .titulo-secao,
+.coluna-lista .valor,
+.quadro.forte .titulo-item,
+.quadro.listrado .titulo-item,
+.painel-escuro .titulo-item,
+.painel-escuro .valor {
+    -fx-text-fill: #FFFFFF;
+}
+.coluna-lista .apoio-item,
+.coluna-lista .codigo-item,
+.coluna-lista .dica,
+.coluna-lista .texto,
+.coluna-lista .linha-apoio,
+.coluna-lista .olho,
+.painel-escuro .apoio-item,
+.painel-escuro .dica,
+.painel-escuro .texto,
+.painel-escuro .linha-apoio {
+    -fx-text-fill: #A1A1AA;
+}
+.coluna-lista .titulo-secao,
+.painel-escuro .titulo-secao,
+.coluna-lista .nome-coluna {
+    -fx-text-fill: #FFFFFF;
+}
+/* a lista escura não pinta canto reto nos cantos de baixo */
+.coluna-lista > .item-lista:last-child {
+    -fx-background-radius: 0 0 14 14;
+}
+.painel-escuro {
+    -fx-background-color: #111114;
+    -fx-border-color: #1C1C1F;
+    -fx-border-width: 1;
+    -fx-border-radius: 14;
+    -fx-background-radius: 14;
+}
+
+/* -------------------------------------------- ferramentas da conversa
+   O mesmo painel de atalhos que a mesa sempre teve: a tecla de um lado e o
+   que ela faz do outro. */
+.ferramenta-botao {
+    -fx-background-color: #FFFFFF;
+    -fx-border-color: #E4E4E7;
+    -fx-border-width: 1;
+    -fx-border-radius: 12;
+    -fx-background-radius: 12;
+    -fx-padding: 8 14 8 10;
+    -fx-cursor: hand;
+    -fx-min-width: 210;
+}
+.ferramenta-botao:hover {
+    -fx-border-color: #111114;
+    -fx-background-color: #FAFAFA;
+}
+.ferramenta-botao .tecla {
+    -fx-background-color: #F4F4F5;
+    -fx-border-color: #E4E4E7;
+    -fx-border-width: 1;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+    -fx-padding: 2 7 2 7;
+    -fx-font-family: "Geist SemiBold", "Geist", "Segoe UI", sans-serif;
+    -fx-font-size: 11px;
+    -fx-text-fill: #52525B;
+}
+.ferramenta-botao .nome-ferramenta {
+    -fx-font-size: 13px;
+    -fx-text-fill: #111114;
+}
+.ferramenta-botao.perigo .nome-ferramenta {
+    -fx-text-fill: #C0392B;
+}
+.ferramenta-botao.perigo:hover {
+    -fx-border-color: #C0392B;
+}
+
+/* as abas da coluna do cliente, dentro do bloco escuro */
+.abas-lado {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent transparent #1C1C1F transparent;
+    -fx-border-width: 0 0 1 0;
+    -fx-padding: 0 8 0 8;
+}
+.aba-lado {
+    -fx-text-fill: #A1A1AA;
+    -fx-font-family: "Geist Medium", "Geist", "Segoe UI", sans-serif;
+    -fx-font-size: 10.5px;
+    -fx-padding: 12 9 10 9;
+    -fx-cursor: hand;
+    -fx-border-color: transparent;
+    -fx-border-width: 0 0 2 0;
+}
+.aba-lado:hover {
+    -fx-text-fill: #FFFFFF;
+}
+.aba-lado.ativa {
+    -fx-text-fill: #FFFFFF;
+    -fx-border-color: transparent transparent #FE4901 transparent;
+}
+
+/* a pílula de situação tem cor própria: o bloco escuro não pinta o texto dela */
+.coluna-lista .marca-situacao,
+.painel-escuro .marca-situacao,
+.quadro.forte .marca-situacao,
+.quadro.listrado .marca-situacao {
+    -fx-text-fill: #52525B;
+}
+.coluna-lista .marca-situacao.s-pago,
+.painel-escuro .marca-situacao.s-pago {
+    -fx-text-fill: #0F4A28;
+}
+.coluna-lista .marca-situacao.s-vencido,
+.painel-escuro .marca-situacao.s-vencido {
+    -fx-text-fill: #7F2018;
+}
+.coluna-lista .marca-situacao.s-parcial,
+.painel-escuro .marca-situacao.s-parcial {
+    -fx-text-fill: #8A4906;
+}
+.coluna-lista .marca-situacao.s-aberto,
+.painel-escuro .marca-situacao.s-aberto {
+    -fx-text-fill: #3A5A8C;
+}
+.coluna-lista .marca-situacao.s-cancelado,
+.painel-escuro .marca-situacao.s-cancelado {
+    -fx-text-fill: #6B6B72;
+}
+/* as quatro abas da coluna do cliente cabem sem cortar o nome */
+.aba-lado {
+    -fx-font-size: 9.5px;
+    -fx-padding: 11 6 9 6;
+}
+
+/* -------------------------------------------------- balões da conversa
+   O que o cliente manda fica claro e à esquerda; o que sai da empresa fica
+   escuro e à direita, igual à mesa da página. */
+.balao {
+    -fx-padding: 12 16 12 16;
+    -fx-background-radius: 14;
+    -fx-border-radius: 14;
+    -fx-border-width: 1;
+    -fx-font-size: 14px;
+}
+.balao.do-cliente {
+    -fx-background-color: #F4F4F5;
+    -fx-border-color: #E4E4E7;
+    -fx-text-fill: #111114;
+}
+.balao.da-empresa {
+    -fx-background-color: #111114;
+    -fx-border-color: #111114;
+    -fx-text-fill: #FFFFFF;
+}
+.quando-balao {
+    -fx-font-size: 11px;
+    -fx-text-fill: #6B6B72;
+    -fx-padding: 0 4 0 4;
+}
+
+/* o aviso que pede atencao: traco ambar a esquerda */
+.caixa-aviso {
+    -fx-background-color: #FDF6EC;
+    -fx-border-color: #F0E0C8 #F0E0C8 #F0E0C8 #B25E09;
+    -fx-border-width: 1 1 1 3;
+    -fx-border-radius: 14;
+    -fx-background-radius: 14;
+}
+.caixa-aviso .label {
+    -fx-text-fill: #6B4A12;
+    -fx-font-size: 13px;
+}
+
+/* o funil de filtro, no cabecalho da coluna */
+.funil {
+    -fx-font-size: 8px;
+    -fx-text-fill: #A1A1AA;
+    -fx-cursor: hand;
+    -fx-padding: 0 2 0 2;
+}
+.funil:hover {
+    -fx-text-fill: #111114;
+}
+.funil.aceso {
+    -fx-text-fill: #FE4901;
+}
+.texto-cabecalho {
+    -fx-text-fill: #6B6B72;
+    -fx-font-family: "Geist Medium", "Geist", "Segoe UI", sans-serif;
+    -fx-font-size: 11.5px;
+}
+
+/* ---------------------------------------------------------- coluna lateral
+   Fundo ink, canto 14, item de 42 de altura, escolhido com o laranja por baixo
+   e a marca de 3 na esquerda. Tudo saiu do itfc-design-system.json. */
+.coluna-lateral {
+    -fx-background-color: #111114;
+    -fx-background-radius: 14;
+    -fx-border-radius: 14;
+    -fx-padding: 0;
+}
+.marca-da-coluna {
+    -fx-padding: 20 14 14 14;
+}
+.bolinha-da-marca {
+    -fx-background-color: #FE4901;
+    -fx-background-radius: 999;
+    -fx-min-width: 30;
+    -fx-min-height: 30;
+    -fx-max-width: 30;
+    -fx-max-height: 30;
+    -fx-alignment: center;
+    -fx-text-fill: #111114;
+    -fx-font-family: "Geist SemiBold", "Geist", "Segoe UI", sans-serif;
+    -fx-font-size: 12px;
+}
+.rolagem-do-menu, .rolagem-do-menu > .viewport {
+    -fx-background-color: transparent;
+}
+.rolagem-do-menu {
+    -fx-background-insets: 0;
+    -fx-padding: 0;
+    -fx-border-width: 0;
+}
+.itens-do-menu {
+    -fx-padding: 6 14 14 11;
+}
+.grupo-da-coluna {
+    -fx-text-fill: #3F3F46;
+    -fx-font-family: "Geist Medium", "Geist", "Segoe UI", sans-serif;
+    -fx-font-size: 10.5px;
+    -fx-padding: 14 0 6 10;
+}
+.item-da-coluna {
+    -fx-min-height: 42;
+    -fx-pref-height: 42;
+    -fx-padding: 0 10 0 0;
+    -fx-background-radius: 14;
+    -fx-border-radius: 14;
+    -fx-cursor: hand;
+}
+/* o risco laranja do item escolhido, arredondado nas pontas */
+.marca-do-item {
+    -fx-min-width: 3;
+    -fx-pref-width: 3;
+    -fx-max-width: 3;
+    -fx-min-height: 22;
+    -fx-pref-height: 22;
+    -fx-max-height: 22;
+    -fx-background-color: #FE4901;
+    -fx-background-radius: 999;
+    -fx-translate-x: 0;
+}
+.item-da-coluna .nome-do-item {
+    -fx-text-fill: #D4D4D8;
+    -fx-font-family: "Geist", "Segoe UI", sans-serif;
+    -fx-font-size: 13.5px;
+}
+.item-da-coluna:hover {
+    -fx-background-color: #1C1C1F;
+}
+.item-da-coluna:hover .nome-do-item {
+    -fx-text-fill: #FFFFFF;
+}
+.item-da-coluna.ativo {
+    -fx-background-color: rgba(254, 73, 1, 0.14);
+}
+.item-da-coluna.ativo .nome-do-item {
+    -fx-text-fill: #FFFFFF;
+    -fx-font-family: "Geist Medium", "Geist", "Segoe UI", sans-serif;
+}
+.rodape-da-coluna {
+    -fx-padding: 14;
+    -fx-border-color: #1C1C1F transparent transparent transparent;
+    -fx-border-width: 1 0 0 0;
+    -fx-cursor: hand;
+}
+.avatar-da-coluna {
+    -fx-background-color: #1C1C1F;
+    -fx-background-radius: 999;
+    -fx-min-width: 32;
+    -fx-min-height: 32;
+    -fx-max-width: 32;
+    -fx-max-height: 32;
+    -fx-alignment: center;
+    -fx-text-fill: #FFFFFF;
+    -fx-font-family: "Geist SemiBold", "Geist", "Segoe UI", sans-serif;
+    -fx-font-size: 12px;
+}
+.nome-da-coluna {
+    -fx-text-fill: #FFFFFF;
+    -fx-font-family: "Geist Medium", "Geist", "Segoe UI", sans-serif;
+    -fx-font-size: 13px;
+}
+.papel-da-coluna {
+    -fx-text-fill: #3F3F46;
+    -fx-font-size: 11.5px;
+}
+
+/* ------------------------------------------------- a faixa de cima, agora leve */
+.trilha {
+    -fx-text-fill: #6B6B72;
+    -fx-font-size: 12.5px;
+}
+.busca-topo {
+    -fx-min-height: 36;
+    -fx-background-radius: 999;
+    -fx-border-radius: 999;
+    -fx-border-color: #E4E4E7;
+    -fx-border-width: 1;
+    -fx-padding: 0 16 0 14;
+    -fx-text-fill: #6B6B72;
+    -fx-font-size: 12.5px;
+    -fx-cursor: hand;
+}
+.busca-topo:hover {
+    -fx-border-color: #111114;
+}
+.sino-topo {
+    -fx-min-width: 36;
+    -fx-min-height: 36;
+    -fx-max-width: 36;
+    -fx-max-height: 36;
+    -fx-background-radius: 999;
+    -fx-border-radius: 999;
+    -fx-border-color: #E4E4E7;
+    -fx-border-width: 1;
+    -fx-cursor: hand;
+}
+.sino-topo:hover {
+    -fx-border-color: #111114;
+}
+
+/* a moldura: a coluna escura flutua sobre a superfície clara */
+.moldura {
+    -fx-background-color: #FAFAFA;
+}
+.area-de-trabalho {
+    -fx-background-color: #FAFAFA;
+}
+/* o miolo não é card: quem é card são os blocos dentro dele, sobre o cinza */
+.conteudo {
+    -fx-background-color: transparent;
+}
+/* o cabeçalho da página é o primeiro card da tela */
+.cabecalho-pagina {
+    -fx-background-color: #FFFFFF;
+    -fx-border-color: #E4E4E7;
+    -fx-border-width: 1;
+    -fx-border-radius: 14;
+    -fx-background-radius: 14;
+    -fx-padding: 20 20 20 20;
+    -fx-effect: dropshadow(gaussian, rgba(17, 17, 20, 0.06), 2, 0, 0, 1);
+}
+.rolagem, .rolagem > .viewport {
+    -fx-background-color: #FAFAFA;
+}
+
+/* ----------------------------------------------------- os cards que seguram
+   Tudo o que segura conteúdo é um card: fundo branco, fio de 1 na cor da borda,
+   canto 14 e a sombra leve do nível 1 do design system. Nada fica solto. */
+.caixa, .tabela, .quadro, .vazio, .caixa-aviso, .ferramenta-botao {
+    -fx-effect: dropshadow(gaussian, rgba(17, 17, 20, 0.06), 2, 0, 0, 1);
+}
+/* a faixa de cima e a fileira de abas também são cards */
+.topo {
+    -fx-background-color: #FFFFFF;
+    -fx-border-color: #E4E4E7;
+    -fx-border-width: 1;
+    -fx-border-radius: 14;
+    -fx-background-radius: 14;
+    -fx-effect: dropshadow(gaussian, rgba(17, 17, 20, 0.06), 2, 0, 0, 1);
+}
+.abas {
+    -fx-background-color: #FFFFFF;
+    -fx-border-color: #E4E4E7;
+    -fx-border-width: 1;
+    -fx-border-radius: 14;
+    -fx-background-radius: 14;
+    -fx-padding: 0 18 0 18;
+    -fx-effect: dropshadow(gaussian, rgba(17, 17, 20, 0.06), 2, 0, 0, 1);
+}
+/* a régua da aba escolhida fica dentro do card, sem encostar na borda */
+.aba {
+    -fx-padding: 13 10 11 10;
+}
+/* a janela que abre por cima usa a sombra do nível 3 */
+.janela-flutuante {
+    -fx-effect: dropshadow(gaussian, rgba(17, 17, 20, 0.12), 48, 0, 0, 20);
+}
+
+/* a seta que volta uma tela de cada vez, ao lado da trilha */
+.seta-de-voltar {
+    -fx-min-width: 30;
+    -fx-min-height: 30;
+    -fx-max-width: 30;
+    -fx-max-height: 30;
+    -fx-background-radius: 999;
+    -fx-cursor: hand;
+}
+.seta-de-voltar:hover {
+    -fx-background-color: #F4F4F5;
+}
+
+/* ------------------------------------------------------- lista suspensa
+   A lista que abre no próprio botão: fundo branco, canto 14, fio na borda e a
+   sombra do nível 2. Os valores saíram do menuSuspenso do design system. */
+.lista-suspensa {
+    -fx-background-color: #FFFFFF;
+    -fx-background-radius: 14;
+    -fx-border-radius: 14;
+    -fx-border-color: #E4E4E7;
+    -fx-border-width: 1;
+    -fx-padding: 8;
+    -fx-effect: dropshadow(gaussian, rgba(17, 17, 20, 0.08), 24, 0, 0, 8);
+}
+.lista-suspensa .menu-item {
+    -fx-padding: 0;
+    -fx-background-radius: 14;
+}
+.lista-suspensa .menu-item:focused, .lista-suspensa .menu-item:hover {
+    -fx-background-color: #F4F4F5;
+}
+.lista-suspensa .separator {
+    -fx-padding: 5 0 5 0;
+}
+.item-suspenso {
+    -fx-padding: 0 12 0 12;
+    -fx-min-height: 40;
+    -fx-pref-height: 40;
+    -fx-background-radius: 14;
+}
+.item-suspenso.escolhido {
+    -fx-background-color: #FFF1EA;
+    -fx-background-radius: 14;
+}
+.nome-do-suspenso {
+    -fx-text-fill: #3F3F46;
+    -fx-font-size: 13.5px;
+}
+.item-suspenso.escolhido .nome-do-suspenso {
+    -fx-text-fill: #111114;
+    -fx-font-family: "Geist Medium", "Geist", "Segoe UI", sans-serif;
+}
+.nome-do-suspenso.perigo {
+    -fx-text-fill: #C0392B;
+}
+.apoio-do-suspenso {
+    -fx-text-fill: #6B6B72;
+    -fx-font-size: 11.5px;
+}

@@ -1,0 +1,34 @@
+/* Equivalente ao :root de tokens/colors.css — looked-up colors do JavaFX. */
+.root{
+  -itia-black:#050506;
+  -itia-charcoal:#151517;
+  -itia-graphite:#2E2E31;
+  -itia-mist:#B9B9BE;
+  -itia-white:#FFFFFF;
+  -itia-red:#FF0000;
+  -itia-mist-40:rgba(185,185,190,0.4);
+  -itia-white-06:rgba(255,255,255,0.06);
+  -itia-black-90:rgba(5,5,6,0.9);
+  -surface-page:-itia-white;
+  -surface-card:-itia-white;
+  -surface-inverse:-itia-black;
+  -surface-inverse-2:-itia-charcoal;
+  -text-primary:-itia-black;
+  -text-secondary:-itia-graphite;
+  -text-muted:-itia-mist;
+  -text-on-inverse:-itia-white;
+  -text-on-inverse-muted:-itia-mist;
+  -border-default:-itia-mist;
+  -border-on-inverse:-itia-graphite;
+  -accent:-itia-red;
+  -accent-fg:-itia-white;
+  -link:-itia-red;
+  -link-hover:-itia-black;
+  -focus-ring:-itia-red;
+  -fx-background-color:-surface-page;
+  -fx-font-family:"IBM Plex Sans";
+  -fx-font-size:17px;
+  -fx-text-fill:-text-primary;
+  -fx-focus-color:transparent;
+  -fx-faint-focus-color:transparent;
+}

@@ -1,6 +1,5 @@
 package br.com.itia.financeiro.servico;
 
-import br.com.itia.financeiro.config.Avisos;
 import br.com.itia.financeiro.dominio.Aprovacao;
 import br.com.itia.financeiro.dominio.Bem;
 import br.com.itia.financeiro.dominio.CentroDeCusto;

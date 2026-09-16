@@ -4,7 +4,7 @@ import br.com.itia.financeiro.dominio.Documento;
 import br.com.itia.financeiro.repositorio.DocumentoRepositorio;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
+import br.com.itia.financeiro.dominio.ArquivoRecebido;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -33,30 +33,30 @@ public class DocumentoServico {
     }
 
     @Transactional
-    public Documento anexar(MultipartFile arquivo, UUID pagadorId, UUID unidadeId,
+    public Documento anexar(ArquivoRecebido arquivo, UUID pagadorId, UUID unidadeId,
                             UUID contratoId, String tipo, LocalDate validade, String observacao) {
-        if (arquivo == null || arquivo.isEmpty()) {
+        if (arquivo == null || arquivo.vazio()) {
             throw new IllegalArgumentException("Escolha um arquivo para anexar.");
         }
-        if (arquivo.getSize() > TAMANHO_MAXIMO) {
+        if (arquivo.tamanho() > TAMANHO_MAXIMO) {
             throw new IllegalArgumentException("Arquivo maior que 20 MB.");
         }
 
         UUID empresaId = contexto.exigirEmpresaId();
-        String nomeOriginal = limparNome(arquivo.getOriginalFilename());
+        String nomeOriginal = limparNome(arquivo.nomeLimpo());
         UUID id = UUID.randomUUID();
         Path pasta = Path.of("dados", "documentos", empresaId.toString());
         Path destino = pasta.resolve(id + "-" + nomeOriginal);
 
         try {
             Files.createDirectories(pasta);
-            arquivo.transferTo(destino.toAbsolutePath());
+            java.nio.file.Files.write(destino.toAbsolutePath(), arquivo.conteudo());
         } catch (IOException erro) {
             throw new IllegalStateException("Não consegui guardar o arquivo: " + erro.getMessage());
         }
 
         Documento documento = new Documento(empresaId, pagadorId, unidadeId, contratoId, tipo,
-                nomeOriginal, destino.toString(), arquivo.getSize(), validade, observacao,
+                nomeOriginal, destino.toString(), arquivo.tamanho(), validade, observacao,
                 contexto.autor());
         return documentos.save(documento);
     }

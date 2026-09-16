@@ -12,7 +12,7 @@ import br.com.itia.financeiro.repositorio.PagamentoRepositorio;
 import br.com.itia.financeiro.repositorio.TituloRepositorio;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
+import br.com.itia.financeiro.dominio.ArquivoRecebido;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -107,9 +107,9 @@ public class Comprovantes {
      * como zero.
      */
     @Transactional
-    public Comprovante receber(UUID pagadorId, String texto, MultipartFile arquivo,
+    public Comprovante receber(UUID pagadorId, String texto, ArquivoRecebido arquivo,
                                String origem) {
-        if ((texto == null || texto.isBlank()) && (arquivo == null || arquivo.isEmpty())) {
+        if ((texto == null || texto.isBlank()) && (arquivo == null || arquivo.vazio())) {
             throw new IllegalArgumentException(
                     "Cole o texto do comprovante ou anexe o arquivo.");
         }
@@ -117,7 +117,7 @@ public class Comprovantes {
                 texto, contexto.autor());
         ler(comprovante, texto);
 
-        if (arquivo != null && !arquivo.isEmpty()) {
+        if (arquivo != null && !arquivo.vazio()) {
             Documento documento = documentos.anexar(arquivo, pagadorId, null, null,
                     "COMPROVANTE DE PAGAMENTO", null, "comprovante em conferência");
             comprovante.guardarArquivo(documento.getId(), null);

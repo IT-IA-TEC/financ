@@ -1,0 +1,287 @@
+{
+  "_leia": "Este arquivo manda no visual do IT.FC. O sistema lê ele ao abrir: o que estiver escrito aqui é o que aparece na tela. Mude um valor, salve, abra o sistema de novo e a mudança está lá. Ninguém precisa mexer em código.",
+
+  "cores": {
+    "preto":          { "valor": "#050506", "uso": "fundo escuro, texto principal, botão cheio" },
+    "carvao":         { "valor": "#151517", "uso": "coluna de apoio, faixa da listra, fio da grade" },
+    "grafite":        { "valor": "#2E2E31", "uso": "texto de apoio, borda dentro do escuro" },
+    "nevoa":          { "valor": "#B9B9BE", "uso": "texto apagado, borda de campo e de cartão" },
+    "branco":         { "valor": "#FFFFFF", "uso": "caixa, texto sobre escuro" },
+    "vermelho":       { "valor": "#FF0000", "uso": "destaque: régua, ponto do olho, vencido, foco" },
+    "vermelhoClaro":  { "valor": "#FF4D4D", "uso": "rótulo vermelho sobre fundo preto ou listrado" },
+    "vermelhoToque":  { "valor": "#D90000", "uso": "botão de destaque ao passar o mouse" },
+    "verde":          { "valor": "#17A06A", "uso": "rótulo do dinheiro que já entrou" },
+    "verdeClaro":     { "valor": "#2BD98C", "uso": "o mesmo verde, sobre fundo escuro" },
+    "pagina":         { "valor": "#F1F1F3", "uso": "fundo de toda tela de trabalho" },
+    "caixa":          { "valor": "#FFFFFF", "uso": "tabela, cartão, janela: o que flutua sobre o fundo" },
+    "linhaPar":       { "valor": "#FAFAFA", "uso": "zebra da tabela, pé de janela" },
+    "borda":          { "valor": "#DCDCE0", "uso": "borda de caixa e régua entre linhas" },
+    "escuroHover":    { "valor": "#202024", "uso": "item de fila ao passar o mouse" },
+    "escuroApagado":  { "valor": "#6E6E76", "uso": "texto apagado dentro do escuro" }
+  },
+
+  "letras": {
+    "display": { "familia": "Space Grotesk", "uso": "títulos e números grandes" },
+    "corpo":   { "familia": "IBM Plex Sans", "uso": "texto que se lê e controles" },
+    "maquina": { "familia": "IBM Plex Mono", "uso": "rótulo, código, dinheiro e data" }
+  },
+
+  "espacos": {
+    "entre":  8,
+    "perto":  12,
+    "dentro": 16,
+    "lado":   24,
+    "topo":   32,
+    "pe":     48
+  },
+
+  "componentes": {
+
+    "botao": {
+      "_leia": "Cinco tipos, três tamanhos. Cada estado tem sua pele.",
+      "altura":          40,
+      "alturaPequeno":   32,
+      "alturaGrande":    48,
+      "folgaLateral":    20,
+      "folgaLateralPequeno": 14,
+      "folgaLateralGrande":  28,
+      "letra":           "corpo",
+      "tamanhoLetra":    14,
+      "peso":            "semibold",
+      "espacoEntreLetras": 0.01,
+      "canto":           0,
+      "respiroAcima":    20,
+      "tipos": {
+        "principal": {
+          "parado": { "fundo": "preto", "texto": "branco", "borda": "preto" },
+          "mouse":  { "fundo": "vermelho", "texto": "branco", "borda": "vermelho" }
+        },
+        "vazado": {
+          "parado": { "fundo": "transparente", "texto": "preto", "borda": "nevoa" },
+          "mouse":  { "fundo": "preto", "texto": "branco", "borda": "preto" }
+        },
+        "destaque": {
+          "parado": { "fundo": "vermelho", "texto": "branco", "borda": "vermelho" },
+          "mouse":  { "fundo": "vermelhoToque", "texto": "branco", "borda": "vermelhoToque" }
+        },
+        "perigo": {
+          "parado": { "fundo": "transparente", "texto": "vermelho", "borda": "vermelho" },
+          "mouse":  { "fundo": "vermelho", "texto": "branco", "borda": "vermelho" }
+        },
+        "desligado": {
+          "parado": { "fundo": "preto", "texto": "branco", "borda": "preto", "opacidade": 0.4 }
+        }
+      },
+      "noEscuro": {
+        "_leia": "Dentro de bloco preto o vazado inverte: enche de branco.",
+        "vazado": {
+          "parado": { "fundo": "transparente", "texto": "branco", "borda": "grafite" },
+          "mouse":  { "fundo": "branco", "texto": "preto", "borda": "branco" }
+        }
+      }
+    },
+
+    "campo": {
+      "altura":        40,
+      "folgaLateral":  12,
+      "borda":         "nevoa",
+      "espessuraBorda": 1,
+      "canto":         0,
+      "letra":         "corpo",
+      "tamanhoLetra":  14,
+      "fundo":         "branco",
+      "estados": {
+        "mouse":     { "borda": "grafite" },
+        "foco":      { "borda": "preto", "reguaEmbaixo": { "cor": "vermelho", "espessura": 2 } },
+        "erro":      { "borda": "vermelho" },
+        "desligado": { "fundo": "branco", "texto": "nevoa" }
+      },
+      "rotulo": {
+        "letra": "corpo", "tamanho": 12, "peso": "medium",
+        "caixaAlta": true, "espacoEntreLetras": 0.10,
+        "cor": "grafite", "respiroAbaixo": 6
+      },
+      "areaDeTexto": { "alturaMinima": 96, "folga": [10, 12] }
+    },
+
+    "cartaoDoTopo": {
+      "_leia": "Tamanho fixo. O texto é que se ajusta dentro, com reticências.",
+      "largura":  176,
+      "altura":   92,
+      "folga":    [10, 14],
+      "espacoEntre": 12,
+      "distribuicao": "rotulo em cima, numero no meio, apoio embaixo",
+      "rotulo": { "letra": "maquina", "tamanho": 9, "espacoEntreLetras": 0.14, "caixaAlta": true, "cor": "vermelho" },
+      "numero": { "letra": "display", "tamanho": 20, "peso": "semibold", "entrelinha": 1.1, "umaLinhaSo": true },
+      "apoio":  { "letra": "corpo", "tamanho": 10.5, "entrelinha": 1.2, "cor": "grafite", "umaLinhaSo": true },
+      "peles": {
+        "normal":   { "fundo": "caixa", "borda": "nevoa" },
+        "inverso":  { "fundo": "preto", "borda": "preto", "texto": "branco", "rotulo": "vermelhoClaro", "pesoRotulo": "bold", "espacoRotulo": 0.16 },
+        "listrado": { "fundo": "listras", "borda": "preto", "texto": "branco", "rotulo": "vermelhoClaro", "pesoRotulo": "bold", "espacoRotulo": 0.16 },
+        "alerta":   { "fundo": "caixa", "borda": "nevoa", "bordaEsquerda": { "cor": "vermelho", "espessura": 3 }, "numero": "vermelho" },
+        "positivo": { "fundo": "caixa", "borda": "nevoa", "rotulo": "verde" }
+      }
+    },
+
+    "tabela": {
+      "cabecalho": {
+        "fundo":        "listras",
+        "reguaEmbaixo": { "cor": "vermelho", "espessura": 2 },
+        "letra":        "maquina",
+        "tamanho":      10,
+        "espacoEntreLetras": 0.14,
+        "caixaAlta":    true,
+        "cor":          "branco",
+        "alinhamento":  "centro",
+        "folga":        [11, 14],
+        "fioEntreColunas": { "cor": "#FFFFFF", "opacidade": 0.16, "espessura": 1 },
+        "colunaFiltrada": { "cor": "vermelho" }
+      },
+      "corpo": {
+        "folgaCelula":  [11, 14],
+        "linhaImpar":   "branco",
+        "linhaPar":     "linhaPar",
+        "mouse":        "pagina",
+        "reguaEntreLinhas": { "cor": "borda", "espessura": 1, "naUltima": false },
+        "fioEntreColunas":  { "cor": "nevoa", "opacidade": 0.45, "espessura": 1 },
+        "letra":        "corpo",
+        "tamanho":      14,
+        "colunaDeValor": { "alinhamento": "direita", "letra": "maquina", "alinhaPelaVirgula": true },
+        "textoDeApoio": { "tamanho": 11.5, "cor": "grafite" },
+        "linhaDeTotal": { "reguaAcima": { "cor": "preto", "espessura": 2 }, "peso": "semibold" }
+      },
+      "caixaPorFora": { "borda": "borda", "espessura": 1 },
+      "larguraMinima": 560
+    },
+
+    "etiquetaDeSituacao": {
+      "letra": "maquina", "tamanho": 10.5, "espacoEntreLetras": 0.08,
+      "caixaAlta": true, "peso": "medium", "folga": [2, 8], "canto": 0,
+      "espessuraBorda": 1,
+      "situacoes": {
+        "aberto":    { "texto": "grafite", "fundo": "transparente", "borda": "nevoa" },
+        "parcial":   { "texto": "grafite", "fundo": "#EDEDEF",      "borda": "#EDEDEF" },
+        "pago":      { "texto": "branco",  "fundo": "preto",        "borda": "preto" },
+        "vencido":   { "texto": "branco",  "fundo": "vermelho",     "borda": "vermelho" },
+        "emAcordo":  { "texto": "carvao",  "fundo": "#E6E6E9",      "borda": "#E6E6E9" },
+        "cancelado": { "texto": "nevoa",   "fundo": "transparente", "borda": "borda" }
+      }
+    },
+
+    "abas": {
+      "_leia": "Entre uma aba e outra vai um traço vermelho, que não é borda.",
+      "fundo":        "preto",
+      "folgaFaixa":   [0, 18],
+      "folgaItem":    [12, 0],
+      "espacoEntreItens": 30,
+      "letra":        "corpo",
+      "tamanho":      11.5,
+      "peso":         "medium",
+      "espacoEntreLetras": 0.12,
+      "caixaAlta":    true,
+      "cor":          "nevoa",
+      "ativa":        { "cor": "branco", "peso": "bold", "reguaEmbaixo": { "cor": "branco", "espessura": 2 } },
+      "separador":    { "texto": "-", "cor": "vermelho", "peso": "semibold", "naUltima": false }
+    },
+
+    "olho": {
+      "_leia": "O rótulo que fica acima de todo título de página.",
+      "ponto":  { "tamanho": 7, "cor": "vermelho", "formato": "circulo" },
+      "espaco": 9,
+      "letra":  "maquina",
+      "tamanho": 11,
+      "espacoEntreLetras": 0.20,
+      "caixaAlta": true,
+      "cor": "vermelho",
+      "corNoEscuro": "nevoa"
+    },
+
+    "cabecalhoDaPagina": {
+      "reguaEmbaixo": { "cor": "preto", "espessura": 2 },
+      "respiroAbaixo": 24,
+      "titulo": { "letra": "display", "tamanho": 30, "peso": "bold", "espacoEntreLetras": -0.02 },
+      "apoio":  { "letra": "corpo", "tamanho": 14, "cor": "grafite" },
+      "arranjo": "titulo a esquerda, numeros no centro, botoes a direita"
+    },
+
+    "rotuloDeBloco": {
+      "letra": "maquina", "tamanho": 10.5, "espacoEntreLetras": 0.18,
+      "caixaAlta": true, "cor": "grafite",
+      "bordaEsquerda": { "cor": "vermelho", "espessura": 3 }, "recuo": 10
+    },
+
+    "janelaFlutuante": {
+      "_leia": "Tamanho fixo: trocar de aba não muda a janela. Quem rola é o miolo.",
+      "largura":  "85%",
+      "altura":   "85%",
+      "fundoPorTras": { "cor": "preto", "opacidade": 0.7 },
+      "borda":    "nevoa",
+      "topo":     { "folga": [18, 22], "reguaEmbaixo": { "cor": "vermelho", "espessura": 2 },
+                    "titulo": 22, "subtitulo": 12 },
+      "corpo":    { "folga": 22, "rola": true },
+      "pe":       { "folga": [16, 22], "reguaAcima": { "cor": "nevoa", "espessura": 1 },
+                    "botoes": "a direita", "espacoEntreBotoes": 12 },
+      "fechar":   { "tamanho": 32, "borda": "nevoa", "mouse": "vermelho" }
+    },
+
+    "cartaoDeEmpresa": {
+      "largura": 282,
+      "altura":  168,
+      "fundo":   "listras",
+      "borda":   { "cor": "vermelho", "espessura": 1 },
+      "apelido": { "letra": "maquina", "tamanho": 10, "espacoEntreLetras": 0.20, "caixaAlta": true,
+                   "cor": "vermelho", "folga": [12, 16, 0] },
+      "nome":    { "letra": "display", "tamanho": 22, "peso": "semibold", "entrelinha": 1.15, "cor": "branco" },
+      "pe":      { "fundo": "branco", "reguaAcima": { "cor": "vermelho", "espessura": 1 },
+                   "letra": "maquina", "tamanho": 11, "cor": "grafite", "folga": [10, 16] },
+      "entrar":  { "letra": "corpo", "tamanho": 12, "peso": "semibold", "cor": "vermelho" },
+      "mouse":   { "fundo": "listras clareadas um degrau" }
+    },
+
+    "barraDoTopo": {
+      "fundo": "preto",
+      "reguaEmbaixo": { "cor": "vermelho", "espessura": 2 },
+      "folga": [12, 24],
+      "ordem": ["marca", "menu", "chip da empresa", "bolinha do perfil"],
+      "marca": { "letra": "display", "tamanho": 18, "peso": "bold", "espacoEntreLetras": -0.03,
+                 "pontoEmVermelho": true },
+      "menu":  { "letra": "corpo", "tamanho": 11.5, "peso": "medium", "espacoEntreLetras": 0.12,
+                 "caixaAlta": true, "cor": "nevoa", "espacoEntreItens": 30,
+                 "ativo": { "cor": "branco", "peso": "bold", "reguaEmbaixo": { "cor": "vermelho", "espessura": 2 } } },
+      "chip":  { "letra": "maquina", "tamanho": 11, "espacoEntreLetras": 0.14, "caixaAlta": true,
+                 "borda": "grafite", "folga": [3, 9], "cor": "nevoa", "nomeEmBranco": true },
+      "bolinha": { "tamanho": 32, "fundo": "vermelho", "letra": "display", "tamanhoLetra": 12,
+                   "peso": "bold", "cor": "branco", "formato": "circulo" }
+    },
+
+    "recado": {
+      "comum": { "bordaEsquerda": { "cor": "preto", "espessura": 3 }, "fundo": "#F6F6F6",
+                 "folga": [12, 16], "tamanho": 14 },
+      "erro":  { "bordaEsquerda": { "cor": "vermelho", "espessura": 3 }, "fundo": "#FFF5F5",
+                 "cor": "vermelho" },
+      "vazio": { "borda": { "cor": "nevoa", "espessura": 1, "tracejada": true },
+                 "folga": [48, 16], "alinhamento": "centro", "cor": "grafite" }
+    },
+
+    "texturas": {
+      "grade":   { "modulo": 64, "fio": 1, "cor": "carvao", "fundo": "preto" },
+      "listras": { "angulo": 45, "faixa": 10, "corA": "carvao", "corB": "preto" },
+      "listrasClaras": { "angulo": 45, "faixa": 7, "corA": "#FAFAFB", "corB": "#F1F1F3" }
+    }
+  },
+
+  "leis": [
+    "Canto reto em tudo, menos círculos de verdade",
+    "Nenhuma sombra: o relevo vem do fundo cinza contra a caixa branca",
+    "Vermelho é destaque, nunca decoração: 10% da tela",
+    "Todo rótulo é máquina, caixa alta, com espaço entre letras",
+    "Todo número que importa é display",
+    "Cabeçalho de tabela é listrado, centralizado, com régua vermelha",
+    "Valor sempre à direita, alinhado pela vírgula",
+    "Cartão do topo tem tamanho fixo: o texto é que se ajusta",
+    "Janela tem tamanho fixo: trocar de aba não muda a janela",
+    "Nenhum controle do sistema operacional aparece",
+    "Respiro antes de todo botão",
+    "Uma etiqueta vermelha por contexto"
+  ]
+}

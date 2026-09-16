@@ -13,7 +13,6 @@ spring:
   jpa:
     hibernate:
       ddl-auto: validate
-    open-in-view: true
     properties:
       hibernate:
         format_sql: false
@@ -21,12 +20,6 @@ spring:
   flyway:
     enabled: true
     locations: classpath:db/migration/h2
-
-  thymeleaf:
-    cache: false
-
-server:
-  port: 8090
 
 ---
 # Perfil do banco de verdade. Ligar com: --spring.profiles.active=postgres
@@ -49,9 +42,6 @@ spring:
     # A versao zero garante que nenhum passo seja pulado: tudo e aplicado.
     baseline-on-migrate: true
     baseline-version: 0
-
-  thymeleaf:
-    cache: true
 
 # Ponte com o ERP: por enquanto so a configuracao, o envio entra na proxima etapa.
 ponte:

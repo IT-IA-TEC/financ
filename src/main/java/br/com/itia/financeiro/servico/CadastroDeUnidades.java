@@ -8,7 +8,7 @@ import br.com.itia.financeiro.repositorio.HistoricoDaUnidadeRepositorio;
 import br.com.itia.financeiro.repositorio.PagadorRepositorio;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
+import br.com.itia.financeiro.dominio.ArquivoRecebido;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -111,8 +111,8 @@ public class CadastroDeUnidades {
      * existe é reaproveitado, e nada vira cadastro repetido.
      */
     @Transactional
-    public Importacao importarBase(MultipartFile arquivo) {
-        if (arquivo == null || arquivo.isEmpty()) {
+    public Importacao importarBase(ArquivoRecebido arquivo) {
+        if (arquivo == null || arquivo.vazio()) {
             throw new IllegalArgumentException("Escolha o arquivo da base.");
         }
         int pessoasNovas = 0;
@@ -121,7 +121,7 @@ public class CadastroDeUnidades {
         List<String> recusadas = new ArrayList<>();
 
         try (BufferedReader leitor = new BufferedReader(
-                new InputStreamReader(arquivo.getInputStream(), StandardCharsets.UTF_8))) {
+                new InputStreamReader(new java.io.ByteArrayInputStream(arquivo.conteudo()), StandardCharsets.UTF_8))) {
             String linha;
             int numero = 0;
             while ((linha = leitor.readLine()) != null) {

@@ -2,9 +2,7 @@ package br.com.itia.financeiro.servico;
 
 import br.com.itia.financeiro.dominio.Empresa;
 import br.com.itia.financeiro.repositorio.EmpresaRepositorio;
-import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.stereotype.Component;
-import org.springframework.web.context.annotation.SessionScope;
 
 import java.io.Serializable;
 import java.util.UUID;
@@ -12,12 +10,14 @@ import java.util.UUID;
 /**
  * Guarda quem entrou e em qual empresa a pessoa esta trabalhando agora.
  *
+ * No programa instalado existe uma pessoa de cada vez, entao isto e unico:
+ * antes era uma copia por sessao de navegador.
+ *
  * E o unico lugar do sistema que responde "qual empresa?". Serviço nenhum
  * adivinha: ou recebe a empresa daqui, ou nao roda. E o que garante que quem
  * cuida de duas empresas nunca veja as duas misturadas.
  */
 @Component
-@SessionScope(proxyMode = ScopedProxyMode.TARGET_CLASS)
 public class ContextoEmpresa implements Serializable {
 
     private final transient EmpresaRepositorio empresas;

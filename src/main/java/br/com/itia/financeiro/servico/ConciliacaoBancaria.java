@@ -13,7 +13,7 @@ import br.com.itia.financeiro.repositorio.PagamentoRepositorio;
 import br.com.itia.financeiro.repositorio.TituloRepositorio;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
+import br.com.itia.financeiro.dominio.ArquivoRecebido;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -112,17 +112,13 @@ public class ConciliacaoBancaria {
      * aquela transação, e é ele que impede o movimento entrar duas vezes.
      */
     @Transactional
-    public Resultado importar(MultipartFile arquivo, UUID contaId) {
-        if (arquivo == null || arquivo.isEmpty()) {
+    public Resultado importar(ArquivoRecebido arquivo, UUID contaId) {
+        if (arquivo == null || arquivo.vazio()) {
             throw new IllegalArgumentException("Escolha o arquivo do extrato.");
         }
         UUID empresaId = contexto.exigirEmpresaId();
-        byte[] conteudo;
-        try {
-            conteudo = arquivo.getBytes();
-        } catch (IOException erro) {
-            throw new IllegalStateException("Não consegui ler o arquivo: " + erro.getMessage());
-        }
+        // o arquivo já vem lido da janela, então aqui não há mais leitura de disco
+        byte[] conteudo = arquivo.conteudo();
 
         String impressao = impressaoDigital(conteudo);
         importacoes.findByEmpresaIdAndImpressao(empresaId, impressao).ifPresent(antiga -> {
@@ -132,7 +128,7 @@ public class ConciliacaoBancaria {
         });
 
         ImportacaoDeExtrato importacao = importacoes.save(new ImportacaoDeExtrato(empresaId,
-                contaId, arquivo.getOriginalFilename(), impressao, contexto.autor()));
+                contaId, arquivo.nomeLimpo(), impressao, contexto.autor()));
 
         int lidas = 0;
         int novos = 0;
