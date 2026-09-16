@@ -1,0 +1,553 @@
+{
+  "_leia": "Este arquivo manda no visual do IT.FC. O sistema lê ele ao abrir: o que estiver escrito aqui é o que aparece na tela. Mude um valor, salve, abra o sistema de novo e a mudança está lá. Todo valor é número, nome de cor do bloco 'cores', nome de fonte do bloco 'letras' ou palavra-chave curta.",
+  "marca": "IT.FC",
+  "base": "You Contabilidade",
+  "tema": "claro",
+  "densidade": "confortavel",
+
+  "cores": {
+    "laranja":        { "valor": "#FE4901", "uso": "acao principal, item ativo, serie principal do grafico" },
+    "laranjaAcento":  { "valor": "#FF9200", "uso": "fim de degrade e acento; nunca recebe texto" },
+    "laranjaTexto":   { "valor": "#D43D00", "uso": "link, texto laranja pequeno, anel de foco" },
+    "laranjaToque":   { "valor": "#E64200", "uso": "laranja ao passar o mouse e no clique" },
+    "laranjaSuave":   { "valor": "#FFF1EA", "uso": "fundo de chip, linha ativa, botao terciario" },
+    "laranjaClaro":   { "valor": "#FFD0B5", "uso": "texto de apoio sobre bloco laranja" },
+
+    "ink":            { "valor": "#111114", "uso": "texto principal, coluna lateral, texto sobre laranja" },
+    "inkDois":        { "valor": "#1C1C1F", "uso": "superficie escura secundaria, fio dentro do escuro" },
+    "grafite":        { "valor": "#3F3F46", "uso": "texto de apoio forte" },
+    "apoio":          { "valor": "#52525B", "uso": "paragrafo secundario, celula neutra" },
+    "apagado":        { "valor": "#6B6B72", "uso": "rotulo, legenda, placeholder" },
+    "nevoa":          { "valor": "#A1A1AA", "uso": "texto desligado, icone ilustrativo" },
+
+    "pagina":         { "valor": "#FFFFFF", "uso": "fundo da tela de trabalho" },
+    "caixa":          { "valor": "#FFFFFF", "uso": "tabela, cartao, janela" },
+    "superficie":     { "valor": "#FAFAFA", "uso": "secao alternada, linha ao passar o mouse" },
+    "superficieDois": { "valor": "#F4F4F5", "uso": "cabecalho de tabela, chip neutro, esqueleto" },
+    "borda":          { "valor": "#E4E4E7", "uso": "borda de caixa, regua entre linhas" },
+    "bordaForte":     { "valor": "#D4D4D8", "uso": "borda de campo, borda ao passar o mouse" },
+    "branco":         { "valor": "#FFFFFF", "uso": "texto sobre escuro, numero display sobre laranja" },
+
+    "verde":          { "valor": "#1B7A44", "uso": "credito, sucesso, validado" },
+    "verdeSuave":     { "valor": "#DCF0E4", "uso": "fundo de etiqueta de credito" },
+    "verdeEscuro":    { "valor": "#0F4A28", "uso": "texto de etiqueta de credito" },
+    "vermelho":       { "valor": "#C0392B", "uso": "debito, erro, acao destrutiva" },
+    "vermelhoSuave":  { "valor": "#F8DAD6", "uso": "fundo de etiqueta de debito" },
+    "vermelhoEscuro": { "valor": "#7F2018", "uso": "texto de etiqueta de debito" },
+    "ambar":          { "valor": "#B25E09", "uso": "aviso, pendente, vencimento proximo" },
+    "ambarSuave":     { "valor": "#F6E2C8", "uso": "fundo de aviso e de etiqueta agendada" },
+    "ambarEscuro":    { "valor": "#8A4906", "uso": "texto sobre fundo de aviso" },
+    "azul":           { "valor": "#3A5A8C", "uso": "informacao do sistema, em aprovacao" },
+    "azulSuave":      { "valor": "#E5EAF2", "uso": "fundo de etiqueta de informacao" },
+
+    "veu":            { "valor": "#111114", "uso": "fundo por tras de janela flutuante" }
+  },
+
+  "degrade": {
+    "marca": { "angulo": 135, "de": "laranja", "para": "laranjaAcento" },
+    "onde": ["numeroHeroi", "barraDeProgresso", "monograma"],
+    "proibido": ["botao", "bloco", "fundoDeSecao"]
+  },
+
+  "letras": {
+    "display": { "familia": "Clash Display", "pesos": [600, 700], "uso": "titulo, numero grande, total" },
+    "corpo":   { "familia": "Geist", "pesos": [400, 500, 600], "uso": "texto, rotulo, controle, celula" }
+  },
+
+  "escalaDeTexto": {
+    "displayXl": { "letra": "display", "tamanho": 44, "entrelinha": 1.05, "peso": 700, "espacoEntreLetras": -0.02 },
+    "displayLg": { "letra": "display", "tamanho": 30, "entrelinha": 1.1,  "peso": 700, "espacoEntreLetras": -0.02 },
+    "tituloLg":  { "letra": "display", "tamanho": 28, "entrelinha": 1.15, "peso": 600, "espacoEntreLetras": -0.02 },
+    "tituloSm":  { "letra": "corpo",   "tamanho": 19, "entrelinha": 1.3,  "peso": 600 },
+    "corpoMd":   { "letra": "corpo",   "tamanho": 15, "entrelinha": 1.65, "peso": 400, "medidaMaxima": 680 },
+    "corpoSm":   { "letra": "corpo",   "tamanho": 13.5, "entrelinha": 1.5, "peso": 400 },
+    "rotulo":    { "letra": "corpo",   "tamanho": 11.5, "peso": 500, "caixaAlta": true, "espacoEntreLetras": 0.14, "cor": "apagado" },
+    "dinheiro":  { "letra": "corpo",   "tamanho": 15, "peso": 600, "numeroTabular": true, "alinhamento": "direita" }
+  },
+
+  "espacos": {
+    "minimo": 4,
+    "entre":  8,
+    "perto":  12,
+    "dentro": 16,
+    "caixa":  20,
+    "lado":   32,
+    "bloco":  48,
+    "secao":  76,
+    "containerMaximo": 1200
+  },
+
+  "forma": {
+    "canto":        14,
+    "cantoPilula":  999,
+    "cantoCirculo": 999,
+    "espessuraBorda": 1,
+    "espessuraBordaForte": 2,
+    "espessuraTracejada": 2
+  },
+
+  "elevacao": {
+    "nivel0": { "borda": "borda" },
+    "nivel1": { "cor": "ink", "opacidade": 0.06, "y": 1,  "desfoque": 2 },
+    "nivel2": { "cor": "ink", "opacidade": 0.08, "y": 8,  "desfoque": 24 },
+    "nivel3": { "cor": "ink", "opacidade": 0.12, "y": 20, "desfoque": 48 },
+    "brilhoColorido": false
+  },
+
+  "foco": {
+    "espessura": 2,
+    "folga": 2,
+    "cor": "laranjaTexto",
+    "aneloInterno": "branco"
+  },
+
+  "movimento": {
+    "rapido": 140,
+    "base":   180,
+    "lento":  200,
+    "curva":  [0.22, 0.61, 0.36, 1],
+    "clique": { "y": 1 },
+    "esqueleto": { "duracao": 1400, "curva": "linear" },
+    "mola": false,
+    "respeitaReducaoDeMovimento": true
+  },
+
+  "componentes": {
+
+    "botao": {
+      "_leia": "Pilula sempre. Texto sobre laranja e ink, peso 600. Um principal por tela.",
+      "altura":              48,
+      "alturaPequeno":       40,
+      "alturaGrande":        54,
+      "alturaExtra":         60,
+      "folgaLateral":        22,
+      "folgaLateralPequeno": 16,
+      "folgaLateralGrande":  28,
+      "letra":               "corpo",
+      "tamanhoLetra":        14.5,
+      "peso":                600,
+      "canto":               "cantoPilula",
+      "espacoParaIcone":     8,
+      "tamanhoIcone":        16,
+      "respiroAcima":        20,
+      "tipos": {
+        "principal": {
+          "parado":    { "fundo": "laranja",     "texto": "ink", "borda": "laranja" },
+          "mouse":     { "fundo": "laranjaToque", "texto": "ink", "borda": "laranjaToque" },
+          "clique":    { "fundo": "laranjaToque", "texto": "ink", "borda": "laranjaToque", "y": 1 },
+          "foco":      { "fundo": "laranja",     "texto": "ink", "anel": "laranjaTexto" },
+          "desligado": { "fundo": "laranja",     "texto": "ink", "opacidade": 0.45 },
+          "carregando":{ "fundo": "laranja",     "texto": "ink", "giro": 16 }
+        },
+        "escuro": {
+          "parado":    { "fundo": "ink",     "texto": "branco", "borda": "ink" },
+          "mouse":     { "fundo": "inkDois", "texto": "branco", "borda": "inkDois" },
+          "clique":    { "fundo": "inkDois", "texto": "branco", "borda": "inkDois", "y": 1 },
+          "foco":      { "fundo": "ink",     "texto": "branco", "anel": "laranjaTexto" },
+          "desligado": { "fundo": "ink",     "texto": "branco", "opacidade": 0.4 }
+        },
+        "vazado": {
+          "parado":    { "fundo": "caixa",      "texto": "ink", "borda": "bordaForte" },
+          "mouse":     { "fundo": "superficie", "texto": "ink", "borda": "ink" },
+          "clique":    { "fundo": "superficieDois", "texto": "ink", "borda": "ink", "y": 1 },
+          "foco":      { "fundo": "caixa",      "texto": "ink", "anel": "laranjaTexto" },
+          "desligado": { "fundo": "caixa",      "texto": "nevoa", "borda": "borda" }
+        },
+        "suave": {
+          "parado":    { "fundo": "laranjaSuave", "texto": "ink", "borda": "laranjaSuave" },
+          "mouse":     { "fundo": "laranjaClaro", "texto": "ink", "borda": "laranjaClaro" },
+          "foco":      { "fundo": "laranjaSuave", "texto": "ink", "anel": "laranjaTexto" },
+          "desligado": { "fundo": "superficieDois", "texto": "nevoa", "borda": "superficieDois" }
+        },
+        "fantasma": {
+          "parado":    { "fundo": "pagina",          "texto": "apoio", "borda": "pagina" },
+          "mouse":     { "fundo": "superficieDois",  "texto": "ink",   "borda": "superficieDois" },
+          "foco":      { "fundo": "pagina",          "texto": "ink",   "anel": "laranjaTexto" },
+          "desligado": { "fundo": "pagina",          "texto": "nevoa", "borda": "pagina" }
+        },
+        "perigo": {
+          "parado":    { "fundo": "vermelho",       "texto": "branco", "borda": "vermelho" },
+          "mouse":     { "fundo": "vermelhoEscuro", "texto": "branco", "borda": "vermelhoEscuro" },
+          "foco":      { "fundo": "vermelho",       "texto": "branco", "anel": "laranjaTexto" },
+          "desligado": { "fundo": "vermelho",       "texto": "branco", "opacidade": 0.4 }
+        },
+        "perigoVazado": {
+          "parado":    { "fundo": "caixa",    "texto": "vermelho", "borda": "vermelho" },
+          "mouse":     { "fundo": "vermelho", "texto": "branco",   "borda": "vermelho" },
+          "desligado": { "fundo": "caixa",    "texto": "nevoa",    "borda": "borda" }
+        },
+        "link": {
+          "parado":    { "texto": "laranjaTexto", "sublinhado": true, "folgaSublinhado": 3 },
+          "mouse":     { "texto": "ink",          "sublinhado": true },
+          "desligado": { "texto": "nevoa",        "sublinhado": false }
+        }
+      },
+      "soIcone": { "lado": 44, "canto": "cantoCirculo", "tamanhoIcone": 18 },
+      "larguraTotal": { "largura": 100, "unidade": "porcento" },
+      "segmentado": { "altura": 40, "canto": "cantoPilula", "ativo": { "fundo": "ink", "texto": "branco" }, "inativo": { "fundo": "caixa", "texto": "apoio" }, "borda": "bordaForte" },
+      "dividido": { "larguraSeta": 44, "fioInterno": { "cor": "ink", "opacidade": 0.28, "espessura": 1 } },
+      "noEscuro": {
+        "vazado": {
+          "parado": { "fundo": "ink",    "texto": "branco", "borda": "grafite" },
+          "mouse":  { "fundo": "branco", "texto": "ink",    "borda": "branco" }
+        }
+      }
+    },
+
+    "campo": {
+      "altura":         48,
+      "alturaPequeno":  40,
+      "folgaLateral":   14,
+      "borda":          "bordaForte",
+      "espessuraBorda": 1,
+      "canto":          "canto",
+      "letra":          "corpo",
+      "tamanhoLetra":   14,
+      "fundo":          "caixa",
+      "texto":          "ink",
+      "placeholder":    "apagado",
+      "estados": {
+        "parado":     { "borda": "bordaForte", "fundo": "caixa" },
+        "mouse":      { "borda": "ink",        "fundo": "caixa" },
+        "foco":       { "borda": "ink",        "fundo": "caixa", "anel": "laranjaTexto", "espessuraAnel": 2, "folgaAnel": 2 },
+        "preenchido": { "borda": "bordaForte", "fundo": "caixa", "texto": "ink" },
+        "erro":       { "borda": "vermelho",   "fundo": "caixa", "icone": "vermelho" },
+        "sucesso":    { "borda": "verde",      "fundo": "caixa", "icone": "verde" },
+        "desligado":  { "borda": "borda",      "fundo": "superficieDois", "texto": "nevoa" },
+        "somenteLeitura": { "borda": "borda",  "fundo": "superficie", "texto": "apoio" },
+        "carregando": { "borda": "bordaForte", "fundo": "caixa", "giro": 16 }
+      },
+      "rotulo":  { "letra": "corpo", "tamanho": 13, "peso": 500, "caixaAlta": false, "cor": "ink", "respiroAbaixo": 8 },
+      "ajuda":   { "letra": "corpo", "tamanho": 12, "cor": "apagado", "respiroAcima": 7 },
+      "erroTexto": { "letra": "corpo", "tamanho": 12, "cor": "vermelho", "respiroAcima": 7 },
+      "obrigatorio": { "marca": "asterisco", "cor": "vermelho" },
+      "areaDeTexto": { "alturaMinima": 96, "folga": [12, 14] },
+      "caixaDeMarcar": {
+        "lado": 20, "canto": 6,
+        "parado":    { "fundo": "caixa",   "borda": "bordaForte" },
+        "marcado":   { "fundo": "laranja", "borda": "laranja", "marca": "ink" },
+        "foco":      { "anel": "laranjaTexto" },
+        "desligado": { "fundo": "superficieDois", "borda": "borda", "marca": "nevoa" }
+      },
+      "opcaoUnica": {
+        "lado": 20, "canto": "cantoCirculo",
+        "parado":    { "fundo": "caixa", "borda": "bordaForte" },
+        "marcado":   { "fundo": "caixa", "borda": "laranja", "espessuraBorda": 5 },
+        "foco":      { "anel": "laranjaTexto" },
+        "desligado": { "fundo": "superficieDois", "borda": "borda" }
+      },
+      "alternador": {
+        "largura": 44, "altura": 26, "bolinha": 20, "folga": 3, "canto": "cantoPilula",
+        "desligadoEstado": { "trilha": "bordaForte", "bolinha": "branco" },
+        "ligado":          { "trilha": "laranja",    "bolinha": "branco" },
+        "foco":            { "anel": "laranjaTexto" },
+        "desabilitado":    { "trilha": "borda", "bolinha": "superficie", "opacidade": 0.5 }
+      },
+      "busca": { "altura": 48, "icone": 16, "corIcone": "apagado", "atalho": { "letra": "corpo", "tamanho": 11.5, "borda": "borda", "canto": "canto" } },
+      "soltarArquivo": { "borda": "bordaForte", "espessura": 2, "tracejada": true, "canto": "canto", "folga": 26, "icone": 26, "corIcone": "nevoa" }
+    },
+
+    "cartaoDoTopo": {
+      "_leia": "Um numero por cartao. Rotulo em cima, numero no meio, variacao embaixo.",
+      "larguraMinima": 230,
+      "folga": 20,
+      "espacoEntre": 10,
+      "canto": "canto",
+      "rotulo":   { "letra": "corpo", "tamanho": 11.5, "espacoEntreLetras": 0.14, "caixaAlta": true, "cor": "apagado" },
+      "numero":   { "letra": "display", "tamanho": 30, "peso": 700, "entrelinha": 1.05, "espacoEntreLetras": -0.02, "numeroTabular": true, "umaLinhaSo": true },
+      "variacao": { "letra": "corpo", "tamanho": 12.5, "peso": 500, "icone": 14 },
+      "peles": {
+        "normal":   { "fundo": "caixa", "borda": "borda", "numero": "ink" },
+        "positivo": { "fundo": "caixa", "borda": "borda", "numero": "ink", "variacao": "verde" },
+        "negativo": { "fundo": "caixa", "borda": "borda", "numero": "ink", "variacao": "vermelho" },
+        "alerta":   { "fundo": "caixa", "borda": "borda", "bordaEsquerda": { "cor": "ambar", "espessura": 3 }, "numero": "ambar" },
+        "inverso":  { "fundo": "ink", "borda": "ink", "rotulo": "nevoa", "numero": "degrade", "variacao": "branco" }
+      }
+    },
+
+    "tabela": {
+      "cabecalho": {
+        "fundo": "superficieDois",
+        "letra": "corpo",
+        "tamanho": 11.5,
+        "espacoEntreLetras": 0.1,
+        "caixaAlta": true,
+        "cor": "apagado",
+        "alinhamento": "esquerda",
+        "folga": [12, 20],
+        "reguaEmbaixo": { "cor": "borda", "espessura": 1 },
+        "colunaOrdenada": { "cor": "ink", "icone": 13 },
+        "fixoAoRolar": true
+      },
+      "corpo": {
+        "alturaLinha": 52,
+        "alturaLinhaCompacta": 40,
+        "folgaCelula": [15, 20],
+        "linhaImpar": "caixa",
+        "linhaPar": "caixa",
+        "zebra": false,
+        "mouse": "superficie",
+        "selecionada": "laranjaSuave",
+        "reguaEntreLinhas": { "cor": "borda", "espessura": 1, "naUltima": false },
+        "letra": "corpo",
+        "tamanho": 13.5,
+        "cor": "ink",
+        "textoDeApoio": { "tamanho": 12, "cor": "apagado" },
+        "colunaDeValor": { "alinhamento": "direita", "numeroTabular": true, "peso": 600, "credito": "verde", "debito": "vermelho", "sinalExplicito": true },
+        "colunaDeData": { "numeroTabular": true, "cor": "apoio" },
+        "linhaDeTotal": { "reguaAcima": { "cor": "ink", "espessura": 2 }, "letra": "display", "tamanho": 17, "peso": 700 },
+        "esqueleto": { "altura": 11, "canto": "cantoPilula", "de": "superficieDois", "para": "borda" }
+      },
+      "caixaPorFora": { "borda": "borda", "espessura": 1, "canto": "canto" },
+      "larguraMinima": 560,
+      "viraCartaoAbaixoDe": 640,
+      "paginacao": { "altura": 32, "canto": "cantoPilula", "ativo": { "fundo": "ink", "texto": "branco" }, "inativo": { "fundo": "caixa", "texto": "apoio", "borda": "borda" } }
+    },
+
+    "etiquetaDeSituacao": {
+      "letra": "corpo", "tamanho": 12, "peso": 500, "caixaAlta": false,
+      "folga": [4, 10], "canto": "canto", "espessuraBorda": 1, "pontinho": 6,
+      "situacoes": {
+        "conciliado":  { "texto": "verdeEscuro",    "fundo": "verdeSuave",    "borda": "verdeSuave" },
+        "agendado":    { "texto": "ambarEscuro",    "fundo": "ambarSuave",    "borda": "ambarSuave" },
+        "vencido":     { "texto": "vermelhoEscuro", "fundo": "vermelhoSuave", "borda": "vermelhoSuave" },
+        "emAprovacao": { "texto": "azul",           "fundo": "azulSuave",     "borda": "azulSuave" },
+        "rascunho":    { "texto": "apoio",          "fundo": "superficieDois","borda": "superficieDois" },
+        "automatico":  { "texto": "ink",            "fundo": "laranjaSuave",  "borda": "laranjaSuave" },
+        "cancelado":   { "texto": "nevoa",          "fundo": "caixa",         "borda": "borda" },
+        "contador":    { "texto": "branco",         "fundo": "vermelho",      "borda": "vermelho", "canto": "cantoPilula", "numeroTabular": true }
+      }
+    },
+
+    "abas": {
+      "fundo": "caixa",
+      "folgaFaixa": [0, 18],
+      "folgaItem": [15, 0],
+      "espacoEntreItens": 22,
+      "letra": "corpo",
+      "tamanho": 13.5,
+      "peso": 500,
+      "caixaAlta": false,
+      "cor": "apoio",
+      "contagem": { "cor": "nevoa", "numeroTabular": true },
+      "ativa":     { "cor": "ink",   "peso": 600, "reguaEmbaixo": { "cor": "laranja", "espessura": 2 } },
+      "mouse":     { "cor": "ink" },
+      "foco":      { "anel": "laranjaTexto" },
+      "desligada": { "cor": "nevoa" }
+    },
+
+    "olho": {
+      "ponto": { "tamanho": 7, "cor": "laranja", "formato": "circulo" },
+      "espaco": 8,
+      "letra": "corpo",
+      "tamanho": 11.5,
+      "espacoEntreLetras": 0.14,
+      "caixaAlta": true,
+      "cor": "apagado",
+      "corNoEscuro": "nevoa"
+    },
+
+    "cabecalhoDaPagina": {
+      "reguaEmbaixo": { "cor": "borda", "espessura": 1 },
+      "respiroAbaixo": 24,
+      "titulo": { "letra": "display", "tamanho": 30, "peso": 700, "espacoEntreLetras": -0.02 },
+      "apoio":  { "letra": "corpo", "tamanho": 14, "cor": "apoio" },
+      "arranjo": "titulo a esquerda, botoes a direita"
+    },
+
+    "rotuloDeBloco": {
+      "letra": "corpo", "tamanho": 11.5, "espacoEntreLetras": 0.14,
+      "caixaAlta": true, "cor": "apagado", "respiroAbaixo": 14
+    },
+
+    "janelaFlutuante": {
+      "larguraPequena": 420,
+      "larguraMedia": 620,
+      "larguraGrande": 880,
+      "fundoPorTras": { "cor": "veu", "opacidade": 0.55 },
+      "fundo": "caixa",
+      "canto": "canto",
+      "elevacao": "nivel3",
+      "topo":  { "folga": [22, 26], "titulo": { "letra": "display", "tamanho": 21, "peso": 600 }, "subtitulo": { "letra": "corpo", "tamanho": 13.5, "cor": "apoio" } },
+      "corpo": { "folga": 26, "rola": true },
+      "pe":    { "folga": [18, 26], "reguaAcima": { "cor": "borda", "espessura": 1 }, "botoes": "a esquerda", "espacoEntreBotoes": 10 },
+      "fechar": { "lado": 40, "canto": "cantoCirculo", "borda": "borda", "mouse": "superficieDois" },
+      "entrada": { "duracao": 200, "de": { "opacidade": 0, "y": 8 } }
+    },
+
+    "painelLateral": {
+      "largura": 480,
+      "fundo": "caixa",
+      "elevacao": "nivel3",
+      "entrada": { "duracao": 200, "direcao": "direita" },
+      "fundoPorTras": { "cor": "veu", "opacidade": 0.55 }
+    },
+
+    "barraDoTopo": {
+      "fundo": "caixa",
+      "opacidadeFundo": 0.82,
+      "desfoque": 14,
+      "reguaEmbaixo": { "cor": "borda", "espessura": 1 },
+      "folga": [14, 18],
+      "ordem": ["trilha", "busca", "notificacao", "perfil"],
+      "trilha": { "letra": "corpo", "tamanho": 12.5, "cor": "apagado", "atual": { "cor": "ink", "peso": 500 }, "separador": 13 },
+      "busca": { "altura": 36, "canto": "cantoPilula", "borda": "borda", "cor": "apagado", "icone": 15 },
+      "notificacao": { "lado": 36, "canto": "cantoCirculo", "borda": "borda", "contador": { "fundo": "vermelho", "texto": "branco", "tamanho": 10.5, "lado": 17 } },
+      "perfil": { "lado": 36, "canto": "cantoCirculo", "fundo": "ink", "texto": "branco", "tamanho": 12 }
+    },
+
+    "colunaLateral": {
+      "largura": 252,
+      "larguraRecolhida": 72,
+      "fundo": "ink",
+      "canto": "canto",
+      "folga": [20, 14],
+      "grupo": { "letra": "corpo", "tamanho": 10.5, "espacoEntreLetras": 0.14, "caixaAlta": true, "cor": "grafite" },
+      "item": {
+        "altura": 42, "folga": [11, 10], "canto": "canto", "icone": 18, "espacoIcone": 11,
+        "letra": "corpo", "tamanho": 13.5,
+        "parado":    { "fundo": "ink",     "texto": "bordaForte", "icone": "bordaForte" },
+        "mouse":     { "fundo": "inkDois", "texto": "branco",     "icone": "branco" },
+        "ativo":     { "fundo": "laranja", "opacidadeFundo": 0.14, "texto": "branco", "icone": "laranjaAcento", "marca": { "cor": "laranja", "largura": 3, "lado": "esquerda" } },
+        "foco":      { "anel": "laranjaTexto" },
+        "desligado": { "fundo": "ink", "texto": "grafite", "icone": "grafite" }
+      },
+      "subitem": { "recuo": 40, "altura": 34, "tamanho": 13, "cor": "nevoa", "ativo": "branco" },
+      "contador": { "fundo": "inkDois", "texto": "branco", "tamanho": 11, "canto": "cantoPilula", "numeroTabular": true },
+      "rodape": { "reguaAcima": { "cor": "inkDois", "espessura": 1 }, "avatar": 32, "nome": { "tamanho": 13, "peso": 500, "cor": "branco" }, "papel": { "tamanho": 11.5, "cor": "grafite" } }
+    },
+
+    "barraInferior": {
+      "altura": 64,
+      "fundo": "caixa",
+      "reguaAcima": { "cor": "borda", "espessura": 1 },
+      "item": { "icone": 19, "letra": "corpo", "tamanho": 10.5, "parado": "apagado", "ativo": "laranjaTexto", "pesoAtivo": 500, "alvoMinimo": 44 }
+    },
+
+    "passos": {
+      "bolinha": 28,
+      "letra": "corpo", "tamanho": 12.5, "peso": 700,
+      "feito":     { "fundo": "laranja", "texto": "ink",   "borda": "laranja" },
+      "atual":     { "fundo": "caixa",   "texto": "ink",   "borda": "ink" },
+      "futuro":    { "fundo": "caixa",   "texto": "nevoa", "borda": "bordaForte" },
+      "linha":     { "cor": "borda", "espessura": 1, "espaco": 14 },
+      "rotulo":    { "letra": "corpo", "tamanho": 13.5, "peso": 500, "futuro": "nevoa" }
+    },
+
+    "menuSuspenso": {
+      "fundo": "caixa",
+      "canto": "canto",
+      "borda": "borda",
+      "elevacao": "nivel2",
+      "folga": 8,
+      "item": {
+        "altura": 40, "folga": [10, 12], "canto": "canto", "letra": "corpo", "tamanho": 13.5, "icone": 15,
+        "parado":     { "fundo": "caixa", "texto": "grafite" },
+        "mouse":      { "fundo": "superficieDois", "texto": "ink" },
+        "selecionado":{ "fundo": "laranjaSuave", "texto": "ink" },
+        "perigo":     { "fundo": "caixa", "texto": "vermelho" },
+        "desligado":  { "fundo": "caixa", "texto": "nevoa" }
+      },
+      "divisor": { "cor": "borda", "espessura": 1, "folga": 5 }
+    },
+
+    "dica": {
+      "fundo": "ink",
+      "texto": "branco",
+      "letra": "corpo",
+      "tamanho": 12.5,
+      "folga": [11, 14],
+      "canto": "canto",
+      "entrada": { "duracao": 140, "de": { "opacidade": 0, "y": 4 } }
+    },
+
+    "recado": {
+      "comum":   { "fundo": "caixa", "borda": "borda", "bordaEsquerda": { "cor": "ink", "espessura": 3 }, "folga": [15, 17], "tamanho": 14, "canto": "canto" },
+      "sucesso": { "fundo": "caixa", "borda": "borda", "icone": "verde", "texto": "ink", "acao": "laranjaTexto", "elevacao": "nivel2" },
+      "aviso":   { "fundo": "ambarSuave", "borda": "ambarSuave", "icone": "ambarEscuro", "texto": "ink" },
+      "erro":    { "fundo": "caixa", "borda": "borda", "bordaEsquerda": { "cor": "vermelho", "espessura": 3 }, "texto": "vermelho", "apoio": "apoio" },
+      "informacao": { "fundo": "azulSuave", "borda": "azulSuave", "icone": "azul", "texto": "ink" },
+      "vazio":   { "fundo": "superficie", "borda": "borda", "folga": [40, 26], "alinhamento": "centro", "icone": 40, "corIcone": "nevoa", "titulo": { "letra": "display", "tamanho": 19, "peso": 600 }, "texto": "apoio" },
+      "temporario": { "duracao": 5000, "posicao": "canto inferior direito", "elevacao": "nivel2", "acaoDesfazer": true }
+    },
+
+    "carregando": {
+      "giroPequeno": { "lado": 16, "espessura": 2, "trilha": "borda", "ponteiro": "laranja" },
+      "giroGrande":  { "lado": 32, "espessura": 3, "trilha": "borda", "ponteiro": "laranja" },
+      "barra":       { "altura": 8, "canto": "cantoPilula", "trilha": "superficieDois", "preenchimento": "degrade" },
+      "esqueleto":   { "de": "superficieDois", "para": "borda", "duracao": 1400 }
+    },
+
+    "grafico": {
+      "seriePrincipal": "laranja",
+      "serieSecundaria": "bordaForte",
+      "serieTerceira": "grafite",
+      "serieQuarta": "laranjaAcento",
+      "credito": "verde",
+      "debito": "vermelho",
+      "grade": { "cor": "borda", "espessura": 1 },
+      "eixo": { "letra": "corpo", "tamanho": 11, "cor": "apagado" },
+      "barra": { "canto": 6, "espacoEntreBarras": 3, "espacoEntreGrupos": 14 },
+      "linha": { "espessura": 2.5, "ponta": "redonda" },
+      "rosca": { "lado": 148, "furo": 92 },
+      "miniLinha": { "altura": 46, "espessura": 2.5 },
+      "legendaObrigatoria": true
+    },
+
+    "identidade": {
+      "avatar": { "lado": 40, "canto": "cantoCirculo", "letra": "corpo", "tamanho": 14, "peso": 600, "fundo": "ink", "texto": "branco" },
+      "avatarSuave": { "fundo": "laranjaSuave", "texto": "laranjaTexto" },
+      "avatarVazio": { "fundo": "superficieDois", "icone": "apagado" },
+      "pontoDeSituacao": { "lado": 12, "borda": "branco", "espessuraBorda": 2, "online": "verde", "ausente": "ambar", "offline": "nevoa" },
+      "grupoSobreposto": { "lado": 34, "recuo": 10, "borda": "branco", "espessuraBorda": 2 },
+      "monograma": { "lado": 38, "canto": "canto", "fundo": "degrade", "texto": "ink", "letra": "display", "tamanho": 15, "peso": 700 }
+    },
+
+    "icone": {
+      "biblioteca": "Lucide",
+      "traco": 1.5,
+      "cor": "currentColor",
+      "emLinha": 14,
+      "emControle": 16,
+      "emNavegacao": 20,
+      "emCartao": 28,
+      "ilustrativo": 40,
+      "emoji": false
+    }
+  },
+
+  "leis": [
+    "Texto e rotulo sobre laranja sao ink; branco so em numero display de 24 para cima",
+    "Laranja ocupa no maximo 10 por cento da tela",
+    "Degrade so em numero heroi, barra de progresso e monograma",
+    "Dois cantos: 14 em tudo e pilula so no botao",
+    "Sombra sempre neutra: nenhum brilho colorido",
+    "Alvo de toque nunca menor que 44",
+    "Valor sempre a direita, numero tabular, com sinal explicito",
+    "Credito e verde, debito e vermelho, e nenhum dos dois depende so de cor",
+    "Rotulo de campo sempre visivel: placeholder nunca substitui rotulo",
+    "Toda acao irreversivel pergunta antes e toda acao que move dinheiro confirma depois",
+    "Anel de foco em todo elemento navegavel por teclado",
+    "Movimento entre 140 e 200, ease-out, sem mola e com versao estatica"
+  ],
+
+  "fontes": {
+    "_leia": "Clash Display vai junto em woff2 e woff (nao existe .ttf licenciado no pacote da You). Geist carrega por Google Fonts.",
+    "display": {
+      "familia": "Clash Display",
+      "pasta": "fonts/",
+      "arquivos": [
+        "ClashDisplay-Semibold.woff2",
+        "ClashDisplay-Semibold.woff",
+        "ClashDisplay-Bold.woff2",
+        "ClashDisplay-Bold.woff"
+      ],
+      "pesos": [600, 700]
+    },
+    "corpo": {
+      "familia": "Geist",
+      "origem": "https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&display=swap",
+      "pesos": [400, 500, 600]
+    }
+  }
+}

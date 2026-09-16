@@ -1,0 +1,316 @@
+{
+ "acordos.html": [
+  [
+   "botao",
+   "Cancelar"
+  ],
+  [
+   "botao",
+   "Ver os documentos"
+  ]
+ ],
+ "agente.html": [
+  [
+   "olho",
+   "Primeiro atendimento"
+  ]
+ ],
+ "clientes.html": [
+  [
+   "janela",
+   "Novo cliente"
+  ],
+  [
+   "coluna",
+   "AB Nome 000 Nome sem pessoa vinculada em dia Unidade em dia Filtro aplicado nesta tabela. Limpar filtros Nenhum cliente nesta empresa ainda. Use o botão Novo cliente para cadastrar o primeiro. Nenhum cliente atende a esse filtro. Limpar filtros . Tabela Colunas da tela Só aparecem aqui campos que o sistema tem para mostrar. As colunas da pessoa ficam junto do nome; as da unidade, na linha de cada unidade. Da pessoa Coluna sempre visível Da unidade Coluna sempre visível Cancelar Salvar colunas Cadastro Novo cliente Quem paga Nome CPF WhatsApp E-mail Unidades desta pessoa A unidade é de onde nasce a cobrança: um CNPJ, uma loja, uma filial ou um contrato. A mesma pessoa pode ter quantas precisar. Em branco, a unidade recebe o nome da pessoa. Nome da unidade CNPJ da unidade Código de origem + Adicionar outro CNPJ Cancelar Cadastrar cliente CPF já cadastrado Esse CPF já tem cliente Já existe um cliente com esse CPF nesta empresa: Nome . Quer somar as unidades informadas a esse cliente? Nenhum cadastro novo de pessoa é criado, e o histórico do cliente continua inteiro. Unidade"
+  ],
+  [
+   "botao",
+   "AB Nome 000"
+  ],
+  [
+   "botao",
+   "Não somar"
+  ]
+ ],
+ "cobrancas.html": [
+  [
+   "titulo",
+   "Pacotes serviços"
+  ],
+  [
+   "botao",
+   "Filtrar"
+  ]
+ ],
+ "comprovantes.html": [
+  [
+   "coluna",
+   "O que fazer"
+  ],
+  [
+   "botao",
+   "Cancelar"
+  ]
+ ],
+ "conciliacao.html": [
+  [
+   "campo",
+   "registrar pagamento"
+  ],
+  [
+   "botao",
+   "Cancelar"
+  ]
+ ],
+ "conversas.html": [
+  [
+   "botao",
+   "Cancelar"
+  ]
+ ],
+ "disparos.html": [
+  [
+   "botao",
+   "Cancelar"
+  ]
+ ],
+ "empresas-configurar.html": [
+  [
+   "olho",
+   "engrenagem"
+  ]
+ ],
+ "esteira.html": [
+  [
+   "janela",
+   "Cliente"
+  ],
+  [
+   "botao",
+   "Cancelar"
+  ]
+ ],
+ "etiquetas.html": [
+  [
+   "botao",
+   "Cancelar"
+  ]
+ ],
+ "fechamento.html": [
+  [
+   "botao",
+   "Importar faturado"
+  ],
+  [
+   "botao",
+   "Cancelar"
+  ]
+ ],
+ "fluxos.html": [
+  [
+   "botao",
+   "Cancelar"
+  ]
+ ],
+ "integracao.html": [
+  [
+   "coluna",
+   "Acesso Segredo salvo não volta a aparecer: mostramos só os últimos dígitos. Deixando o campo em branco, o que já estava guardado continua valendo. Campo Comportamento Tempo limite (segundos) Tentativas Espera entre tentativas (ms) Conferir assinatura do aviso não sim Anotação Para que essa ligação serve aqui Salvar Operações Cada operação é uma chamada que esta integração pode fazer. Nada sai daqui sem estar nesta lista. Os caminhos que vieram do modelo são sugestão: confira na documentação do provedor. Operação"
+  ]
+ ],
+ "integracoes-ajuda.html": [
+  [
+   "janela",
+   "O que o módulo garante, em qualquer integração"
+  ]
+ ],
+ "integracoes.html": [
+  [
+   "coluna",
+   "Situação"
+  ],
+  [
+   "campo",
+   "Modelo operação"
+  ],
+  [
+   "botao",
+   "Cancelar"
+  ],
+  [
+   "olho",
+   "Nova ligação"
+  ]
+ ],
+ "inteligencia.html": [
+  [
+   "coluna",
+   "O que fazer"
+  ],
+  [
+   "botao",
+   "Guardar as chaves"
+  ]
+ ],
+ "modelos.html": [
+  [
+   "coluna",
+   "Situação"
+  ],
+  [
+   "coluna",
+   "O que fazer"
+  ],
+  [
+   "botao",
+   "Cancelar"
+  ]
+ ],
+ "obrigacao.html": [
+  [
+   "campo",
+   "Cancelar esta conta"
+  ]
+ ],
+ "pacote.html": [
+  [
+   "botao",
+   "Cancelar"
+  ],
+  [
+   "olho",
+   "Contratação do cliente"
+  ]
+ ],
+ "pacotes.html": [
+  [
+   "botao",
+   "Cancelar"
+  ]
+ ],
+ "pagar.html": [
+  [
+   "coluna",
+   "Vencimento De Até Aplicar"
+  ],
+  [
+   "coluna",
+   "Nº Número da conta Aplicar"
+  ],
+  [
+   "coluna",
+   "Favorecido Quem recebe todos Aplicar"
+  ],
+  [
+   "coluna",
+   "Descrição Contém Aplicar"
+  ],
+  [
+   "coluna",
+   "Natureza O que está sendo pago todas Aplicar"
+  ],
+  [
+   "coluna",
+   "Centro de custo Área que absorve todos Aplicar"
+  ],
+  [
+   "coluna",
+   "Valor devido De Até Aplicar"
+  ],
+  [
+   "coluna",
+   "Pago De Até Aplicar"
+  ],
+  [
+   "coluna",
+   "Saldo De Até Aplicar"
+  ],
+  [
+   "coluna",
+   "Situação Mostrar em aberto Aplicar"
+  ],
+  [
+   "coluna",
+   "Pendências Mostrar todas as contas só com pendência só sem pendência Aplicar"
+  ],
+  [
+   "campo",
+   "Situação do cadastro"
+  ],
+  [
+   "olho",
+   "Parcelamento"
+  ],
+  [
+   "olho",
+   "Cadastros desta empresa"
+  ]
+ ],
+ "realizados.html": [
+  [
+   "titulo",
+   "Pacotes serviços"
+  ],
+  [
+   "botao",
+   "Filtrar"
+  ],
+  [
+   "botao",
+   "Cancelar"
+  ]
+ ],
+ "regua.html": [
+  [
+   "coluna",
+   "Situação"
+  ],
+  [
+   "coluna",
+   "O que fazer"
+  ],
+  [
+   "botao",
+   "Cancelar"
+  ]
+ ],
+ "servico.html": [
+  [
+   "coluna",
+   "Situação"
+  ],
+  [
+   "botao",
+   "Cancelar"
+  ],
+  [
+   "olho",
+   "Cadastro de apoio"
+  ]
+ ],
+ "servicos.html": [
+  [
+   "titulo",
+   "Pacotes serviços"
+  ],
+  [
+   "botao",
+   "Cancelar"
+  ]
+ ],
+ "tarefas.html": [
+  [
+   "janela",
+   "Cancelar tarefa"
+  ],
+  [
+   "botao",
+   "Voltar"
+  ],
+  [
+   "olho",
+   "Quem mais precisa saber"
+  ]
+ ]
+}

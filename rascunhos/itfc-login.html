@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>IT.FC — Entrar</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=clash-display@600,700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&display=swap">
+<style>
+  :root{
+    --brand:#FE4901; --brand-hover:#E64200; --orange-text:#D43D00;
+    --ink:#111114; --ink-2:#1C1C1F;
+    --text:#111114; --muted:#52525B; --faint:#6B6B72;
+    --border:#E4E4E7; --border-strong:#D4D4D8;
+    --page:#FFFFFF; --card:#FFFFFF;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0; background:var(--page); color:var(--text);
+    font-family:Geist,sans-serif; -webkit-font-smoothing:antialiased;
+    display:grid; place-items:center; padding:48px 24px; min-height:100vh;
+  }
+  a{color:var(--orange-text); text-decoration:none}
+  a:hover{color:var(--ink)}
+
+  .card{
+    width:100%; max-width:420px; background:var(--card);
+    border:1px solid var(--brand); border-radius:18px; padding:44px 40px;
+    box-shadow:0 24px 56px rgba(17,17,20,.14), 0 4px 10px rgba(17,17,20,.05);
+  }
+
+  .brand{display:flex; flex-direction:column; align-items:center; gap:14px; margin-bottom:36px}
+  .brand-mark{
+    width:44px; height:44px; border-radius:14px; background:var(--brand);
+    display:grid; place-items:center;
+    font-family:'Clash Display',sans-serif; font-weight:700; font-size:17px;
+    color:var(--ink); letter-spacing:-.02em;
+  }
+  .brand-name{font-family:'Clash Display',sans-serif; font-weight:700; font-size:19px; letter-spacing:-.02em}
+
+  h1{
+    font-family:'Clash Display',sans-serif; font-weight:700; font-size:28px;
+    line-height:1.2; letter-spacing:-.02em; margin:0 0 8px; text-align:center;
+  }
+  .sub{font-size:14.5px; color:var(--muted); line-height:1.6; margin:0 0 32px; text-align:center}
+
+  .fields{display:grid; gap:18px}
+  .field label{display:block; font-size:13px; font-weight:500; margin-bottom:8px; color:var(--ink)}
+  .field input{
+    width:100%; height:44px; border:1px solid var(--border); border-radius:14px; padding:0 14px;
+    font-family:Geist,sans-serif; font-size:14px; color:var(--ink); background:#FFF;
+    transition:border-color 180ms cubic-bezier(.22,.61,.36,1), box-shadow 180ms cubic-bezier(.22,.61,.36,1);
+  }
+  .field input::placeholder{color:var(--faint)}
+  .field input:hover{border-color:var(--border-strong)}
+  .field input:focus{outline:none; border-color:var(--ink); box-shadow:0 0 0 2px #FFF,0 0 0 4px var(--orange-text)}
+  .help{font-size:12px; color:var(--faint); margin-top:7px}
+
+  .row{display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap}
+  .check{display:inline-flex; align-items:center; gap:10px; font-size:14px; font-weight:500; cursor:pointer; user-select:none}
+  .check input{position:absolute; opacity:0; width:0; height:0}
+  .box{
+    width:20px; height:20px; border-radius:6px; border:1px solid var(--border-strong); background:#FFF;
+    display:grid; place-items:center; flex:0 0 auto;
+    transition:background 160ms cubic-bezier(.22,.61,.36,1), border-color 160ms cubic-bezier(.22,.61,.36,1);
+  }
+  .box svg{width:13px; height:13px; stroke:var(--ink); stroke-width:3; opacity:0; transition:opacity 140ms}
+  .check input:checked + .box{background:var(--brand); border-color:var(--brand)}
+  .check input:checked + .box svg{opacity:1}
+  .check input:focus-visible + .box{box-shadow:0 0 0 2px #FFF,0 0 0 4px var(--orange-text)}
+  .link-sm{font-size:13.5px; font-weight:500}
+
+  .btn{
+    width:100%; height:48px; background:var(--ink); color:#FFF; border:none; border-radius:14px;
+    font-family:Geist,sans-serif; font-weight:600; font-size:15px; cursor:pointer;
+    transition:background 180ms cubic-bezier(.22,.61,.36,1), transform 120ms cubic-bezier(.22,.61,.36,1);
+  }
+  .btn:hover{background:var(--ink-2)}
+  .btn:active{transform:translateY(1px)}
+  .btn:focus-visible{outline:none; box-shadow:0 0 0 2px #FFF,0 0 0 4px var(--orange-text)}
+
+  .foot{font-size:13px; color:var(--muted); line-height:1.6; margin:28px 0 0; text-align:center}
+
+  .code{display:flex; gap:9px; margin-bottom:22px}
+  .cell{
+    flex:1; height:58px; border:1px solid var(--border-strong); border-radius:14px;
+    display:grid; place-items:center;
+    font-family:'Clash Display',sans-serif; font-weight:700; font-size:21px; font-variant-numeric:tabular-nums;
+  }
+  .cell.active{border-color:var(--ink); box-shadow:0 0 0 2px #FFF,0 0 0 4px var(--orange-text)}
+  .caret{width:1px; height:23px; background:var(--brand)}
+
+  .center{display:flex; justify-content:center; gap:6px; font-size:13px; color:var(--muted); margin-top:22px}
+  .ghost{
+    background:transparent; border:none; padding:0; font-family:Geist,sans-serif;
+    font-size:13px; font-weight:500; color:var(--faint); cursor:pointer;
+  }
+  .ghost:hover{color:var(--ink)}
+
+  [hidden]{display:none !important}
+
+  @media (prefers-reduced-motion: reduce){ *{transition:none !important} }
+</style>
+</head>
+<body>
+
+<div class="card">
+
+  <div class="brand">
+    <div class="brand-mark">IT</div>
+    <div class="brand-name">IT.FC</div>
+  </div>
+
+  <!-- ENTRAR -->
+  <section id="tela-entrar">
+    <h1>Entrar na sua conta</h1>
+    <p class="sub">Use o e-mail cadastrado pela sua empresa.</p>
+
+    <form class="fields" onsubmit="event.preventDefault(); mostrar('codigo');">
+      <div class="field">
+        <label for="email">E-mail corporativo</label>
+        <input id="email" type="email" placeholder="marina@empresa.com.br" autocomplete="email">
+      </div>
+      <div class="field">
+        <label for="senha">Senha</label>
+        <input id="senha" type="password" placeholder="Sua senha" autocomplete="current-password">
+      </div>
+
+      <div class="row">
+        <label class="check">
+          <input type="checkbox">
+          <span class="box"><svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>
+          Manter conectado
+        </label>
+        <a href="#recuperar" class="link-sm" onclick="event.preventDefault(); mostrar('recuperar');">Esqueci minha senha</a>
+      </div>
+
+      <button type="submit" class="btn">Entrar</button>
+    </form>
+
+    <p class="foot">Ainda não tem acesso? <a href="#acesso">Fale com o administrador</a></p>
+  </section>
+
+  <!-- CÓDIGO -->
+  <section id="tela-codigo" hidden>
+    <h1>Confirme que é você</h1>
+    <p class="sub">Código de 6 dígitos enviado para o número terminado em <strong style="font-variant-numeric:tabular-nums">•••• 4417</strong>.</p>
+
+    <div class="code">
+      <div class="cell">4</div>
+      <div class="cell">1</div>
+      <div class="cell">9</div>
+      <div class="cell active"><span class="caret"></span></div>
+      <div class="cell"></div>
+      <div class="cell"></div>
+    </div>
+
+    <button type="button" class="btn">Confirmar e entrar</button>
+
+    <div class="center"><span>Não recebeu?</span><a href="#reenviar">Reenviar em 0:42</a></div>
+    <div class="center"><button type="button" class="ghost" onclick="mostrar('entrar')">Voltar</button></div>
+  </section>
+
+  <!-- RECUPERAR -->
+  <section id="tela-recuperar" hidden>
+    <h1>Recuperar acesso</h1>
+    <p class="sub">Informe o e-mail cadastrado e enviamos um link para criar uma senha nova.</p>
+
+    <form class="fields" onsubmit="event.preventDefault();">
+      <div class="field">
+        <label for="email-rec">E-mail corporativo</label>
+        <input id="email-rec" type="email" placeholder="marina@empresa.com.br" autocomplete="email">
+        <div class="help">O link vale por 30 minutos.</div>
+      </div>
+      <button type="submit" class="btn">Enviar link</button>
+    </form>
+
+    <div class="center"><button type="button" class="ghost" onclick="mostrar('entrar')">Voltar para o login</button></div>
+  </section>
+
+</div>
+
+<script>
+  function mostrar(tela){
+    ['entrar','codigo','recuperar'].forEach(function(t){
+      document.getElementById('tela-' + t).hidden = (t !== tela);
+    });
+  }
+</script>
+
+</body>
+</html>
