@@ -149,6 +149,24 @@ public class Esteira {
         return quadro;
     }
 
+    /**
+     * Quantos clientes têm pelo menos um título vencido hoje.
+     *
+     * É a conta que aparece no aviso vermelho da coluna lateral: um cliente
+     * conta uma vez, tendo ele um título atrasado ou dez.
+     */
+    public int quantosInadimplentes(LocalDate hoje) {
+        UUID empresaId = contexto.exigirEmpresaId();
+        java.util.Set<UUID> quem = new java.util.HashSet<>();
+        for (Titulo titulo : titulos.findByEmpresaIdAndSituacaoInOrderByVencimento(
+                empresaId, List.of(SituacaoTitulo.ABERTO, SituacaoTitulo.PARCIAL))) {
+            if (titulo.diasDeAtraso(hoje) > 0) {
+                quem.add(titulo.getCliente().getId());
+            }
+        }
+        return quem.size();
+    }
+
     public BigDecimal totalDe(List<NaEsteira> coluna) {
         return coluna.stream().map(NaEsteira::vencido)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);

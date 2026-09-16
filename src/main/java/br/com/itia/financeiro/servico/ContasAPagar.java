@@ -130,6 +130,9 @@ public class ContasAPagar {
             case "naoconciliadas" -> !o.isCancelada()
                     && o.getLiquidacao() == br.com.itia.financeiro.dominio.Liquidacao.LIQUIDADA
                     && o.getConciliacao() != Conciliacao.CONCILIADA;
+            case "rascunhos" -> !o.isCancelada()
+                    && o.getQualidade() == br.com.itia.financeiro.dominio
+                    .QualidadeDoCadastro.RASCUNHO;
             case "canceladas" -> o.isCancelada();
             default -> !o.isCancelada();
         };
@@ -140,7 +143,8 @@ public class ContasAPagar {
         LocalDate hoje = LocalDate.now();
         Map<String, Integer> contagem = new LinkedHashMap<>();
         for (String visao : List.of("proximos7", "vencidas", "aprovacao", "prontas",
-                "encaminhadas", "reembolsos", "parciais", "incompletas", "naoconciliadas")) {
+                "encaminhadas", "reembolsos", "parciais", "incompletas", "naoconciliadas",
+                "rascunhos")) {
             contagem.put(visao, (int) todas().stream()
                     .filter(o -> cabeNaVisao(o, visao, hoje)).count());
         }
@@ -636,8 +640,17 @@ public class ContasAPagar {
     public Natureza cadastrarNatureza(String codigo, String nome,
                                       br.com.itia.financeiro.dominio.GrupoDeNatureza grupo,
                                       UUID paiId) {
-        return naturezas.save(new Natureza(contexto.exigirEmpresa(), codigo, nome, grupo,
-                natureza(paiId)));
+        return cadastrarNatureza(codigo, nome, grupo, paiId, false);
+    }
+
+    @Transactional
+    public Natureza cadastrarNatureza(String codigo, String nome,
+                                      br.com.itia.financeiro.dominio.GrupoDeNatureza grupo,
+                                      UUID paiId, boolean livroCaixa) {
+        Natureza nova = new Natureza(contexto.exigirEmpresa(), codigo, nome, grupo,
+                natureza(paiId));
+        nova.marcarLivroCaixa(livroCaixa);
+        return naturezas.save(nova);
     }
 
     @Transactional

@@ -44,6 +44,15 @@ public class Natureza {
     @Column(nullable = false)
     private GrupoDeNatureza grupo = GrupoDeNatureza.DESPESA;
 
+    /**
+     * Se o que entra nesta linha do plano vai para o livro caixa.
+     *
+     * A marca é do item, não do lançamento: quem lança não precisa lembrar
+     * disso conta a conta.
+     */
+    @Column(name = "livro_caixa", nullable = false)
+    private boolean livroCaixa;
+
     @Column(nullable = false)
     private boolean ativo = true;
 
@@ -71,6 +80,10 @@ public class Natureza {
         this.ativo = ativo;
     }
 
+    public void marcarLivroCaixa(boolean entra) {
+        this.livroCaixa = entra;
+    }
+
     /** O nome com o grupo acima, para a lista não virar sopa de letras. */
     public String getCaminho() {
         return pai == null ? nome : pai.getNome() + " · " + nome;
@@ -94,6 +107,10 @@ public class Natureza {
 
     public GrupoDeNatureza getGrupo() {
         return grupo;
+    }
+
+    public boolean isLivroCaixa() {
+        return livroCaixa;
     }
 
     public boolean isAtivo() {

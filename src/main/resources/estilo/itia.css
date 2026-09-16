@@ -317,6 +317,25 @@
     -fx-border-color: #111114;
     -fx-effect: innershadow(gaussian, rgba(212,61,0,0.35), 0, 0, 0, 0);
 }
+/* o botao de criar na hora, do lado da lista */
+.botao-mais {
+    -fx-min-width: 48;
+    -fx-pref-width: 48;
+    -fx-max-width: 48;
+    -fx-min-height: 48;
+    -fx-pref-height: 48;
+    -fx-padding: 0;
+    -fx-font-size: 18px;
+}
+/* campo que o sistema preenche sozinho e ninguem digita, como "quem paga" */
+.campo-travado {
+    -fx-background-color: #F4F4F5;
+    -fx-text-fill: #6B6B72;
+    -fx-cursor: default;
+}
+.campo-travado:hover, .campo-travado:focused {
+    -fx-border-color: #D4D4D8;
+}
 /* o campo de data: o quadradinho do calendario fica dentro da borda do campo,
    sem o botao cinza de fabrica do Java */
 .date-picker {
@@ -1079,6 +1098,34 @@
     -fx-text-fill: #FFFFFF;
     -fx-font-family: "Geist Medium", "Geist", "Segoe UI", sans-serif;
 }
+/* o aviso de inadimplencia, colado embaixo de Cobranca */
+.aviso-da-coluna {
+    -fx-min-height: 34;
+    -fx-pref-height: 34;
+    -fx-padding: 0 10 0 44;
+    -fx-background-color: rgba(214, 31, 31, 0.16);
+    -fx-background-radius: 12;
+    -fx-border-radius: 12;
+    -fx-border-color: rgba(214, 31, 31, 0.45);
+    -fx-border-width: 1;
+    -fx-cursor: hand;
+}
+.aviso-da-coluna:hover {
+    -fx-background-color: rgba(214, 31, 31, 0.26);
+}
+.aviso-da-coluna .nome-do-aviso {
+    -fx-text-fill: #FF6B6B;
+    -fx-font-family: "Geist Medium", "Geist", "Segoe UI", sans-serif;
+    -fx-font-size: 12.5px;
+}
+.aviso-da-coluna .contador-do-aviso {
+    -fx-text-fill: #FFFFFF;
+    -fx-background-color: #D61F1F;
+    -fx-background-radius: 999;
+    -fx-padding: 1 9 1 9;
+    -fx-font-family: "Geist Medium", "Geist", "Segoe UI", sans-serif;
+    -fx-font-size: 12px;
+}
 .rodape-da-coluna {
     -fx-padding: 14;
     -fx-border-color: #1C1C1F transparent transparent transparent;
@@ -1258,4 +1305,90 @@
 .apoio-do-suspenso {
     -fx-text-fill: #6B6B72;
     -fx-font-size: 11.5px;
+}
+
+/* ------------------------------------------------------- porta de entrada
+   Um card só no meio da tela, pelas medidas do desenho: 420 de largura,
+   canto 18, fio laranja de 1 e a sombra funda do nível 3. */
+.fundo-do-portao {
+    -fx-background-color: #FFFFFF;
+}
+.card-do-portao {
+    -fx-background-color: #FFFFFF;
+    -fx-background-radius: 18;
+    -fx-border-radius: 18;
+    -fx-border-color: #FE4901;
+    -fx-border-width: 1;
+    -fx-padding: 44 40 44 40;
+    -fx-effect: dropshadow(gaussian, rgba(17, 17, 20, 0.14), 56, 0, 0, 24);
+}
+.marca-do-portao {
+    -fx-background-color: #FE4901;
+    -fx-background-radius: 14;
+    -fx-min-width: 44;
+    -fx-min-height: 44;
+    -fx-max-width: 44;
+    -fx-max-height: 44;
+    -fx-alignment: center;
+    -fx-text-fill: #111114;
+    -fx-font-family: "Clash Display", "Segoe UI", sans-serif;
+    -fx-font-weight: bold;
+    -fx-font-size: 17px;
+}
+.titulo-do-portao {
+    -fx-font-family: "Clash Display", "Segoe UI", sans-serif;
+    -fx-font-weight: bold;
+    -fx-font-size: 28px;
+    -fx-text-fill: #111114;
+}
+.chamada-do-portao {
+    -fx-font-size: 14.5px;
+    -fx-text-fill: #52525B;
+}
+.rotulo-do-portao {
+    -fx-font-family: "Geist Medium", "Geist", "Segoe UI", sans-serif;
+    -fx-font-size: 13px;
+    -fx-text-fill: #111114;
+}
+.card-do-portao .text-field {
+    -fx-min-height: 44;
+    -fx-pref-height: 44;
+}
+.botao-portao {
+    -fx-min-height: 48;
+    -fx-pref-height: 48;
+    -fx-font-size: 15px;
+    -fx-background-radius: 14;
+    -fx-border-radius: 14;
+}
+.pe-do-portao {
+    -fx-font-size: 13px;
+    -fx-text-fill: #52525B;
+}
+.elo-do-portao {
+    -fx-font-size: 13px;
+    -fx-text-fill: #D43D00;
+    -fx-cursor: hand;
+}
+.elo-do-portao:hover {
+    -fx-text-fill: #111114;
+}
+
+/* o olho que mostra e esconde os valores do painel */
+.olho-dos-valores {
+    -fx-min-width: 48;
+    -fx-min-height: 48;
+    -fx-max-width: 48;
+    -fx-max-height: 48;
+    -fx-background-color: #FFFFFF;
+    -fx-background-radius: 12;
+    -fx-border-radius: 12;
+    -fx-border-color: #D4D4D8;
+    -fx-border-width: 1;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(gaussian, rgba(17, 17, 20, 0.06), 2, 0, 0, 1);
+}
+.olho-dos-valores:hover {
+    -fx-border-color: #111114;
+    -fx-background-color: #FAFAFA;
 }

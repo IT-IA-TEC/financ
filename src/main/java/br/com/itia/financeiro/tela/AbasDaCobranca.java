@@ -5,7 +5,7 @@ import javafx.scene.Node;
 import java.util.LinkedHashMap;
 
 /**
- * As oito partes do módulo Cobrança, sempre na mesma ordem.
+ * As partes do módulo Cobrança, sempre na mesma ordem.
  *
  * Fica separado para nenhuma tela do módulo inventar uma ordem própria.
  */
@@ -17,6 +17,7 @@ final class AbasDaCobranca {
     static Node montar(Janela janela, String atual) {
         LinkedHashMap<String, Runnable> partes = new LinkedHashMap<>();
         partes.put("Disparos", () -> janela.ir(TelaDisparos.class));
+        partes.put("Inadimplência", () -> janela.ir(TelaInadimplencia.class));
         partes.put("Conversas", () -> janela.ir(TelaConversas.class));
         partes.put("Régua", () -> janela.ir(TelaRegua.class));
         partes.put("Esteira", () -> janela.ir(TelaEsteira.class));

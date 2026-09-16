@@ -54,11 +54,20 @@ public final class Pecas {
         Region espaco = new Region();
         HBox.setHgrow(espaco, Priority.ALWAYS);
 
-        // a fileira de números vem antes dos botões, como na web
+        // a fileira de números vem antes dos botões, como na web. Quando são
+        // muitos cartões, ela desce para uma linha própria: assim nenhum cartão
+        // passa por cima do título nem escapa da borda do card
         java.util.List<Node> emOrdem = new java.util.ArrayList<>();
+        Node fileiraGrande = null;
         for (Node acao : acoes) {
             if (acao != null && acao.getStyleClass().contains("quadros-do-topo")) {
-                emOrdem.add(acao);
+                boolean muitos = acao instanceof javafx.scene.Parent pai
+                        && pai.getChildrenUnmodifiable().size() > 4;
+                if (muitos) {
+                    fileiraGrande = acao;
+                } else {
+                    emOrdem.add(acao);
+                }
             }
         }
         for (Node acao : acoes) {
@@ -77,15 +86,48 @@ public final class Pecas {
 
         // o texto da esquerda não empurra os botões para fora
         esquerda.setMaxWidth(560);
+        esquerda.setMinWidth(0);
         HBox.setHgrow(direita, Priority.ALWAYS);
 
         HBox faixa = new HBox(16, esquerda, espaco, direita);
         faixa.setAlignment(Pos.BOTTOM_LEFT);
         faixa.setMinWidth(0);
 
-        VBox caixa = new VBox(faixa);
+        // a direita nunca passa por cima do texto: ela só pode ocupar o que
+        // sobra depois do título, e o que não couber desce para a linha de baixo
+        direita.maxWidthProperty().bind(javafx.beans.binding.Bindings.createDoubleBinding(
+                () -> Math.max(0, faixa.getWidth() - esquerda.getWidth() - 32),
+                faixa.widthProperty(), esquerda.widthProperty()));
+
+        VBox caixa = new VBox(14, faixa);
         caixa.getStyleClass().add("cabecalho-pagina");
+        if (fileiraGrande != null) {
+            caixa.getChildren().add(emLinhaQueQuebra(fileiraGrande));
+        }
         return caixa;
+    }
+
+    /**
+     * A fileira grande de cartões vira um painel que quebra sozinho: o que não
+     * cabe na largura desce para a linha de baixo, sem nunca sair do card.
+     */
+    private static javafx.scene.layout.FlowPane emLinhaQueQuebra(Node fileira) {
+        javafx.scene.layout.FlowPane painel = new javafx.scene.layout.FlowPane(12, 10);
+        painel.setMinWidth(0);
+        if (fileira instanceof javafx.scene.layout.Pane antiga) {
+            java.util.List<Node> cartoes =
+                    new java.util.ArrayList<>(antiga.getChildren());
+            antiga.getChildren().clear();
+            for (Node cartao : cartoes) {
+                if (cartao instanceof Region caixa) {
+                    caixa.setMinWidth(196);
+                    caixa.setPrefWidth(Region.USE_COMPUTED_SIZE);
+                    caixa.setMaxWidth(Region.USE_PREF_SIZE);
+                }
+                painel.getChildren().add(cartao);
+            }
+        }
+        return painel;
     }
 
     /** O título de uma seção, com o fio preto embaixo. */

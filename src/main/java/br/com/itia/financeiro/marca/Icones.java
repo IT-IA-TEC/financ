@@ -89,6 +89,17 @@ public final class Icones {
                 "M9 17h.01", "M15 9h.01", "M15 13h.01", "M15 17h.01");
     }
 
+    public static StackPane olhoAberto(double lado, Color cor) {
+        return de(lado, cor, "M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7z",
+                "M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z");
+    }
+
+    public static StackPane olhoFechado(double lado, Color cor) {
+        return de(lado, cor, "M9.9 4.2A10.9 10.9 0 0 1 12 4c6.4 0 10 7 10 7a18 18 0 0 1-2.7 3.7",
+                "M6.6 6.6A18 18 0 0 0 2 11s3.6 7 10 7a10.7 10.7 0 0 0 5.4-1.4",
+                "M9.9 9.9a3 3 0 0 0 4.2 4.2", "M2 2l20 20");
+    }
+
     public static StackPane voltar(double lado, Color cor) {
         return de(lado, cor, "M19 12H5", "M12 19l-7-7 7-7");
     }

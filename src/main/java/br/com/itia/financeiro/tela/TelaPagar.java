@@ -68,6 +68,12 @@ public class TelaPagar implements Tela {
         return "pagar";
     }
 
+    /** Abre a lista já peneirada só nos rascunhos, venha de onde vier. */
+    public void verRascunhos() {
+        visao = "rascunhos";
+        janela.ir(TelaPagar.class);
+    }
+
     private JanelasDoPagar janelas() {
         return new JanelasDoPagar(contas, janela);
     }
@@ -83,6 +89,10 @@ public class TelaPagar implements Tela {
         VBox tela = new VBox(16);
         tela.getChildren().add(Pecas.cabecalho("obrigações", "Contas a pagar",
                 "O que a empresa deve, com quem aprovou e quem pagou.",
+                Pecas.botaoVazado("Rascunhos", () -> {
+                    visao = "rascunhos";
+                    janela.atualizar();
+                }),
                 Pecas.botaoVazado("Cadastros", () -> janelas().cadastros()),
                 Pecas.botaoVazado("Parcelar", () -> janelas().parcelar()),
                 Pecas.botaoVazado("Recorrências", () -> janelas().recorrencias()),
@@ -107,9 +117,23 @@ public class TelaPagar implements Tela {
                 janela.atualizar();
             });
         }
-        String atual = VISOES.get(visao)
+        // na lista de rascunhos nenhuma aba fica acesa: o recorte veio do botão
+        String atual = VISOES.get(visao) == null ? "" : VISOES.get(visao)
                 + (contagem.get(visao) == null ? "" : " (" + contagem.get(visao) + ")");
         tela.getChildren().add(Pecas.abas(atual, abas));
+
+        if ("rascunhos".equals(visao)) {
+            javafx.scene.control.Label recado = new javafx.scene.control.Label(
+                    "Mostrando só as contas guardadas como rascunho, que ainda não foram "
+                            + "lançadas de verdade.");
+            recado.getStyleClass().add("dica");
+            HBox faixa = new HBox(12, recado, Pecas.botaoVazado("Ver todas as contas", () -> {
+                visao = "todas";
+                janela.atualizar();
+            }));
+            faixa.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+            tela.getChildren().add(faixa);
+        }
 
 
         List<ContasAPagar.LinhaDeCusto> custos = contas.custoPorCentro(lista);
@@ -143,7 +167,7 @@ public class TelaPagar implements Tela {
                 .coluna("Favorecido", o -> o.getFavorecido() == null ? ""
                         : o.getFavorecido().getNome(), 1.8)
                 .coluna("Descrição", Obrigacao::getDescricao, 1.8)
-                .coluna("Natureza", o -> o.getItens().stream()
+                .coluna("Plano de conta", o -> o.getItens().stream()
                         .filter(i -> i.getNatureza() != null)
                         .map(i -> i.getNatureza().getNome()).findFirst().orElse(""), 1.2)
                 .coluna("Centro de custo", o -> o.getItens().stream()
@@ -157,7 +181,7 @@ public class TelaPagar implements Tela {
                 .funil("Nº", filtro.filtrando("numero"), this::filtrarNumero)
                 .funil("Favorecido", filtro.filtrando("favorecido"), this::filtrarFavorecido)
                 .funil("Descrição", filtro.filtrando("descricao"), this::filtrarDescricao)
-                .funil("Natureza", filtro.filtrando("natureza"), this::filtrarNatureza)
+                .funil("Plano de conta", filtro.filtrando("natureza"), this::filtrarNatureza)
                 .funil("Centro de custo", filtro.filtrando("centro"), this::filtrarCentro)
                 .funil("Valor devido", filtro.filtrando("valor"),
                         () -> filtrarFaixa("Valor devido", "f_valor_de", "f_valor_ate"))

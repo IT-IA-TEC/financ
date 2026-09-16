@@ -138,7 +138,7 @@ public class TelaObrigacao implements TelaDeUmSo {
                 Pecas.botao("Adicionar à composição", () -> janelaDoItem(conta))));
         tela.getChildren().add(Tabela.de(conta.getItens())
                 .coluna("O que é", ItemDaObrigacao::getDescricao, 2.4)
-                .coluna("Natureza", i -> i.getNatureza() == null ? ""
+                .coluna("Plano de conta", i -> i.getNatureza() == null ? ""
                         : i.getNatureza().getNome(), 1.4)
                 .coluna("Centro de custo", i -> i.getCentroDeCusto() == null ? ""
                         : i.getCentroDeCusto().getNome(), 1.4)
@@ -275,11 +275,6 @@ public class TelaObrigacao implements TelaDeUmSo {
 
         TextField descricao = new TextField(conta.getDescricao());
 
-        ComboBox<TipoDeOperacao> tipo = new ComboBox<>();
-        tipo.getItems().addAll(TipoDeOperacao.values());
-        tipo.getSelectionModel().select(conta.getTipoOperacao());
-        tipo.setMaxWidth(Double.MAX_VALUE);
-
         DatePicker emissao = new DatePicker(conta.getEmissao());
         DatePicker competencia = new DatePicker(conta.getCompetencia());
         DatePicker vencimento = new DatePicker(conta.getVencimento());
@@ -305,13 +300,6 @@ public class TelaObrigacao implements TelaDeUmSo {
 
         TextField pessoa = new TextField(conta.getPessoaRelacionada());
 
-        ComboBox<Bem> bem = new ComboBox<>();
-        bem.getItems().add(null);
-        bem.getItems().addAll(contas.bensAtivos());
-        bem.setConverter(nomeOuPadrao(Bem::getDescricao, "nenhum"));
-        bem.getSelectionModel().select(conta.getBem());
-        bem.setMaxWidth(Double.MAX_VALUE);
-
         TextField solicitante = new TextField(conta.getSolicitante());
         TextField observacao = new TextField(conta.getObservacao());
 
@@ -321,7 +309,7 @@ public class TelaObrigacao implements TelaDeUmSo {
         recado.setWrapText(true);
 
         HBox linha1 = new HBox(16, Pecas.campo("Favorecido", favorecido),
-                Pecas.campo("Descrição", descricao), Pecas.campo("Tipo de operação", tipo));
+                Pecas.campo("Descrição", descricao));
         HBox linha2 = new HBox(16, Pecas.campo("Emissão", emissao),
                 Pecas.campo("Competência", competencia),
                 Pecas.campo("Vencimento", vencimento),
@@ -329,8 +317,7 @@ public class TelaObrigacao implements TelaDeUmSo {
         HBox linha3 = new HBox(16, Pecas.campo("Conta financeira", banco),
                 Pecas.campo("Quem paga", pagadora),
                 Pecas.campo("Pessoa relacionada", pessoa));
-        HBox linha4 = new HBox(16, Pecas.campo("Bem relacionado", bem),
-                Pecas.campo("Solicitante", solicitante),
+        HBox linha4 = new HBox(16, Pecas.campo("Solicitante", solicitante),
                 Pecas.campo("Observação", observacao));
         for (HBox linha : List.of(linha1, linha2, linha3, linha4)) {
             linha.getChildren().forEach(c -> HBox.setHgrow(c, Priority.ALWAYS));
@@ -343,13 +330,13 @@ public class TelaObrigacao implements TelaDeUmSo {
                         return;
                     }
                     contas.salvarDadosGerais(conta.getId(), favorecido.getValue().getId(),
-                            descricao.getText(), tipo.getValue(), emissao.getValue(),
+                            descricao.getText(), conta.getTipoOperacao(), emissao.getValue(),
                             competencia.getValue(), vencimento.getValue(),
                             TelaTituloNovo.dinheiro(valor.getText()),
                             banco.getValue() == null ? null : banco.getValue().getId(),
                             pagadora.getValue() == null ? null : pagadora.getValue().getId(),
                             pessoa.getText(), null,
-                            bem.getValue() == null ? null : bem.getValue().getId(),
+                            conta.getBem() == null ? null : conta.getBem().getId(),
                             solicitante.getText(), observacao.getText());
                     janela.avisar("Dados salvos.");
                     janela.ir(TelaObrigacao.class, conta.getId());
@@ -551,13 +538,11 @@ public class TelaObrigacao implements TelaDeUmSo {
 
         ComboBox<Natureza> natureza = escolha(contas.naturezasAtivas(), Natureza::getNome);
         ComboBox<CentroDeCusto> centro = escolha(contas.centrosAtivos(), CentroDeCusto::getNome);
-        ComboBox<Bem> bem = escolha(contas.bensAtivos(), Bem::getDescricao);
 
         HBox linha1 = new HBox(16, Pecas.campo("O que é", descricao),
                 Pecas.campo("Quantidade", quantidade), Pecas.campo("Valor (R$)", valor));
-        HBox linha2 = new HBox(16, Pecas.campo("Natureza", natureza),
-                Pecas.campo("Centro de custo", centro), Pecas.campo("Pessoa", pessoa),
-                Pecas.campo("Bem", bem));
+        HBox linha2 = new HBox(16, Pecas.campo("Plano de conta", natureza),
+                Pecas.campo("Centro de custo", centro), Pecas.campo("Pessoa", pessoa));
         linha1.getChildren().forEach(c -> HBox.setHgrow(c, Priority.ALWAYS));
         linha2.getChildren().forEach(c -> HBox.setHgrow(c, Priority.ALWAYS));
 
@@ -574,8 +559,7 @@ public class TelaObrigacao implements TelaDeUmSo {
                             numero(quantidade.getText()), numero(valor.getText()),
                             natureza.getValue() == null ? null : natureza.getValue().getId(),
                             centro.getValue() == null ? null : centro.getValue().getId(),
-                            pessoa.getText(),
-                            bem.getValue() == null ? null : bem.getValue().getId());
+                            pessoa.getText(), null);
                     janela.avisar("Item incluído na composição.");
                     janela.atualizar();
                     return true;
@@ -626,7 +610,7 @@ public class TelaObrigacao implements TelaDeUmSo {
         }
 
         HBox linha = new HBox(16, Pecas.campo("O que está sendo dividido", descricao),
-                Pecas.campo("Natureza", natureza), Pecas.campo("Critério", criterio));
+                Pecas.campo("Plano de conta", natureza), Pecas.campo("Critério", criterio));
         linha.getChildren().forEach(c -> HBox.setHgrow(c, Priority.ALWAYS));
 
         JanelaFlutuante.nova(janela.palco(), "Ratear entre áreas",

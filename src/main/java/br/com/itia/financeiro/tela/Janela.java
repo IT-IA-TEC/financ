@@ -66,6 +66,7 @@ public class Janela {
     private final TransactionTemplate transacao;
     private final br.com.itia.financeiro.servico.Acessos acessos;
     private final br.com.itia.financeiro.servico.FinanceiroServico financeiro;
+    private final br.com.itia.financeiro.servico.Esteira esteira;
 
     private Stage palco;
     private final BorderPane raiz = new BorderPane();
@@ -96,12 +97,14 @@ public class Janela {
     public Janela(ApplicationContext molas, ContextoEmpresa contexto,
                   TransactionTemplate transacao,
                   br.com.itia.financeiro.servico.Acessos acessos,
-                  br.com.itia.financeiro.servico.FinanceiroServico financeiro) {
+                  br.com.itia.financeiro.servico.FinanceiroServico financeiro,
+                  br.com.itia.financeiro.servico.Esteira esteira) {
         this.molas = molas;
         this.contexto = contexto;
         this.transacao = transacao;
         this.acessos = acessos;
         this.financeiro = financeiro;
+        this.esteira = esteira;
     }
 
     // ------------------------------------------------------------------ abrir
@@ -531,6 +534,9 @@ public class Janela {
                     HBox item = itemDaColuna(secao, MENU.get(secao));
                     itensPorSecao.put(secao, item);
                     itensDoMenu.getChildren().add(item);
+                    if ("cobranca".equals(secao)) {
+                        itensDoMenu.getChildren().add(avisoDeInadimplencia());
+                    }
                 }
             }
         }
@@ -580,6 +586,30 @@ public class Janela {
         item.setAlignment(Pos.CENTER_LEFT);
         item.setOnMouseClicked(clique -> irPorSecao(secao));
         return item;
+    }
+
+    /**
+     * O aviso de inadimplência, colado embaixo de Cobrança: em vermelho, com
+     * quantos clientes têm título vencido hoje. Clicar leva para a aba.
+     */
+    private HBox avisoDeInadimplencia() {
+        int quantos = transacao.execute(status ->
+                esteira.quantosInadimplentes(java.time.LocalDate.now()));
+
+        Label rotulo = new Label("Inadimplência");
+        rotulo.getStyleClass().add("nome-do-aviso");
+
+        Label quantidade = new Label(String.valueOf(quantos));
+        quantidade.getStyleClass().add("contador-do-aviso");
+
+        javafx.scene.layout.Region espaco = new javafx.scene.layout.Region();
+        HBox.setHgrow(espaco, Priority.ALWAYS);
+
+        HBox aviso = new HBox(8, rotulo, espaco, quantidade);
+        aviso.getStyleClass().add("aviso-da-coluna");
+        aviso.setAlignment(Pos.CENTER_LEFT);
+        aviso.setOnMouseClicked(clique -> ir(TelaInadimplencia.class));
+        return aviso;
     }
 
     private void acenderMenu(String secao) {

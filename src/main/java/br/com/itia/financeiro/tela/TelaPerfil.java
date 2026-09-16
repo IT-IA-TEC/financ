@@ -61,7 +61,6 @@ public class TelaPerfil implements Tela {
                 .quandoVazia("Nenhuma empresa cadastrada.")
                 .montar());
 
-        tela.getChildren().add(Pecas.secao("Sair"));
         tela.getChildren().add(Pecas.caixa(
                 Pecas.campo("Empresa em que você está", new javafx.scene.control.Label(empresa)),
                 Pecas.campo("Sua alçada aqui", new javafx.scene.control.Label(papel)),

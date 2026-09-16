@@ -1,16 +1,19 @@
 package br.com.itia.financeiro.tela;
 
 import br.com.itia.financeiro.dominio.ContaFinanceira;
-import br.com.itia.financeiro.dominio.Bem;
 import br.com.itia.financeiro.dominio.CentroDeCusto;
 import br.com.itia.financeiro.dominio.Empresa;
 import br.com.itia.financeiro.dominio.Favorecido;
+import br.com.itia.financeiro.dominio.GrupoDeNatureza;
 import br.com.itia.financeiro.dominio.Natureza;
 import br.com.itia.financeiro.dominio.Obrigacao;
 import br.com.itia.financeiro.dominio.OrigemDoRegistro;
 import br.com.itia.financeiro.dominio.TipoDeOperacao;
 import br.com.itia.financeiro.servico.ContasAPagar;
+import br.com.itia.financeiro.servico.ContextoEmpresa;
+import javafx.geometry.Pos;
 import javafx.scene.Node;
+import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.TextField;
@@ -20,25 +23,45 @@ import javafx.scene.layout.VBox;
 import javafx.util.StringConverter;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 /**
  * Lançar uma conta a pagar.
  *
- * O básico entra aqui; a classificação por natureza, o rateio e os documentos
- * entram depois, na ficha da própria conta.
+ * O básico entra aqui; o rateio e os documentos entram depois, na ficha da
+ * própria conta. A classificação é uma só: o plano de conta, em categoria e
+ * subcategoria, que dá para criar na hora sem sair do lançamento.
  */
 @Component
 public class TelaObrigacaoNova implements Tela {
 
     private final ContasAPagar contas;
+    private final ContextoEmpresa contexto;
+    private final TransactionTemplate transacao;
+    private final TelaPagar pagar;
     private final Janela janela;
 
-    public TelaObrigacaoNova(ContasAPagar contas, @Lazy Janela janela) {
+    /**
+     * O nome completo de cada item do plano, montado enquanto o banco ainda está
+     * aberto. Sem isto, a lista quebraria ao tentar ler a categoria de cima
+     * depois que a tela já foi montada.
+     */
+    private final Map<UUID, String> nomeNoPlano = new LinkedHashMap<>();
+
+    public TelaObrigacaoNova(ContasAPagar contas, ContextoEmpresa contexto,
+                             TransactionTemplate transacao, @Lazy TelaPagar pagar,
+                             @Lazy Janela janela) {
         this.contas = contas;
+        this.contexto = contexto;
+        this.transacao = transacao;
+        this.pagar = pagar;
         this.janela = janela;
     }
 
@@ -53,7 +76,8 @@ public class TelaObrigacaoNova implements Tela {
         LocalDate hoje = LocalDate.now();
 
         VBox tela = new VBox(16, Pecas.cabecalho("nova conta", "Lançar conta a pagar",
-                "Quem recebe, quanto e quando. O resto entra na ficha da conta."));
+                "Quem recebe, quanto e quando. O resto entra na ficha da conta.",
+                Pecas.botaoVazado("Ver rascunhos", pagar::verRascunhos)));
 
         if (favorecidos.isEmpty()) {
             tela.getChildren().add(Pecas.vazio(
@@ -76,11 +100,6 @@ public class TelaObrigacaoNova implements Tela {
         });
         favorecido.getSelectionModel().selectFirst();
         favorecido.setMaxWidth(Double.MAX_VALUE);
-
-        ComboBox<TipoDeOperacao> tipo = new ComboBox<>();
-        tipo.getItems().addAll(TipoDeOperacao.values());
-        tipo.getSelectionModel().select(TipoDeOperacao.DESPESA);
-        tipo.setMaxWidth(Double.MAX_VALUE);
 
         ComboBox<ContaFinanceira> conta = new ComboBox<>();
         conta.getItems().add(null);
@@ -111,33 +130,25 @@ public class TelaObrigacaoNova implements Tela {
         competencia.setMaxWidth(Double.MAX_VALUE);
         vencimento.setMaxWidth(Double.MAX_VALUE);
 
-        ComboBox<Empresa> pagadora = new ComboBox<>();
-        pagadora.getItems().add(null);
-        pagadora.getItems().addAll(contas.empresasDoGrupo());
-        pagadora.setConverter(escolha(Empresa::getNome, "a própria empresa"));
-        pagadora.getSelectionModel().selectFirst();
-        pagadora.setMaxWidth(Double.MAX_VALUE);
+        // Quem paga não é escolha: é sempre a empresa que está aberta na hora do
+        // lançamento. O campo aparece só para a pessoa conferir em qual empresa está.
+        Empresa pagadora = contexto.exigirEmpresa();
+        TextField quemPaga = new TextField(pagadora.getNome());
+        quemPaga.setEditable(false);
+        quemPaga.setFocusTraversable(false);
+        quemPaga.getStyleClass().add("campo-travado");
+        quemPaga.setMaxWidth(Double.MAX_VALUE);
 
-        ComboBox<Natureza> natureza = new ComboBox<>();
-        natureza.getItems().add(null);
-        natureza.getItems().addAll(contas.naturezasAtivas());
-        natureza.setConverter(escolha(Natureza::getNome, "definir depois"));
-        natureza.getSelectionModel().selectFirst();
-        natureza.setMaxWidth(Double.MAX_VALUE);
+        ComboBox<Natureza> plano = new ComboBox<>();
+        encherPlano(plano, null);
+        plano.setConverter(escolha(qual -> nomeNoPlano.getOrDefault(qual.getId(), qual.getNome()),
+                "definir depois"));
+        plano.setMaxWidth(Double.MAX_VALUE);
 
         ComboBox<CentroDeCusto> centro = new ComboBox<>();
-        centro.getItems().add(null);
-        centro.getItems().addAll(contas.centrosAtivos());
+        encherCentros(centro, null);
         centro.setConverter(escolha(CentroDeCusto::getNome, "definir depois"));
-        centro.getSelectionModel().selectFirst();
         centro.setMaxWidth(Double.MAX_VALUE);
-
-        ComboBox<Bem> bem = new ComboBox<>();
-        bem.getItems().add(null);
-        bem.getItems().addAll(contas.bensAtivos());
-        bem.setConverter(escolha(Bem::getDescricao, "nenhum"));
-        bem.getSelectionModel().selectFirst();
-        bem.setMaxWidth(Double.MAX_VALUE);
 
         TextField pessoa = new TextField();
         pessoa.setPromptText("de quem é a conta, quando é de alguém");
@@ -145,40 +156,215 @@ public class TelaObrigacaoNova implements Tela {
         solicitante.setPromptText("quem pediu");
         TextField observacao = new TextField();
 
-        ComboBox<String> situacaoDoCadastro = new ComboBox<>();
-        situacaoDoCadastro.getItems().addAll("completo", "rascunho, falta informação");
-        situacaoDoCadastro.getSelectionModel().selectFirst();
-        situacaoDoCadastro.setMaxWidth(Double.MAX_VALUE);
-
         tela.getChildren().add(Pecas.caixa(
                 linha(Pecas.campo("Favorecido", favorecido),
                         Pecas.campo("Descrição", descricao),
-                        Pecas.campo("Tipo de operação", tipo)),
+                        Pecas.campo("Conta financeira", conta)),
                 linha(Pecas.campo("Emissão", emissao),
                         Pecas.campo("Competência", competencia),
                         Pecas.campo("Vencimento", vencimento),
                         Pecas.campo("Valor devido (R$)", valor)),
-                linha(Pecas.campo("Conta financeira", conta),
-                        Pecas.campo("Quem paga", pagadora),
-                        Pecas.campo("Natureza", natureza),
-                        Pecas.campo("Centro de custo", centro)),
+                linha(Pecas.campo("Quem paga", quemPaga),
+                        Pecas.campo("Plano de conta", comMais(plano,
+                                "Criar categoria ou subcategoria", () -> novoNoPlano(plano))),
+                        Pecas.campo("Centro de custo", comMais(centro,
+                                "Criar centro de custo", () -> novoCentro(centro)))),
                 linha(Pecas.campo("Pessoa relacionada", pessoa),
-                        Pecas.campo("Bem relacionado", bem),
-                        Pecas.campo("Solicitante", solicitante),
-                        Pecas.campo("Situação do cadastro", situacaoDoCadastro)),
+                        Pecas.campo("Solicitante", solicitante)),
                 linha(Pecas.campo("Observação", observacao)),
                 new HBox(12,
                         Pecas.botao("Lançar", () -> lancar(favorecido.getValue(),
-                                descricao.getText(), tipo.getValue(), emissao.getValue(),
+                                descricao.getText(), emissao.getValue(),
                                 competencia.getValue(), vencimento.getValue(), valor.getText(),
                                 conta.getValue(),
-                                pagadora.getValue(), natureza.getValue(), centro.getValue(),
-                                pessoa.getText(), bem.getValue(), solicitante.getText(),
-                                observacao.getText(),
-                                situacaoDoCadastro.getSelectionModel().getSelectedIndex() == 1)),
+                                pagadora, plano.getValue(), centro.getValue(),
+                                pessoa.getText(), solicitante.getText(),
+                                observacao.getText(), false)),
+                        Pecas.botaoVazado("Salvar rascunho", () -> lancar(favorecido.getValue(),
+                                descricao.getText(), emissao.getValue(),
+                                competencia.getValue(), vencimento.getValue(), valor.getText(),
+                                conta.getValue(),
+                                pagadora, plano.getValue(), centro.getValue(),
+                                pessoa.getText(), solicitante.getText(),
+                                observacao.getText(), true)),
                         Pecas.botaoVazado("Cancelar", () -> janela.ir(TelaPagar.class)))));
         return tela;
     }
+
+    // ------------------------------------------------- criar na hora, sem sair
+
+    /**
+     * Cria uma categoria nova do plano de conta, ou uma subcategoria dentro de
+     * uma categoria que já existe. O código é dado pelo sistema.
+     */
+    private void novoNoPlano(ComboBox<Natureza> plano) {
+        ComboBox<Natureza> dentroDe = new ComboBox<>();
+        dentroDe.getItems().add(null);
+        dentroDe.getItems().addAll(categorias());
+        dentroDe.setConverter(escolha(Natureza::getNome, "nenhuma: é uma categoria nova"));
+        dentroDe.getSelectionModel().selectFirst();
+        dentroDe.setMaxWidth(Double.MAX_VALUE);
+
+        TextField nome = new TextField();
+        nome.setPromptText("aluguel, energia, software");
+
+        javafx.scene.control.CheckBox livroCaixa =
+                new javafx.scene.control.CheckBox("Entra no livro caixa");
+
+        ComboBox<GrupoDeNatureza> grupo = new ComboBox<>();
+        grupo.getItems().addAll(GrupoDeNatureza.values());
+        grupo.getSelectionModel().select(GrupoDeNatureza.DESPESA);
+        grupo.setConverter(escolha(GrupoDeNatureza::getRotulo, ""));
+        grupo.setMaxWidth(Double.MAX_VALUE);
+
+        JanelaFlutuante.estreita(janela.palco(), "Novo item do plano de conta",
+                        "Deixe a categoria em branco para criar uma categoria nova. "
+                                + "Escolhendo uma categoria, o que entra é uma subcategoria dela.")
+                .com(Pecas.caixa(
+                        Pecas.campo("Dentro da categoria", dentroDe),
+                        Pecas.campo("Nome", nome),
+                        Pecas.campo("Onde entra no resultado", grupo),
+                        livroCaixa))
+                .acao("Criar", () -> {
+                    if (nome.getText() == null || nome.getText().isBlank()) {
+                        janela.reclamar("Escreva o nome do item do plano de conta.");
+                        return false;
+                    }
+                    Natureza pai = dentroDe.getValue();
+                    Natureza criado = transacao.execute(status ->
+                            contas.cadastrarNatureza(proximoCodigo(pai), nome.getText().trim(),
+                                    grupo.getValue(), pai == null ? null : pai.getId(),
+                                    livroCaixa.isSelected()));
+                    encherPlano(plano, criado.getId());
+                    janela.avisar("Plano de conta: "
+                            + nomeNoPlano.getOrDefault(criado.getId(), criado.getNome())
+                            + " criado.");
+                    return true;
+                })
+                .abrir();
+    }
+
+    /** Cria um centro de custo na hora, sem sair do lançamento. */
+    private void novoCentro(ComboBox<CentroDeCusto> centro) {
+        TextField nome = new TextField();
+        nome.setPromptText("fiscal, contábil, comercial");
+        TextField descricao = new TextField();
+        descricao.setPromptText("para que serve esta área");
+
+        JanelaFlutuante.estreita(janela.palco(), "Novo centro de custo",
+                        "A área que absorve o custo desta conta.")
+                .com(Pecas.caixa(Pecas.campo("Nome", nome),
+                        Pecas.campo("Descrição", descricao)))
+                .acao("Criar", () -> {
+                    if (nome.getText() == null || nome.getText().isBlank()) {
+                        janela.reclamar("Escreva o nome do centro de custo.");
+                        return false;
+                    }
+                    CentroDeCusto criado = transacao.execute(status ->
+                            contas.cadastrarCentro(nome.getText().trim(), descricao.getText()));
+                    encherCentros(centro, criado.getId());
+                    janela.avisar("Centro de custo " + criado.getNome() + " criado.");
+                    return true;
+                })
+                .abrir();
+    }
+
+    /** As categorias do plano: as que não estão dentro de nenhuma outra. */
+    private List<Natureza> categorias() {
+        return transacao.execute(status -> contas.naturezasAtivas().stream()
+                .filter(qual -> qual.getPai() == null).toList());
+    }
+
+    /**
+     * O código do item novo, dado pelo sistema: a subcategoria continua o código
+     * da categoria, e a categoria nova entra no fim da fila.
+     */
+    private String proximoCodigo(Natureza pai) {
+        List<Natureza> todas = transacao.execute(status -> {
+            List<Natureza> tudo = contas.naturezasTodas();
+            tudo.forEach(qual -> {
+                if (qual.getPai() != null) {
+                    qual.getPai().getId();
+                }
+            });
+            return tudo;
+        });
+        if (pai == null) {
+            int maior = 0;
+            for (Natureza qual : todas) {
+                if (qual.getPai() == null) {
+                    maior = Math.max(maior, primeiroNumero(qual.getCodigo()));
+                }
+            }
+            return String.valueOf(maior + 1);
+        }
+        int quantos = 0;
+        for (Natureza qual : todas) {
+            if (qual.getPai() != null && qual.getPai().getId().equals(pai.getId())) {
+                quantos++;
+            }
+        }
+        return pai.getCodigo() + "." + (quantos + 1);
+    }
+
+    private int primeiroNumero(String codigo) {
+        if (codigo == null) {
+            return 0;
+        }
+        StringBuilder so = new StringBuilder();
+        for (char letra : codigo.toCharArray()) {
+            if (Character.isDigit(letra)) {
+                so.append(letra);
+            } else {
+                break;
+            }
+        }
+        return so.isEmpty() ? 0 : Integer.parseInt(so.toString());
+    }
+
+    private void encherPlano(ComboBox<Natureza> plano, UUID escolher) {
+        List<Natureza> itens = transacao.execute(status -> {
+            List<Natureza> tudo = contas.naturezasAtivas();
+            nomeNoPlano.clear();
+            tudo.forEach(qual -> nomeNoPlano.put(qual.getId(), qual.getCaminho()
+                    + (qual.isLivroCaixa() ? "  ·  livro caixa" : "")));
+            return tudo;
+        });
+        plano.getItems().clear();
+        plano.getItems().add(null);
+        plano.getItems().addAll(itens);
+        plano.getSelectionModel().selectFirst();
+        if (escolher != null) {
+            itens.stream().filter(qual -> qual.getId().equals(escolher)).findFirst()
+                    .ifPresent(qual -> plano.getSelectionModel().select(qual));
+        }
+    }
+
+    private void encherCentros(ComboBox<CentroDeCusto> centro, UUID escolher) {
+        List<CentroDeCusto> itens = transacao.execute(status -> contas.centrosAtivos());
+        centro.getItems().clear();
+        centro.getItems().add(null);
+        centro.getItems().addAll(itens);
+        centro.getSelectionModel().selectFirst();
+        if (escolher != null) {
+            itens.stream().filter(qual -> qual.getId().equals(escolher)).findFirst()
+                    .ifPresent(qual -> centro.getSelectionModel().select(qual));
+        }
+    }
+
+    /** A lista com o botão de criar do lado, para não precisar sair da tela. */
+    private HBox comMais(Node lista, String oQueFaz, Runnable acao) {
+        Button mais = Pecas.botaoVazado("+", acao);
+        mais.getStyleClass().add("botao-mais");
+        javafx.scene.control.Tooltip.install(mais, new javafx.scene.control.Tooltip(oQueFaz));
+
+        HBox junto = new HBox(8, lista, mais);
+        junto.setAlignment(Pos.CENTER_LEFT);
+        HBox.setHgrow(lista, Priority.ALWAYS);
+        return junto;
+    }
+
+    // ------------------------------------------------------------------ apoio
 
     private <T> StringConverter<T> escolha(java.util.function.Function<T, String> comoChama,
                                            String quandoNulo) {
@@ -203,10 +389,10 @@ public class TelaObrigacaoNova implements Tela {
         return linha;
     }
 
-    private void lancar(Favorecido favorecido, String descricao, TipoDeOperacao tipo,
+    private void lancar(Favorecido favorecido, String descricao,
                         LocalDate emissao, LocalDate competencia, LocalDate vencimento,
                         String valor, ContaFinanceira conta, Empresa pagadora,
-                        Natureza natureza, CentroDeCusto centro, String pessoa, Bem bem,
+                        Natureza plano, CentroDeCusto centro, String pessoa,
                         String solicitante, String observacao, boolean rascunho) {
         if (favorecido == null || descricao == null || descricao.isBlank()) {
             janela.reclamar("Escolha o favorecido e escreva a descrição.");
@@ -217,18 +403,21 @@ public class TelaObrigacaoNova implements Tela {
             janela.reclamar("Escreva o valor da conta, maior que zero.");
             return;
         }
-        Obrigacao nova = contas.lancar(favorecido.getId(), descricao.trim(), tipo, emissao,
+        Obrigacao nova = contas.lancar(favorecido.getId(), descricao.trim(),
+                TipoDeOperacao.DESPESA, emissao,
                 competencia, vencimento, quanto, conta == null ? null : conta.getId(),
-                pagadora == null ? null : pagadora.getId(), pessoa, null,
-                bem == null ? null : bem.getId(), solicitante, observacao, rascunho,
+                pagadora.getId(), pessoa, null,
+                null, solicitante, observacao, rascunho,
                 OrigemDoRegistro.MANUAL, null);
-        if (natureza != null || centro != null) {
+        if (plano != null || centro != null) {
             contas.adicionarItem(nova.getId(), descricao.trim(), BigDecimal.ONE, quanto,
-                    natureza == null ? null : natureza.getId(),
-                    centro == null ? null : centro.getId(), pessoa,
-                    bem == null ? null : bem.getId());
+                    plano == null ? null : plano.getId(),
+                    centro == null ? null : centro.getId(), pessoa, null);
         }
-        janela.avisar("Conta " + nova.getNumero() + " lançada.");
+        janela.avisar(rascunho
+                ? "Rascunho " + nova.getNumero() + " guardado. Ele fica em Rascunhos até ser "
+                        + "conferido."
+                : "Conta " + nova.getNumero() + " lançada.");
         janela.ir(TelaObrigacao.class, nova.getId());
     }
 }

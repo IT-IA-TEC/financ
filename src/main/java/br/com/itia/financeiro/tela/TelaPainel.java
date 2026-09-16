@@ -33,6 +33,12 @@ public class TelaPainel implements Tela {
     private final ContextoEmpresa contexto;
     private final Janela janela;
 
+    /**
+     * Os valores começam escondidos toda vez que o sistema abre: quem quiser
+     * ver clica no olho. Serve para abrir o painel na frente de gente.
+     */
+    private boolean valoresAbertos;
+
     public TelaPainel(PainelServico painel, FinanceiroServico financeiro,
                       ContextoEmpresa contexto, @Lazy Janela janela) {
         this.painel = painel;
@@ -57,14 +63,15 @@ public class TelaPainel implements Tela {
         tela.getChildren().add(Pecas.cabecalho("painel",
                 contexto.exigirEmpresa().getNome(),
                 "Posição de hoje. Todos os números são calculados na hora, nenhum é digitado.",
+                olho(),
                 Pecas.botao("Lançar título", () -> janela.reclamar(
                         "O lançamento de título entra na próxima leva da conversão.")),
                 Pecas.quadrosDoTopo(
-                Pecas.quadro("Em aberto", Pecas.dinheiro(resumo.emAberto()),
+                Pecas.quadro("Em aberto", escondendo(Pecas.dinheiro(resumo.emAberto())),
                         resumo.titulosEmAberto() + " títulos", true, false),
-                Pecas.quadro("Vencido", Pecas.dinheiro(resumo.vencido()),
+                Pecas.quadro("Vencido", escondendo(Pecas.dinheiro(resumo.vencido())),
                         "já passou do vencimento", false, true),
-                Pecas.quadro("Recebido no mês", Pecas.dinheiro(resumo.recebidoNoMes()),
+                Pecas.quadro("Recebido no mês", escondendo(Pecas.dinheiro(resumo.recebidoNoMes())),
                         "do dia 1 até hoje"),
                 Pecas.quadro("Clientes ativos", String.valueOf(resumo.clientesAtivos()),
                         "nesta empresa"))));
@@ -82,14 +89,37 @@ public class TelaPainel implements Tela {
         return tela;
     }
 
+    /** O olho que mostra e esconde os valores do painel. */
+    private Node olho() {
+        javafx.scene.layout.StackPane botao = new javafx.scene.layout.StackPane(
+                valoresAbertos
+                        ? br.com.itia.financeiro.marca.Icones.olhoAberto(18,
+                                javafx.scene.paint.Color.web("#111114"))
+                        : br.com.itia.financeiro.marca.Icones.olhoFechado(18,
+                                javafx.scene.paint.Color.web("#111114")));
+        botao.getStyleClass().add("olho-dos-valores");
+        javafx.scene.control.Tooltip.install(botao, new javafx.scene.control.Tooltip(
+                valoresAbertos ? "Esconder os valores" : "Mostrar os valores"));
+        botao.setOnMouseClicked(clique -> {
+            valoresAbertos = !valoresAbertos;
+            janela.atualizar();
+        });
+        return botao;
+    }
+
+    /** Enquanto o olho está fechado, o valor vira pontinhos. */
+    private String escondendo(String valor) {
+        return valoresAbertos ? valor : "••••••";
+    }
+
     private Node tabelaDeTitulos(List<Titulo> titulos, LocalDate hoje) {
         return Tabela.de(titulos)
                 .coluna("Nº", t -> String.valueOf(t.getNumero()), 0.5)
                 .coluna("Cliente", t -> t.getCliente().getRazaoSocial(), 2)
                 .coluna("Descrição", Titulo::getDescricao, 2)
                 .coluna("Vencimento", t -> Pecas.data(t.getVencimento()))
-                .valor("Valor", t -> Pecas.numero(t.getValor()))
-                .valor("Saldo", t -> Pecas.numero(t.getSaldo()))
+                .valor("Valor", t -> escondendo(Pecas.numero(t.getValor())))
+                .valor("Saldo", t -> escondendo(Pecas.numero(t.getSaldo())))
                 .comMarca(t -> t.estaVencido(hoje)
                                 ? t.diasDeAtraso(hoje) + " dias"
                                 : t.getSituacao().name().toLowerCase(),
