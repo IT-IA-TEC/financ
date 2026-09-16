@@ -24,7 +24,7 @@ que foi combinado — nada é importado de lugar nenhum.
 ### Onde ficam os dados
 
 Por enquanto, num arquivo dentro da própria pasta do projeto
-(`FINANCEIRO-JAVA/dados/`). É o modo "roda na máquina sem instalar servidor".
+(`IT.FC/dados/`). É o modo "roda na máquina sem instalar servidor".
 
 Quando for para valer, o banco é PostgreSQL e o sistema sobe assim:
 
