@@ -218,5 +218,11 @@ Para não repetir:
 
 ## 10. Commits desta arrumação
 
-Os números entram aqui no último commit desta leva, depois que os anteriores
-existirem. Enquanto esta linha estiver aqui, a tabela ainda não foi preenchida.
+| Commit | O que é |
+|---|---|
+| `7ea6c73` | A leva de mudanças que veio antes desta arrumação: entrada nova, plano de conta e rascunho no contas a pagar |
+| `b905d79` | Junta no projeto a identidade, o rascunho da entrada e as provas |
+| `f16f06f` | Traz os scripts de conferência de tela e corta o caminho da máquina |
+| `1e627a3` | Tira as últimas menções à pasta antiga |
+| `e46cbd3` | Documento de entrada: o estado da operação |
+| `(este)` | Registra os números dos commits aqui nesta tabela |
