@@ -225,4 +225,4 @@ Para não repetir:
 | `f16f06f` | Traz os scripts de conferência de tela e corta o caminho da máquina |
 | `1e627a3` | Tira as últimas menções à pasta antiga |
 | `e46cbd3` | Documento de entrada: o estado da operação |
-| `(este)` | Registra os números dos commits aqui nesta tabela |
+| `527e91b` | Registra os números dos commits aqui nesta tabela |
